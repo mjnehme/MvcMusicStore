@@ -1,3 +1,4 @@
+
 # 01 — Architecture Overview (as-is)
 
 **Deliverable 01 of 13** · MvcMusicStore modernization assessment · foundation document
@@ -25,6 +26,8 @@ It contains **no** target-state design, **no** migration prescription, **no** ef
 3. **Repository-wide claims — counts and absences — carry the command that reproduces them**, adjacent to the claim. A count has no single line to point at, so the command is its evidence, and it is the stronger form because a reader can re-run it.
 4. **One fact, one owner.** This document owns the as-is description. It does not restate decisions owned by other deliverables.
 
+Markdown line length follows the corpus convention recorded in [`README.md` § 10 Markdown line-length convention](README.md#10-markdown-line-length-convention).
+
 Section 9 records the one place where the Technical Specification and the repository disagree, and resolves it in the repository's favour.
 
 ### 1.4 How to read this document
@@ -37,7 +40,7 @@ The repository ships **three independent ASP.NET MVC web applications** that sha
 
 Two relationships hold, and conflating them is the single most likely way to misread this codebase:
 
-- **MVC 4 and MVC 5 are one application with two authentication stacks.** Five of their six controllers are byte-identical and eight of nine core model files are identical; only `AccountController` differs materially. Section 10.1 carries the measurements.
+- **MVC 4 and MVC 5 are one application with two authentication stacks.** Five of their six controllers are byte-identical and eight of nine shared core model files are identical; what differs materially is the **account layer** — `AccountController.cs`, and the account model files, where MVC 4 declares a second `DbContext` MVC 5 has no counterpart for (sections 6.3 and 8.2). Section 10.1 carries the measurements and states which files the "nine" are.
 - **MVC 3 is not equivalent in that way.** Its shopping cart owns its own database context and commits internally, its genre menu runs a different query, its catalog seed content differs substantially, and its layout has no authentication UI at all. Sections 7 and 10.2 carry the evidence.
 
 Consequently **every claim in this document names the edition or editions it holds in**. A claim about "the application" without an edition qualifier would be unverifiable here, and where a fact holds in all three editions this document says so explicitly.
@@ -115,6 +118,16 @@ The `Content` directories of MVC 4 and MVC 3 are nested — 54 of MVC 4's 55 `Co
 
 Two counting methods exist in this assessment and they differ by roughly ten percent on this codebase, so each figure states its method and the two are never mixed in one sentence. **Sizing figures use non-blank lines, excluding `Properties/AssemblyInfo.cs`**; duplication comparisons use physical-line and diff-line counts and appear in section 10.
 
+**What "physical lines" counts, stated exactly, because two files in this repository make the difference visible.** A physical-line figure in this assessment is what `wc -l` returns, which is a count of **line-feed characters** — not of content lines. The two coincide only when a file ends with a terminal newline, and two of the files this assessment measures do not, each ending on its closing `}`: `Models/SampleData.cs` [src/MVC5/MvcMusicStore/Models/SampleData.cs:827] and MVC 5's `Controllers/AccountController.cs` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:423], the latter being **422 LF / 423 content lines**. So the seed's physical-line figure is **826 LF**, while the file carries **827 content lines**, and a locator that ends at `:826` would stop one line short of the closing brace. Every seed figure in this document therefore names the metric — `826 LF` / `827 content lines` for MVC 5 and MVC 4, `430 LF` / `431 content lines` for MVC 3 — and every seed locator runs to the closing brace. Neither figure is the sizing metric: by non-blank lines the same MVC 5 file is **820** (7 blank lines), and MVC 3's is **428** (3 blank lines). All of it is reproducible, and the three commands are given rather than described because the first two disagree by exactly the one line at issue:
+
+```bash
+wc -l                    < src/MVC5/MvcMusicStore/Models/SampleData.cs   # -> 826   (LF characters)
+awk 'END{print NR}'        src/MVC5/MvcMusicStore/Models/SampleData.cs   # -> 827   (content lines)
+grep -cve '^[[:space:]]*$' src/MVC5/MvcMusicStore/Models/SampleData.cs   # -> 820   (non-blank; sizing)
+# MVC 4's file is byte-identical (section 10.1). The same three against MVC 3's
+# src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/SampleData.cs -> 430, 431, 428.
+```
+
 | Edition | Files counted | Non-blank lines |
 | --- | --- | --- |
 | MVC 3-Completed | 19 | 1,326 |
@@ -142,7 +155,7 @@ This is the most consequential structural fact about the migration source, becau
 
 | # | Registration | Locator | What it composes |
 | --- | --- | --- | --- |
-| 1 | `AreaRegistration.RegisterAllAreas()` | [src/MVC5/MvcMusicStore/Global.asax.cs:15] | Area discovery — the repository has no `Areas` folder in MVC 5, so it discovers nothing |
+| 1 | `AreaRegistration.RegisterAllAreas()` | [src/MVC5/MvcMusicStore/Global.asax.cs:15] | Area discovery — no edition has an `Areas` folder, so it discovers nothing. All three call it: MVC 4 at [src/MVC4/MvcMusicStore/Global.asax.cs:19] and MVC 3 at [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:36]. `git ls-files \| grep -c '/Areas/'` returns `0` |
 | 2 | `FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters)` | [src/MVC5/MvcMusicStore/Global.asax.cs:16] | The global filter collection (section 4.2) |
 | 3 | `RouteConfig.RegisterRoutes(RouteTable.Routes)` | [src/MVC5/MvcMusicStore/Global.asax.cs:17] | The route table (section 4.1) |
 | 4 | `BundleConfig.RegisterBundles(BundleTable.Bundles)` | [src/MVC5/MvcMusicStore/Global.asax.cs:18] | The five asset bundles (section 4.5) |
@@ -255,6 +268,8 @@ The only global filter registered in **any** edition is `HandleErrorAttribute`:
 | MVC 4 | `filters.Add(new HandleErrorAttribute());` [src/MVC4/MvcMusicStore/App_Start/FilterConfig.cs:10] |
 | MVC 3 | `filters.Add(new HandleErrorAttribute());` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:17] |
 
+`HandleErrorAttribute` is an **exception filter**, so its place in the pipeline is conditional rather than serial: the single registration adds an `OnException` handler that is reached only when action or result execution throws, and a request that completes normally never involves it [src/MVC5/MvcMusicStore/App_Start/FilterConfig.cs:10]. Section 4.6 draws it accordingly.
+
 That single registration, plus the shared error view it renders, is the whole of each application's cross-cutting error handling. In MVC 5 the view is typed to a framework type — `@model System.Web.Mvc.HandleErrorInfo` [src/MVC5/MvcMusicStore/Views/Shared/Error.cshtml:1] — and its body is generic user-facing text with no exception detail [src/MVC5/MvcMusicStore/Views/Shared/Error.cshtml:7-8]. Deliverable 12 owns the migration consequence of that model type; deliverable 09 owns error-disclosure findings, including MVC 4's, which is in its controller rather than its view.
 
 Per-controller filters exist and are part of the pipeline description: `[Authorize]` on the checkout controller in all three editions [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:8], [src/MVC4/MvcMusicStore/Controllers/CheckoutController.cs:8], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/CheckoutController.cs:8]; `[Authorize(Roles = "Administrator")]` on the administration controller in all three [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:12], [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:12], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:12]; and `[Authorize]` on the account controller in MVC 5 [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:15] and MVC 4, where it is paired with a SimpleMembership initialization filter [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:16-17].
@@ -305,16 +320,26 @@ flowchart TD
     F -->|"no"| H{"Path resolves to a<br/>static file or bundle?"}
     H -->|"yes"| I["Static file or bundle response<br/>BundleConfig.cs:11-28"]
     H -->|"no"| J["Default route<br/>{controller}/{action}/{id}<br/>RouteConfig.cs:16-20"]
-    J --> K["Global filter: HandleErrorAttribute<br/>FilterConfig.cs:10"]
-    K --> L{"Controller or action<br/>carries [Authorize]?"}
-    L -->|"denied"| M["Redirect to LoginPath /Account/Login<br/>Startup.Auth.cs:17"]
-    L -->|"allowed"| N["Action executes against a<br/>field-initialized MusicStoreEntities"]
-    N --> O["Razor view — WebViewPage base type,<br/>six imported namespaces<br/>Views/Web.config:13-21"]
-    O --> P["Layout renders two child actions<br/>_Layout.cshtml:25-26"]
-    P --> Q["Response"]
-    N --> R["JsonResult for the cart AJAX endpoint<br/>ShoppingCartController.cs:83"]
-    R --> Q
+    J --> K{"Controller or action<br/>carries [Authorize]?"}
+    K -->|"denied"| L["Redirect to LoginPath /Account/Login<br/>Startup.Auth.cs:17"]
+    K -->|"allowed"| M["Action executes"]
+    M --> N["Five catalog controllers — the action runs against the<br/>controller's own field-initialized MusicStoreEntities<br/>e.g. StoreController.cs:12; all five listed below"]
+    M --> O["AccountController — no field-initialized catalog context:<br/>the Identity graph is built by hand in a chained constructor,<br/>and one MusicStoreEntities is created on demand<br/>inside MigrateShoppingCart alone<br/>AccountController.cs:19, AccountController.cs:32"]
+    N --> P["Razor view — WebViewPage base type,<br/>six imported namespaces<br/>Views/Web.config:13-21"]
+    O --> P
+    P --> Q["Layout renders two child actions<br/>_Layout.cshtml:25-26"]
+    Q --> R["Response"]
+    N --> S["JsonResult for the cart AJAX endpoint<br/>ShoppingCartController.cs:83"]
+    S --> R
+    M -.->|"action or result<br/>execution throws"| T["Exception filter: HandleErrorAttribute —<br/>reached only on a thrown exception<br/>FilterConfig.cs:10"]
+    T -.-> U["Shared Error view<br/>Views/Shared/Error.cshtml:1"]
+    U --> R
 ```
+
+Two edges in that diagram are branches rather than serial stages, and reading either as a stage every request passes through would misstate the architecture:
+
+- **`HandleErrorAttribute` is an exception filter.** It is registered once, as the only global filter in the edition [src/MVC5/MvcMusicStore/App_Start/FilterConfig.cs:10], and it contributes nothing to a request that completes normally: its handler is reached only when action or result execution throws, and what it yields is the shared error view [src/MVC5/MvcMusicStore/Views/Shared/Error.cshtml:1]. That is why it is drawn as a dashed branch off action execution and not as a node between routing and authorization.
+- **The data-access edge branches by controller.** Five of MVC 5's six controllers hold a field-initialized `MusicStoreEntities` and every action on them runs against it [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:11], [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:12], [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:10], [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:11], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:15]. `AccountController` does not: it has no field-initialized catalog context at all, holds an `ApplicationDbContext` indirectly through the `UserManager` its chained constructor builds [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:19], and constructs exactly one `MusicStoreEntities` on demand inside `MigrateShoppingCart` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:32]. Section 5.4 carries the full construction-site list.
 
 ### 4.7 Pipeline deltas by edition
 
@@ -347,16 +372,51 @@ All three editions use the same folder-based layering, and the layering is thin 
 | Data access | `Models/MusicStoreEntities.cs`, `Models/IdentityModels.cs` | two `DbContext` classes |
 | Business logic | `Models/ShoppingCart.cs` | cart, order-creation and cart-migration logic |
 | Identity model | `Models/IdentityModels.cs`, `Models/AccountViewModels.cs` | MVC 5 only |
-| Seed data | `Models/SampleData.cs` | 826 physical lines |
+| Seed data | `Models/SampleData.cs` | 826 LF / 827 content lines (section 2.4) |
 | Presentation models | `ViewModels/` | `ShoppingCartViewModel`, `ShoppingCartRemoveViewModel` |
 | Views | `Views/` | 29 Razor files |
 | Assembly metadata | `Properties/AssemblyInfo.cs` | excluded from the sizing figures of section 2.4 |
 
 Business logic lives in the `Models` folder rather than in a service layer: `ShoppingCart` computes cart counts and totals, creates orders and migrates cart ownership [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:103-158], [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:184-193]. Section 7 describes it in full because the two cart designs across editions are architecturally distinct.
 
+**One edition's namespaces do not match its folders, and it is the account layer that breaks the pattern.** MVC 4 and MVC 5 declare every type under `MvcMusicStore.*`, including their account code [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:14], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:13]. **MVC 3 does not**: two of its files sit in a namespace named after the Visual Studio project template that scaffolded them, while the other seventeen use `MvcMusicStore.*`. Nineteen of the edition's twenty C# files declare a namespace — `Properties/AssemblyInfo.cs` is the exception — and they split 2 against 17:
+
+| File | Namespace declared |
+| --- | --- |
+| `Controllers/AccountController.cs` | `Mvc3ToolsUpdateWeb_Default.Controllers` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:11] |
+| `Models/AccountModels.cs` | `Mvc3ToolsUpdateWeb_Default.Models` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/AccountModels.cs:8] |
+| The other five controllers, nine models, two view models and `Global.asax.cs` | `MvcMusicStore`, `MvcMusicStore.Controllers`, `MvcMusicStore.Models`, `MvcMusicStore.ViewModels` — e.g. [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:8], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/Album.cs:6], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:8] |
+
+A caveat about reproducing that 2-against-17 split: three of MVC 3's files declare their namespace on line 1 behind a byte-order mark — `Models/Artist.cs`, `Models/OrderDetail.cs` and `ViewModels/ShoppingCartRemoveViewModel.cs` — so an anchored search misses them and reports 16. Use the unanchored form over both pathspecs — `git grep -n 'namespace ' -- 'src/MVC3/MvcMusicStore-Completed/MvcMusicStore/*.cs' 'src/MVC3/MvcMusicStore-Completed/MvcMusicStore/**/*.cs'` — which returns all nineteen; the root pathspec is needed because `Global.asax.cs` sits at the project root and `**/*.cs` alone does not match it.
+
+The seam is visible from three directions, and each is checkable:
+
+1. **The account controller imports across it** — `using Mvc3ToolsUpdateWeb_Default.Models;` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:8] — which no other controller in the edition needs.
+2. **Three views bind their model type fully qualified**, because MVC 3's `Views/Web.config` imports **four** namespaces into every view and not one of them is an application namespace — `System.Web.Mvc`, `System.Web.Mvc.Ajax`, `System.Web.Mvc.Html` and `System.Web.Routing` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Web.config:14-19], against MVC 5's six, which include `MvcMusicStore` (section 4.4). So no view in MVC 3 can name a model type unqualified, and the account views are where that shows: `@model Mvc3ToolsUpdateWeb_Default.Models.LogOnModel` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Account/LogOn.cshtml:1], and the same shape at [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Account/Register.cshtml:1] and [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Account/ChangePassword.cshtml:1].
+3. **The project's own `RootNamespace` disagrees with both files** — `<RootNamespace>MvcMusicStore</RootNamespace>` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/MvcMusicStore.csproj:13], the same value MVC 4 and MVC 5 declare [src/MVC4/MvcMusicStore/MvcMusicStore.csproj:14], [src/MVC5/MvcMusicStore/MvcMusicStore.csproj:14]. So a newly added file in MVC 3 would default to `MvcMusicStore.*`, and the scaffolded pair is an exception the project settings do not describe.
+
+`git grep -n 'Mvc3ToolsUpdateWeb_Default' -- 'src/' | grep -v '/packages/'` returns **twelve** lines and no more: the six above, plus six identical ones in the tutorial-asset copy under `src/MVC3/MvcMusicStore-Assets/Code/` — the same scaffolded account files duplicated as tutorial payload (section 2.5), not a second occurrence of the seam in a running application. The string appears nowhere in MVC 4 or MVC 5.
+
+**What this is and is not.** It is scaffold residue: the tutorial's account files were generated by the ASP.NET MVC 3 Tools Update project template and pasted in without renaming, and nothing in the application depends on the name. It is recorded because a reader inventorying MVC 3's types by namespace will not find its account layer, and because an automated port that maps namespaces mechanically will carry the template's name into the target. It is **not** a namespace to preserve: MVC 5 is the sole migration source and has no such split, so `Mvc3ToolsUpdateWeb_Default` has no place in any target namespace. Deliverable 05 owns the target namespace and project layout; this document records only that the seam exists, in MVC 3 alone, and that it stops there.
+
 ### 5.2 Controllers and the URL surface
 
-All three editions declare the same six controllers, verified by listing `Controllers/` in each. MVC 5's action surface:
+All three editions declare the same six controllers, verified by listing `Controllers/` in each.
+
+**The counting basis, stated once and used everywhere in this document.** Two different numbers can be called "the action count", and mixing them makes editions look more or less alike than they are, so both are named and neither is used loosely:
+
+- **Action methods** — `public` methods declared **directly on the controller class**, excluding constructors, `Dispose` overrides and any method of a nested type. This is the count that sizes the porting work, because each method is a separate signature to move.
+- **Distinct action names** — the set of those methods' names. This is the count that describes the **URL surface**, because a GET/POST overload pair shares one name and therefore one route-reachable action.
+
+Every action figure in sections 5.2, 8 and 9 is written as *methods across distinct names* on that basis, and every one is reproducible. `git grep -nE '^[[:space:]]+public .*\(' -- '<edition>/Controllers/AccountController.cs'` lists the candidate lines — 20 of them for MVC 5 — from which three kinds of line are excluded to reach the action count:
+
+- **Constructors**, two in MVC 5 [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:18], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:23].
+- **The nested result class's own constructors**, two in MVC 5 [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:396], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:400].
+- **The nested result class's `ExecuteResult` override** — [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:411] in `ChallengeResult`, and [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:381] in MVC 4's `ExternalLoginResult`. These are the lines most easily miscounted as actions: they are `public`, they sit in the controller's file, and they are members of a private nested class rather than of the controller. Deliverable 12 owns their migration consequence.
+
+20 candidate lines minus those 5 gives MVC 5's 15 action methods, whose names collapse to 12 because `Login`, `Register` and `Manage` each have a GET/POST pair.
+
+MVC 5's action surface:
 
 | Controller | Actions and locators | Authorization |
 | --- | --- | --- |
@@ -364,8 +424,8 @@ All three editions declare the same six controllers, verified by listing `Contro
 | `StoreController` | `Index` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:16], `Browse` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:27], `Details` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:36], `GenreMenu` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:44] | anonymous |
 | `ShoppingCartController` | `Index` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:15], `AddToCart` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:33], `RemoveFromCart` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:55], `CartSummary` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:87] | anonymous |
 | `CheckoutController` | `AddressAndPayment` GET [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:17] and POST [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:26], `Complete` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:68] | `[Authorize]` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:8] |
-| `StoreManagerController` | `Index`, `Details`, `Create` GET/POST, `Edit` GET/POST, `Delete`, `DeleteConfirmed` — e.g. [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:20], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:30], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:54] | `[Authorize(Roles = "Administrator")]` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:12] |
-| `AccountController` | 15 public actions [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:45-317] including `Login`, `Register`, `Disassociate`, `Manage`, `ExternalLogin`, `LinkLogin`, `LogOff`, `RemoveAccountList` | `[Authorize]` at class level [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:15] with `[AllowAnonymous]` on the anonymous actions, e.g. [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:44] |
+| `StoreManagerController` | **8 action methods across 6 distinct names** — `Index`, `Details`, `Create` GET/POST, `Edit` GET/POST, `Delete`, `DeleteConfirmed` — e.g. [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:20], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:30], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:54]. The same 8-across-6 shape holds in MVC 4 and MVC 3 | `[Authorize(Roles = "Administrator")]` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:12] |
+| `AccountController` | **15 action methods across 12 distinct names** [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:45-317] — `Login` GET/POST, `Register` GET/POST, `Manage` GET/POST, `Disassociate`, `ExternalLogin`, `ExternalLoginCallback`, `ExternalLoginConfirmation`, `ExternalLoginFailure`, `LinkLogin`, `LinkLoginCallback`, `LogOff`, `RemoveAccountList` | `[Authorize]` at class level [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:15] with `[AllowAnonymous]` on the anonymous actions, e.g. [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:44] |
 
 Two verb facts belong to the as-is description because they characterize the surface. `AddToCart` carries **no verb attribute** and mutates state — it loads the album, adds it to the cart and saves [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:33-46] — so it is reachable by `GET`, and its only call site is an `@Html.ActionLink`, that is, an ordinary hyperlink [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:28-29]. `RemoveFromCart` is `[HttpPost]` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:54] and returns `Json(results)` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:83], making it the one AJAX endpoint in the application. Both hold identically in MVC 4 (its controller file is byte-identical, section 10.1) and in MVC 3 [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:33], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:52-53]. Deliverables 09 and 12 own the security and migration consequences respectively.
 
@@ -381,13 +441,15 @@ Part of the request path rather than a detail: MVC 5 declares **three** `[ChildA
 
 Because the first two are called from `_Layout.cshtml` and `_ViewStart.cshtml` applies that layout to every view [src/MVC5/MvcMusicStore/Views/_ViewStart.cshtml:2], both queries run on **every page render** in MVC 5. Deliverable 08 owns the performance consequence.
 
-Child-action counts differ per edition, and the difference tracks the authentication surface:
+Child-action counts differ per edition, and the difference tracks the authentication surface. **Declarations and call sites are counted separately**, because they are not the same number in MVC 4 — one of its child actions is rendered from two different views:
 
-| Edition | Count | Declarations |
-| --- | --- | --- |
-| MVC 5 | 3 | Store [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:43], ShoppingCart [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:86], Account [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:316] |
-| MVC 4 | 4 | Store [src/MVC4/MvcMusicStore/Controllers/StoreController.cs:43], ShoppingCart [src/MVC4/MvcMusicStore/Controllers/ShoppingCartController.cs:86], and **two** in Account — `ExternalLoginsList` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:322] and `RemoveExternalLogins` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:329] |
-| MVC 3 | 2 | Store [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:49], ShoppingCart [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:82] — **none** in Account |
+| Edition | Declarations | View call sites | Declarations, located |
+| --- | --- | --- | --- |
+| MVC 5 | 3 | 3, all `@Html.Action` | Store [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:43], ShoppingCart [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:86], Account [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:316] |
+| MVC 4 | 4 | **5**, all `@Html.Action` — `ExternalLoginsList` is called from both [src/MVC4/MvcMusicStore/Views/Account/Login.cshtml:45] and [src/MVC4/MvcMusicStore/Views/Account/Manage.cshtml:27] | Store [src/MVC4/MvcMusicStore/Controllers/StoreController.cs:43], ShoppingCart [src/MVC4/MvcMusicStore/Controllers/ShoppingCartController.cs:86], and **two** in Account — `ExternalLoginsList` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:322] and `RemoveExternalLogins` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:329] |
+| MVC 3 | 2 | 2, both `Html.RenderAction` rather than `@Html.Action` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:16], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:21] | Store [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:49], ShoppingCart [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:82] — **none** in Account |
+
+Nine declarations and ten call sites in total: `git grep -n 'ChildActionOnly' -- 'src/' | grep -v '/packages/' | wc -l` → `9`. Deliverable 12 owns the migration consequence of both halves.
 
 MVC 3's `GenreMenu` is also a different query: a plain `storeDB.Genres.ToList()` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:52], where MVC 5's ranks genres by summed order-detail quantity and takes nine [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52]. MVC 3's home page takes the top **five** albums [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/HomeController.cs:18] against MVC 5's **six** [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:18].
 
@@ -496,18 +558,37 @@ Recorded because the mix is deliberate in effect if not in intent, and because i
 
 `Artist` has no inverse navigation property at all [src/MVC5/MvcMusicStore/Models/Artist.cs:8-12]. The consequence is visible in the query code: because `Genre.Albums` is not `virtual` it cannot be populated by an EF 6 lazy-loading proxy, and `StoreController.Browse` therefore loads it explicitly with a string-based `Include("Albums")` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:30] — while `StoreController.Details` loads an album with a bare `Find(id)` and no `Include` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:38] and its view reads `@Model.Genre.Name` [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:16] and `@Model.Artist.Name` [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:20], both of which *are* `virtual` and are therefore populated implicitly at render time. MVC 3 makes the same explicit/implicit split [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:30], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:41]. Deliverable 12 owns the migration consequence of the implicit half.
 
-### 6.3 Two `DbContext` classes, two different configuration conventions
+### 6.3 `DbContext` declarations — five across three editions, and two configuration conventions in MVC 5
 
-MVC 5 has two data contexts, and they resolve their connection strings by **two different mechanisms**:
+The repository declares **five** `DbContext` classes, and the distribution is **1 / 2 / 2**, not one per edition:
+
+```bash
+git grep -nE ': DbContext|: IdentityDbContext' -- 'src/*.cs' | grep -v '/packages/'
+# -> src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/MusicStoreEntities.cs:5
+#    src/MVC4/MvcMusicStore/Models/AccountModels.cs:11
+#    src/MVC4/MvcMusicStore/Models/MusicStoreEntities.cs:5
+#    src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10
+#    src/MVC5/MvcMusicStore/Models/MusicStoreEntities.cs:5
+```
+
+| Edition | Catalog context | Second context | Count |
+| --- | --- | --- | --- |
+| MVC 3 | `MusicStoreEntities : DbContext` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/MusicStoreEntities.cs:5] | **none** — its credential store is provider-managed and declared nowhere in the repository (section 8.3) | **1** |
+| MVC 4 | `MusicStoreEntities : DbContext` [src/MVC4/MvcMusicStore/Models/MusicStoreEntities.cs:5], byte-identical to MVC 5's (section 10.1) | `UsersContext : DbContext` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:11] — an EF-mapped **profile** context, one `DbSet<UserProfile>` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:18] over the `UserProfile` table [src/MVC4/MvcMusicStore/Models/AccountModels.cs:21-28] | **2** |
+| MVC 5 | `MusicStoreEntities : DbContext` [src/MVC5/MvcMusicStore/Models/MusicStoreEntities.cs:5] | `ApplicationDbContext : IdentityDbContext<ApplicationUser>` [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10] — the credential store itself, EF-mapped | **2** |
+
+MVC 4's second context is **not** an equivalent of MVC 5's: it maps a single profile table and sits *beside* a provider stack that owns the credentials themselves, which is the hybrid architecture section 8.2 records. What the two second contexts do share is that each names its connection string explicitly, and each names the same one — `DefaultConnection` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:13-15], [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:12-13].
+
+MVC 5's pair is where the two configuration conventions sit side by side, because its two contexts resolve their connection strings by **two different mechanisms**:
 
 - **`MusicStoreEntities : DbContext`** [src/MVC5/MvcMusicStore/Models/MusicStoreEntities.cs:5] declares six `DbSet` properties [src/MVC5/MvcMusicStore/Models/MusicStoreEntities.cs:7-12] and **nothing else**: no constructor, no `OnModelCreating`, no configuration of any kind. The whole file is 13 non-blank lines. With no constructor, EF 6 resolves its connection string by matching the **class name** to a configured connection-string name — and `Web.config` duly declares one named `MusicStoreEntities` [src/MVC5/MvcMusicStore/Web.config:13].
 - **`ApplicationDbContext : IdentityDbContext<ApplicationUser>`** [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10] declares a constructor that passes the connection-string name **explicitly**: `: base("DefaultConnection")` [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:12-13], matching the connection string of that name [src/MVC5/MvcMusicStore/Web.config:12]. Its user type is an empty subclass, `ApplicationUser : IdentityUser` with no added members [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:6-8].
 
-So one context depends on a naming convention and the other states its target. MVC 4 and MVC 3 have only the catalog context — `MusicStoreEntities` — because their credential stores are provider-managed rather than EF-mapped (section 8).
+So one context depends on a naming convention and the other states its target. The convention half also holds for the other two editions' catalog contexts: MVC 4 declares no constructor either and is served by a connection string named `MusicStoreEntities` [src/MVC4/MvcMusicStore/Web.config:18], and so is MVC 3's [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:56]. Deliverable 12 owns what happens to both conventions in EF Core, which honours neither.
 
 ### 6.4 Schema lifecycle and seed data
 
-No edition ships an EF migration. Instead each registers an initializer whose base class decides first-run behaviour: `SampleData : DropCreateDatabaseIfModelChanges<MusicStoreEntities>` [src/MVC5/MvcMusicStore/Models/SampleData.cs:9], registered at the sites tabulated in section 3.7. The seed payload is hardcoded C#: MVC 5's `SampleData.cs` is **826 physical lines** (a duplication-metric figure, per section 2.4's method note).
+No edition ships an EF migration. Instead each registers an initializer whose base class decides first-run behaviour: `SampleData : DropCreateDatabaseIfModelChanges<MusicStoreEntities>` [src/MVC5/MvcMusicStore/Models/SampleData.cs:9], registered at the sites tabulated in section 3.7. The seed payload is hardcoded C#: MVC 5's `SampleData.cs` is **826 LF — 827 content lines** [src/MVC5/MvcMusicStore/Models/SampleData.cs:1-827], a duplication-metric figure and not the sizing metric, per section 2.4's method note, which also gives the commands and the file's 820 non-blank lines.
 
 Seed content is one of the places MVC 3 diverges: comparing its `SampleData.cs` with MVC 5's yields 668 added and 272 removed lines (`diff … | grep -c '^>'` and `'^<'`). MVC 4's is byte-identical to MVC 5's (section 10.1).
 
@@ -536,15 +617,15 @@ No edition declares a `<sessionState>` element or a `<machineKey>` element in an
 
 ### 6.7 Per-edition persistence topology
 
-Architectural shape only; deliverable 10 owns the database components required to run each edition.
+Architectural shape only; deliverable 10 §10.1 owns the database components required to run each edition, stated there as runtime requirements with the catalog and credential stores in separate columns. The table below is the mapping view of the same topology and is meant to be read with it.
 
-| Edition | Catalog connection | Credential store | Connection strings declared |
-| --- | --- | --- | --- |
-| MVC 5 | `MusicStoreEntities`, LocalDB `MSSQLLocalDB` with a file-attached `.mdf` [src/MVC5/MvcMusicStore/Web.config:13] | a **separate** EF-mapped Identity database via `DefaultConnection` [src/MVC5/MvcMusicStore/Web.config:12] | 2 [src/MVC5/MvcMusicStore/Web.config:11-14] |
-| MVC 4 | `MusicStoreEntities`, `(LocalDB)\v11.0` with a file-attached `.mdf` [src/MVC4/MvcMusicStore/Web.config:18-22] | a separate SimpleMembership database via `DefaultConnection` [src/MVC4/MvcMusicStore/Web.config:12-17] | 2 [src/MVC4/MvcMusicStore/Web.config:11-23] |
-| MVC 3 | `MusicStoreEntities`, **SQL Server Compact 4.0** — `Data Source=\|DataDirectory\|MvcMusicStore.sdf` with `providerName="System.Data.SqlServerCe.4.0"` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:56-58] | **not declared** — classic providers resolved from machine configuration (section 8.3) | 1 [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:55-59] |
+| Edition | Catalog connection | Credential store | Contexts over the credential store | Connection strings declared |
+| --- | --- | --- | --- | --- |
+| MVC 5 | `MusicStoreEntities`, LocalDB `MSSQLLocalDB` with a file-attached `.mdf` [src/MVC5/MvcMusicStore/Web.config:13] | a **separate** EF-mapped Identity database via `DefaultConnection` [src/MVC5/MvcMusicStore/Web.config:12] | **one, mapping all of it** — `ApplicationDbContext` [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10-13] | 2 [src/MVC5/MvcMusicStore/Web.config:11-14] |
+| MVC 4 | `MusicStoreEntities`, `(LocalDB)\v11.0` with a file-attached `.mdf` [src/MVC4/MvcMusicStore/Web.config:18-22] | a separate SimpleMembership database via `DefaultConnection` [src/MVC4/MvcMusicStore/Web.config:12-17] | **one, mapping one table of it** — `UsersContext` over `UserProfile` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:11-28]; the credential tables themselves are provider-owned and reached by the `WebSecurity` statics, so the store has **two** access mechanisms (section 8.2) | 2 [src/MVC4/MvcMusicStore/Web.config:11-23] |
+| MVC 3 | `MusicStoreEntities`, **SQL Server Compact 4.0** — `Data Source=\|DataDirectory\|MvcMusicStore.sdf` with `providerName="System.Data.SqlServerCe.4.0"` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:56-58] | **not declared** — classic providers resolved from machine configuration (section 8.3) | **none** | 1 [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:55-59] |
 
-MVC 3 is therefore the only edition whose catalog engine is not SQL Server, and the only one whose credential store is not named anywhere in the repository.
+Two asymmetries follow from the fourth column, and both matter more than the connection-string count. MVC 3 is the only edition whose catalog engine is not SQL Server, and the only one whose credential store is not named anywhere in the repository. MVC 4 is the only edition where **one database is reached both through an EF context and through provider APIs that bypass it** — the hybrid arrangement section 8.2 records in full.
 
 ---
 
@@ -602,14 +683,20 @@ Each edition authenticates through a different framework generation. The three a
 - **Pipeline integration.** OWIN middleware only; ASP.NET authentication is `None` and the Forms module is removed [src/MVC5/MvcMusicStore/Web.config:32], [src/MVC5/MvcMusicStore/Web.config:38]. Cookie options set two values and inherit everything else [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:14-18].
 - **API surface.** `UserManager<ApplicationUser>` and `RoleManager<IdentityRole>`, both hand-constructed — in the account controller's chained constructor [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:18-19] and in startup provisioning [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:28-29].
 - **Identification of the signed-in user in views.** By Identity helper: `User.Identity.GetUserName()` [src/MVC5/MvcMusicStore/Views/Shared/_LoginPartial.cshtml:10], with the namespace imported at [src/MVC5/MvcMusicStore/Views/Shared/_LoginPartial.cshtml:1] and the whole partial branching on `Request.IsAuthenticated` [src/MVC5/MvcMusicStore/Views/Shared/_LoginPartial.cshtml:2].
-- **Account surface.** 15 public actions [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:45-317], including external-login link and callback actions [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:237], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:245] and a sign-out posted from the layout partial [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:302], [src/MVC5/MvcMusicStore/Views/Shared/_LoginPartial.cshtml:4-12].
+- **Account surface.** **15 action methods across 12 distinct action names** [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:45-317], on the counting basis fixed in section 5.2, including external-login link and callback actions [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:237], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:245] and a sign-out posted from the layout partial [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:302], [src/MVC5/MvcMusicStore/Views/Shared/_LoginPartial.cshtml:4-12].
 
-### 8.2 MVC 4 — SimpleMembership with Forms authentication
+### 8.2 MVC 4 — a hybrid: SimpleMembership and role providers alongside an EF-mapped `UsersContext`
 
-- **Framework.** `WebMatrix.WebData` — the SimpleMembership provider — imported by startup [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:8] and by the account controller [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:10], with the classic `System.Web.Security` statics alongside it [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:7].
-- **Credential store.** A separate SimpleMembership database reached through `DefaultConnection` [src/MVC4/MvcMusicStore/Web.config:12-17]. The provider is initialized by a filter attribute, `[InitializeSimpleMembership]` on the account controller [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:17], declared as `public sealed class InitializeSimpleMembershipAttribute : ActionFilterAttribute` in the edition's only `Filters` file [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:12] with its work in `OnActionExecuting` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:18], and invoked directly by startup provisioning to prime it outside a request [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:27].
+MVC 4 is the edition whose identity architecture is not one stack but a composite, and the composite is the substance of this section rather than a detail of it: **its credential database is reached by two mechanisms that share no unit of work.**
+
+- **Framework.** `WebMatrix.WebData` — the SimpleMembership provider — imported by startup [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:8] and by the account controller [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:10], with the classic `System.Web.Security` statics alongside it [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:7] and Entity Framework alongside both [src/MVC4/MvcMusicStore/Models/AccountModels.cs:5].
+- **Credential store.** A separate SimpleMembership database reached through `DefaultConnection` [src/MVC4/MvcMusicStore/Web.config:12-17]. The provider is initialized by a filter attribute, `[InitializeSimpleMembership]` on the account controller [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:17], declared as `public sealed class InitializeSimpleMembershipAttribute : ActionFilterAttribute` in the edition's only `Filters` file [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:12] with its work in `OnActionExecuting` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:18], and invoked directly by startup provisioning to prime it outside a request [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:27]. That same database is **also** EF-mapped: `UsersContext : DbContext` names `DefaultConnection` explicitly [src/MVC4/MvcMusicStore/Models/AccountModels.cs:11-15] and exposes one `DbSet<UserProfile>` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:18] over the `UserProfile` table whose identity key is `UserId` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:21-28] — the same table and key columns the provider is told to use, `"UserProfile"`, `"UserId"`, `"UserName"` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:41]. Deliverable 10 §10.1 owns the topology as a runtime requirement; section 6.7 carries the mapping view.
+- **The two mechanisms, and where the seam shows.** Credentials, external accounts and roles are reached through provider statics — `WebSecurity` for sign-in, registration and password change [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:38-39], [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:97-98], [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:177], `OAuthWebSecurity` for external accounts [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:295-296], and the classic `Roles` static for role work [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:32-36] — while the profile row is written through EF: `using (UsersContext db = new UsersContext())`, a `FirstOrDefault` existence check, an `Add` and a `SaveChanges` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:285-293]. The seam is visible in four consecutive statements of external-login confirmation: EF commits the profile row [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:292-293], then the provider creates the account and signs it in [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:295-296]. One logical account creation, two mechanisms, **no shared change tracker and no transaction spanning them** — so a provider-side failure after the EF commit leaves a profile row with no account behind it.
+- **EF maps the profile table but owns neither the schema nor the credential tables.** The context's initializer is switched off outright — `Database.SetInitializer<UsersContext>(null)` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:28] — the database is created, if missing, through the underlying `ObjectContext` rather than through an initializer [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:32-37], and the membership tables are created outside EF entirely by `autoCreateTables: true` on the provider's own initialization [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:41]. This is the one context in the repository whose schema lifecycle is not the one section 6.4 describes.
+- **Within the provider half, roles are a second provider family — and the registration that binds it lives in code, not in configuration.** `Roles.RoleExists`, `Roles.CreateRole` and `Roles.AddUserToRole` are called from startup [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:32-36], and MVC 4's configuration declares **no `<membership>`, no `<roleManager>` and no `<profile>` element**: `git grep -n -iE '<membership|<roleManager|<profile' -- 'src/MVC4/MvcMusicStore/Web.config' 'src/MVC4/MvcMusicStore/Views/Web.config'` → no output, exit `1`. **That absence does not make the store unknowable**, and this is the one place in the repository where it would be easy to conclude that it does. The edition performs the binding in code instead: `WebSecurity.InitializeDatabaseConnection("DefaultConnection", "UserProfile", "UserId", "UserName", autoCreateTables: true)` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:41] names the connection string, the user table and its key columns, and `autoCreateTables: true` has the provider create the membership and role tables in that same database. So **MVC 4's active user store and role storage is the `DefaultConnection` database** [src/MVC4/MvcMusicStore/Web.config:12-17], and the binding is already in force when the role calls above run, because startup primes the initializer by hand [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:27] before it reaches them. Deliverable 10 §10.1 states the same topology as a runtime requirement, and deliverable 09 §6.9 corroborates it from the committed store itself, whose printable strings include `webpages_Membership` and `webpages_Roles`.
+- **What is host-inherited in MVC 4 is only the registration the SimpleMembership binding displaces.** With no provider element declared, the classic `Membership` and `Roles` statics resolve to the host's machine-level ASP.NET provider configuration until the code-side registration at [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:41] replaces it for the application's lifetime. That **predecessor** — what the statics would resolve to absent this edition's own registration — is a property of the host and cannot be settled from the checkout. The uncertainty stops there: it does not reach the active store, and it is not the open host-verification item, which is MVC 3's (section 8.3). Deliverable 09 owns the posture consequence; deliverable 10 owns the MVC 3 host verification.
 - **Pipeline integration.** Forms authentication [src/MVC4/MvcMusicStore/Web.config:36-37].
-- **API surface.** `WebSecurity` for sign-in and account creation [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:38-39], [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:29-30], and the classic `Roles` static for role work [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:32-36].
+- **Startup provisioning crosses the same two mechanisms.** `AppConfig.Configure()` [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:14] is the last statement of `Application_Start` [src/MVC4/MvcMusicStore/Global.asax.cs:27], it registers the catalog initializer [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:16] and then calls `CreateAdminUser` [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:21-37], which primes the SimpleMembership initializer by hand, creates the account through `WebSecurity` and creates the `Administrator` role and membership through `Roles`. Section 3.5 carries the statement-by-statement composition and the independent-check behaviour; what belongs here is that one provisioning routine spans two identity mechanisms. Deliverable 09 owns the credential itself.
 - **Account surface.** 14 public actions [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:24-330], including an external-login group [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:228-330] built on `Microsoft.Web.WebPages.OAuth` and DotNetOpenAuth [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:8-9], whose client registrations are all commented out [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29].
 
 ### 8.3 MVC 3 — classic ASP.NET Membership and Roles, resolved from machine configuration
@@ -617,22 +704,25 @@ Each edition authenticates through a different framework generation. The three a
 - **Framework.** The classic statics, with no provider abstraction of its own: `Membership.ValidateUser` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:41], `FormsAuthentication.SetAuthCookie` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:45], `FormsAuthentication.SignOut` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:71], `Membership.CreateUser` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:94] and `Membership.GetUser` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:137].
 - **Pipeline integration.** Forms authentication with its own login URL [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:26-28], and role management switched on with a bare `<roleManager enabled="true" />` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:15].
 - **Credential store — declared nowhere in the repository.** MVC 3's `web.config` contains **no `<membership>` element, no `<providers>` element under `roleManager`, and no `LocalSqlServer` connection string**; its only connection string is the SQL Server Compact catalog entry [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:55-59]. Both `Membership` and `Roles` therefore resolve to the **machine-level** ASP.NET SQL providers and the machine's own connection-string setting. That is an inherited default — a property of the host MVC 3 runs on, not of this repository — so the effective store cannot be determined from the checkout. Deliverable 10 owns the database consequence and the host verification it requires; the architectural fact recorded here is that MVC 3 is the only edition whose identity configuration is incomplete on its own.
-- **Account surface.** Five public actions and no more: `LogOn` GET/POST [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:28], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:37], `LogOff` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:69], `Register` GET/POST [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:79], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:88], `ChangePassword` GET/POST [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:117], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:127] and `ChangePasswordSuccess` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:162]. **No external-login surface exists**: `git grep -lE 'OAuth|DotNetOpenAuth|ExternalLogin' -- 'src/MVC3/MvcMusicStore-Completed/*.cs' | wc -l` → `0`.
+- **Account surface.** **8 action methods across 5 distinct action names, and no more** — the smallest of the three on the counting basis fixed in section 5.2, which puts the three editions at MVC 3 8/5, MVC 4 14/11 and MVC 5 15/12. The names themselves also differ, not only the count: MVC 3 uses `LogOn` where the other two use `Login`, and `ChangePassword` plus `ChangePasswordSuccess` where the other two expose password change through `Manage`. All eight methods: `LogOn` GET/POST [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:28], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:37], `LogOff` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:69], `Register` GET/POST [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:79], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:88], `ChangePassword` GET/POST [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:117], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:127] and `ChangePasswordSuccess` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:162]. **No external-login surface exists**: `git grep -lE 'OAuth|DotNetOpenAuth|ExternalLogin' -- 'src/MVC3/MvcMusicStore-Completed/*.cs' | wc -l` → `0`.
 - **No authentication UI in the layout.** MVC 3's `Views/Shared` holds only `Error.cshtml` and `_Layout.cshtml`, and that layout's navigation is four static links — Home, Store, the cart summary child action and Admin [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:13-18]. The account actions above are reachable by URL and by the `[Authorize]` redirect, but nothing in the chrome offers register, sign-in or sign-out.
 
 ### 8.4 The three stacks side by side
 
 | Property | MVC 3 | MVC 4 | MVC 5 |
 | --- | --- | --- | --- |
-| Stack | classic Membership / Roles | SimpleMembership (`WebSecurity`) | ASP.NET Identity `1.0.0` [src/MVC5/MvcMusicStore/packages.config:8-10] |
+| Stack | classic Membership / Roles | **hybrid** — SimpleMembership (`WebSecurity`) plus classic `Roles`, with an EF `UsersContext` over the profile table (section 8.2) | ASP.NET Identity `1.0.0` [src/MVC5/MvcMusicStore/packages.config:8-10] |
 | Pipeline | Forms [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:26-28] | Forms [src/MVC4/MvcMusicStore/Web.config:36-37] | OWIN cookie middleware [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:14-18] |
 | ASP.NET authentication mode | `Forms` | `Forms` | `None` [src/MVC5/MvcMusicStore/Web.config:32] |
 | Credential store declared in repo | **no** (machine-level providers) | yes [src/MVC4/MvcMusicStore/Web.config:12-17] | yes, EF-mapped [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10-13] |
+| `DbContext` classes over that store | **none** | **one, over one table** — `UsersContext` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:11]; credentials and roles stay provider-owned | **one, over all of it** — `ApplicationDbContext` [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10] |
+| Role provider declared in repo | **no** — `<roleManager enabled="true" />` with no provider [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:15] | **yes, in code rather than configuration** — no `<roleManager>` element exists, and the SimpleMembership registration binds the user store and role storage to `DefaultConnection` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:41] (section 8.2) | yes — `RoleManager<IdentityRole>` over the same context [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:29] |
 | Login URL | `~/Account/LogOn` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:27] | `~/Account/Login` [src/MVC4/MvcMusicStore/Web.config:37] | `/Account/Login` [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:17] |
 | Account actions | 5 | 14 | 15 |
 | External-login code | **none** | present, providers disabled [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29] | present, providers disabled [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35] |
 | Startup administrator provisioning | **none** | [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:21-37] | [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:21-45] |
 | Sign-in UI in the layout | **none** [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:13-18] | present | present [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:28] |
+| Account action methods (distinct action names) — basis in 5.2 | 8 (5) | 14 (11) | 15 (12) |
 
 Deliverable 09 owns the security posture of all three; this section records only their architecture.
 
@@ -669,12 +759,12 @@ Three marks are used, and the third is the one that matters:
 | 11 | Cart migration on sign-in | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:189-198] | Implemented | Implemented [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:184-193] |
 | 12 | Checkout with promo-code gate | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/CheckoutController.cs:12], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/CheckoutController.cs:33] | Implemented [src/MVC4/MvcMusicStore/Controllers/CheckoutController.cs:12] | Implemented [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:12], [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:33] |
 | 13 | Order confirmation with ownership check | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/CheckoutController.cs:66] | Implemented | Implemented [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:68-73] |
-| 14 | Album administration CRUD | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:20-104] but **Unreachable** — see 9.3 | Implemented [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:12] | Implemented [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:20-117] |
-| 15 | Role-gated administration authorization | Declared [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:12]; role never created | Implemented [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:12] | Implemented [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:12] |
+| 14 | Album administration CRUD | **Unreachable** — code complete [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:20-104], never exercisable — see 9.3 | Implemented [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:12] | Implemented [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:20-117] |
+| 15 | Role-gated administration authorization | **Unreachable** — guard declared [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:12]; role never created — see 9.3 | Implemented [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:12] | Implemented [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:12] |
 | 16 | User registration | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:79-88] | Implemented [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:79-90] | Implemented [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:79-89] |
 | 17 | Sign in and sign out | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:28-71]; **no layout affordance** [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:13-18] | Implemented [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:24-68] | Implemented [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:45-302] |
 | 18 | Password change / set | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/AccountController.cs:117-162] | Implemented [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:147-164] | Implemented [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:131-148] |
-| 19 | External (social) login | **Absent** — zero references, command in 8.3 | Implemented but disabled [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29] | Implemented but disabled [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35] |
+| 19 | External (social) login | **Absent** — zero references, command in 8.3 | **Unreachable** — surface shipped [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29]; every provider registration commented out, so no sign-in can complete — see 9.3 | **Unreachable** — surface shipped [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35]; every provider registration commented out, so no sign-in can complete — see 9.3 |
 | 20 | External-login management UI (link / remove) | **Absent** — no account child action (5.3) | Implemented [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:322], [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:329] | Implemented [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:316], [src/MVC5/MvcMusicStore/Views/Account/Manage.cshtml:22] |
 | 21 | Startup administrator provisioning | **Absent** [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:32-40] | Implemented [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:21-37] | Implemented [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:21-45] |
 | 22 | First-run database creation and seeding | Implemented [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:34] | Implemented [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:16] | Implemented, registered twice [src/MVC5/MvcMusicStore/Global.asax.cs:20], [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:16] |
@@ -684,19 +774,26 @@ Three marks are used, and the third is the one that matters:
 
 Rows marked "Implemented" without a citation in the MVC 4 column are those whose MVC 4 file is **byte-identical** to MVC 5's; section 10.1 carries that measurement and its command, so the MVC 5 citation in the same row is the evidence for both.
 
-### 9.3 The three marks that are not "Implemented", with their evidence
+### 9.3 The eleven cells that are not "Implemented", with their evidence
 
-**MVC 3's administration capability is Unreachable as shipped.** Three facts combine, each independently verified:
+Eleven of the matrix's **75 cells** — 25 capabilities across three editions — carry a status other than "Implemented", leaving **64 Implemented**. Only the three marks defined in section 9.1 are used: a capability that ships but cannot be exercised as shipped is **Unreachable**, whatever the reason its precondition is unmet, so no fourth state exists to be counted separately. Counted from section 9.2 exactly as it stands, the eleven are **six Absent** and **five Unreachable**:
 
-1. `StoreManagerController` is guarded by `[Authorize(Roles = "Administrator")]` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:12], so all eight of its public actions require membership of a role named `Administrator` — `grep -cE 'public (ActionResult|ViewResult)' src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs` → `8`.
+- **Absent — six cells, all but one of them MVC 3's:** external social login (row 19), external-login management UI (row 20), startup administrator provisioning (row 21) and script and style bundling (row 23) in MVC 3; the HTTP API routing surface (row 24) in MVC 3 **and** in MVC 5.
+- **Unreachable — five cells:** album administration CRUD (row 14) and role-gated administration authorization (row 15) in MVC 3; the HTTP API routing surface (row 24) in MVC 4; external social login (row 19) in MVC 4 **and** in MVC 5.
+
+Those eleven cells rest on **three bodies of evidence**, and the remainder of this section sets out each in turn: MVC 3's administration path, which carries rows 14, 15 and 21; MVC 4's mapped HTTP API route, which carries all three cells of row 24; and external login, which carries rows 19 and 20. The one cell no paragraph below repeats is row 23, MVC 3's absent bundling: sections 3.6 and 4.5 establish it — the edition has no `App_Start` folder and therefore no bundle registration, and its layout links scripts and styles directly — and it is cross-referenced rather than restated.
+
+**MVC 3's administration capability is Unreachable as shipped, and nothing in the edition provisions the role its guard requires — row 21's Absent mark and rows 14 and 15's Unreachable marks are the same three facts seen from two directions.** Each is independently verified:
+
+1. `StoreManagerController` is guarded by `[Authorize(Roles = "Administrator")]` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:12], so all **8 of its action methods, across 6 distinct action names** (basis in section 5.2), require membership of a role named `Administrator` — `grep -cE 'public (ActionResult|ViewResult)' src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs` → `8`, the method count; the names collapse to six because `Create` and `Edit` each have a GET/POST pair.
 2. **Nothing in MVC 3 ever creates that role or any user.** Its `Application_Start` runs four statements and none of them provisions anything [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:32-40]; there is no `App_Start` folder and therefore no `AppConfig` equivalent (section 3.6).
 3. Its role provider is not configured in the repository either — `<roleManager enabled="true" />` with no provider element and no store connection string [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:15], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:55-59] (section 8.3).
 
 The administration code is complete and would work if the role and a member existed; as shipped, nothing in the repository brings either into being. The mark is "Unreachable", not "Absent", and the distinction matters to anyone estimating the work: the code needs no writing, only a provisioning path.
 
-**MVC 4's HTTP API surface is Unreachable.** The route template is mapped at every startup [src/MVC4/MvcMusicStore/App_Start/WebApiConfig.cs:12-16] and no controller can serve it: `git grep -l 'ApiController' -- '*.cs' | wc -l` → `0`, repository-wide.
+**MVC 4's HTTP API surface is Unreachable.** The route template is mapped at every startup [src/MVC4/MvcMusicStore/App_Start/WebApiConfig.cs:12-16] and no controller can serve it: `git grep -l 'ApiController' -- '*.cs' | wc -l` → `0`, repository-wide. Neither other edition maps such a route at all — `git ls-files '*WebApiConfig.cs'` returns MVC 4's file alone, and `git grep -l 'MapHttpRoute' -- '*.cs' | grep -v /packages/` returns the same single path — which is why row 24 reads **Unreachable** for MVC 4, where the surface exists but cannot be exercised, and **Absent** for MVC 3 and MVC 5, where it does not exist.
 
-**External login is Implemented-but-disabled in MVC 4 and MVC 5, and Absent in MVC 3.** MVC 5 ships the full action surface [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:200-265] and an external sign-in cookie [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:20], with every provider registration commented out [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35]; MVC 4 the same shape with its own registrations commented out [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29]. MVC 3 has no such code at all (command in section 8.3). This is the one row where "Implemented" would be actively misleading, since no user can complete an external sign-in in any edition.
+**External login is Unreachable in MVC 4 and MVC 5, and Absent in MVC 3.** MVC 5 ships the full action surface [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:200-265] and an external sign-in cookie [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:20], with every provider registration commented out [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35]; MVC 4 the same shape with its own registrations commented out [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29]. MVC 3 has no such code at all (command in section 8.3). **Unreachable is the exact mark for row 19's two cells, by the definition in section 9.1 rather than by judgement:** the implementation exists, and the precondition it depends on — at least one enabled provider registration carrying a client id and secret — is never satisfied, so no user can complete an external sign-in in any edition. "Implemented" would be actively misleading here, and no fourth "implemented but disabled" state is introduced to hold it, because the three marks already classify it. Row 20 keeps its Implemented mark in MVC 4 and MVC 5 for a different reason: the management page itself renders for a signed-in user [src/MVC5/MvcMusicStore/Views/Account/Manage.cshtml:22]; what row 19 forecloses is completing a new external sign-in, not reaching that page.
 
 ---
 
@@ -719,7 +816,9 @@ Duplication is measured here in **diff-line counts** — the number of `^[<>]` l
 
 **Core model files — eight of nine are identical.** Comparing `Album`, `Artist`, `Cart`, `Genre`, `MusicStoreEntities`, `Order`, `OrderDetail`, `SampleData` and `ShoppingCart`: all identical except `Album.cs`, which shows 2 diff lines. Both editions' `ViewModels` folders hold the same two files.
 
-So the material difference between MVC 4 and MVC 5 is the authentication layer and its supporting startup composition — `AccountController.cs`, the account view models, and the `App_Start` differences of sections 3.2 and 3.5. Everything else in the two editions is the same code. MVC 5's `AccountController.cs` is 382 non-blank lines of its 2,097 (sizing metric, section 2.4), which is the scale of the one genuinely divergent component.
+**The nine are the shared set, not the whole `Models` folder**, and the residue is where the two editions genuinely differ. MVC 4 carries `Models/AccountModels.cs`, which has no MVC 5 counterpart and is the file holding its **second `DbContext`** — `UsersContext` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:11] — plus its `Filters/` folder, which MVC 5 does not have at all; MVC 5 carries `Models/IdentityModels.cs` and `Models/AccountViewModels.cs`. So the equivalence claim holds for the catalog, cart and checkout layers and stops at the account layer, in the model folder exactly as it does in the controller folder.
+
+So the material difference between MVC 4 and MVC 5 is the authentication layer and its supporting startup composition — `AccountController.cs`, the account models and view models, MVC 4's `Filters/` attribute, and the `App_Start` differences of sections 3.2 and 3.5. Everything else in the two editions is the same code, including the cart unit-of-work model of section 7, which MVC 4 shares with MVC 5 **because its `ShoppingCart.cs` is one of the eight identical files** — a per-file identity, not an inference from the editions being alike. MVC 5's `AccountController.cs` is 382 non-blank lines of its 2,097 (sizing metric, section 2.4), which is the scale of the one genuinely divergent component.
 
 ### 10.2 MVC 3 is not equivalent in that way
 
@@ -743,13 +842,15 @@ Add the composition differences of section 3.6 and the capability gaps of sectio
 | Startup entry points | 1 | 1 | 2 |
 | `Application_Start` statements | 4 | 7 | 5 |
 | Controllers | 6 | 6 | 6 |
-| Child actions | 2 | 4 | 3 |
-| `DbContext` classes | 1 | 1 | 2 |
+| Child actions — declarations (view call sites) — basis in 5.3 | 2 (2) | 4 (5) | 3 (3) |
+| `DbContext` classes (section 6.3) | 1 | **2** — catalog plus `UsersContext` [src/MVC4/MvcMusicStore/Models/AccountModels.cs:11] | 2 — catalog plus `ApplicationDbContext` [src/MVC5/MvcMusicStore/Models/IdentityModels.cs:10] |
 | Cart unit-of-work owner | the cart | the controller | the controller |
 | Authentication stack | classic Membership | SimpleMembership | ASP.NET Identity over OWIN |
 | Async methods / awaits | 0 / 0 | 0 / 0 | 9 / 22 |
 | `ProjectReference` declarations | 0 | 0 | 0 |
-| Tests | none, repository-wide — `git grep -lE 'TestClass\|\[Fact\]\|xunit\|NUnit\|Microsoft\.VisualStudio\.TestTools' -- '*.cs' '*.csproj' \| wc -l` → `0` | | |
+| Tests | none | none | none |
+
+The last row is the only one in this table that is not per-edition arithmetic: **no edition contains a test of any kind, and neither does any other location in the repository**, so "none" in all three columns is a single absence rather than three separate ones. Its evidence is a command that ranges over the whole index rather than over an edition, which is why it is stated here instead of inside a cell — `git grep -lE 'TestClass|\[Fact\]|xunit|NUnit|Microsoft\.VisualStudio\.TestTools' -- '*.cs' '*.csproj' | wc -l` → `0`, repository-wide. Three narrower probes agree: `git ls-files '*Test*.csproj' | wc -l` → `0`, `git ls-files '*Test*.cs' | grep -v /packages/ | wc -l` → `0`, and `git ls-files '*packages.config' | grep -v /packages/ | xargs grep -hiE 'xunit|nunit|mstest|TestPlatform|Test.Sdk' | wc -l` → `0`, so no test project, no test file and no test-runner pin exists in any edition.
 
 The tutorial payload under `src/MVC3/MvcMusicStore-Assets/` is a fourth code location but **not** a fourth application: 3 C# files and 4 Razor files (section 2.5), with no project file and no solution, duplicating scaffolding for a project under construction.
 
@@ -771,19 +872,24 @@ This document is the as-is description. The facts it records have consequences o
 | Three child actions and their call sites | 5.3 | 05 (view components) |
 | Layout-level query fan-out on every page | 5.3 | 08 (performance debt) |
 | Mixed `virtual` navigation properties; string-based `Include` | 6.2 | 12 (loading behaviour) |
-| Two contexts with two connection-string conventions | 6.3 | 05, 12 |
+| Five `DbContext` declarations, 1 / 2 / 2 by edition; MVC 5's two connection-string conventions | 6.3 | 05, 12 |
+| MVC 4's hybrid identity architecture — one credential database, provider statics and an EF `UsersContext`, no shared unit of work; the user store and role storage bound in code to `DefaultConnection` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:41] | 8.2 | 05 (Identity and profile migration), 09 (posture), 10 (§10.1 topology) |
 | Destructive initializer and the 826-line seed | 6.4 | 08 (debt), 05 and 06 (schema lifecycle) |
 | Convention-only coupling between the two stores | 6.5 | 05 (Identity data migration) |
 | Session-held cart key; no `<sessionState>` or `<machineKey>` | 6.6 | 11 (statefulness) |
 | Per-edition persistence topology | 6.7 | 10 (database components) |
 | Two cart unit-of-work models | 7 | 08 (debt), 07 (sizing MVC 3 separately) |
-| Three authentication stacks; MVC 3's inherited providers | 8 | 09 (posture), 10 (host verification) |
+| Three authentication stacks; MVC 4's code-bound SimpleMembership store and MVC 3's inherited providers | 8 | 09 (posture), 10 (MVC 3 host verification) |
 | Plaintext administrator credential read at startup | 3.3, 3.5 | 09 |
 | Capability gaps: MVC 3 administration, MVC 4 HTTP API, external login | 9.3 | 07 (what must not be estimated as working), 09 |
 | Verb of `AddToCart`; the single AJAX JSON endpoint | 5.2 | 09 (anti-forgery), 12 (serialization) |
 | No test of any kind, repository-wide | 10.3 | 08 (debt), 07 (risk) |
 | Dependency versions and pins | referenced only | 02 (dependency inventory) |
 | Build outcomes and toolchain per edition | not covered here | 10 |
+| MVC 3's scaffold account namespace, in that edition alone | 5.1 | 05 (target namespace and layout); historical record only — nothing carries it forward |
+| Two contexts with two connection-string conventions | 6.3 | 05, 12 |
+| Destructive initializer and the 826-LF seed | 6.4 | 08 (debt), 05 and 06 (schema lifecycle) |
+| Three authentication stacks; MVC 3's inherited providers | 8 | 09 (posture), 10 (host verification) |
 
 ---
 

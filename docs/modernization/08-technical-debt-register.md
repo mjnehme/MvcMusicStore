@@ -1,3 +1,4 @@
+
 # 08 — Technical Debt Register
 
 ## 1. Purpose, scope and authoring contract
@@ -20,7 +21,7 @@ Debt intersects nearly every other deliverable, so the boundary is drawn explici
 
 | Not owned here | Owner | What this document does instead |
 | --- | --- | --- |
-| Build outcomes per edition, toolchain prerequisites, database components | **10** | Records that the build debt exists, with severity and owner; does not restate the diagnosis or the verified build result |
+| Build outcomes per edition, toolchain prerequisites, database components | **10** | Records that the build debt exists, with severity and owner; does not restate the diagnosis. The build status of the migration source is 10's to state — it carries MVC 5 as **blocked pending a Windows verification run** ([10 §5.4](10-build-and-deployment-requirements.md)) — and no entry below treats that build as verified |
 | The effort model — units, bands, assumptions, confidence | **07** | Supplies the quantities and states which are estimation-safe (section 12) |
 | Target framework, SDK band, project-format conversion, per-package outcomes | **04** | Records the debt that makes the conversion harder; names no target version |
 | Hosting target, deployment model, path-casing audit, key-ring location | **06** | Records the casing evidence it found by accident (section 10.7) and routes it |
@@ -28,6 +29,7 @@ Debt intersects nearly every other deliverable, so the boundary is drawn explici
 | The forward anti-forgery policy, the `AddToCart` verb change, DI design, Identity migration | **05** | Records today's coverage; proposes no policy |
 | No-successor constructs and differing-default successors | **12** | Records the debt; does not classify migration blockers |
 | Workstream sequencing and gates | **03** | Names the owner of each remediation; sequences nothing |
+| The forward anti-forgery policy, the `AddToCart` verb change, DI design, Identity migration, the duplicate-`Genre` browse contract | **05** | Records today's coverage and the measured source behaviour; proposes no policy and authors no competing contract |
 
 Two further exclusions. This register does not rank debt by remediation cost — that is an effort judgement and belongs to 07. And it does not propose an order of repair: severity is a statement about consequence, not a queue.
 
@@ -35,11 +37,24 @@ Two further exclusions. This register does not rank debt by remediation cost —
 
 The user directed *"Do not make code changes initially"*, and the attached environment setup instructions independently restate the same gate: *"Do not modify code until assessment and modernization plan are approved."* Two inputs agreeing on it is why the boundary extends even to the defects catalogued below.
 
-This is the deliverable that finds the fixable things. Every item in it stays exactly as it is: the stale fourth solution file, the duplicated schema scripts, the fourteen committed database binaries, the two committed `packages/` trees, the three IDE user-state files, the plaintext administrator credential, the unprotected state-changing POSTs. Each is documented; none is repaired. The evidence that the constraint held is a clean working tree apart from this documentation tree:
+This is the deliverable that finds the fixable things. Every item in it stays exactly as it is: the stale fourth solution file, the duplicated schema scripts, the fourteen committed database binaries, the two committed `packages/` trees, the three IDE user-state files, the plaintext administrator credential, the unprotected state-changing POSTs. Each is documented; none is repaired.
+
+**The evidence that the constraint held is a pair of commands, and the pair matters.** A `git status --porcelain` listing describes the state of **one checkout at one moment**, so it is recorded below as what it is — current-checkout evidence — while the durable half is a diff between **two pinned commits**, which any reader can re-run at any time and get the same answer. The range is pinned at both ends deliberately: `ea2552d..HEAD` moves as work continues, so a durability claim made against it would be a claim about a moving target.
 
 ```bash
-git status --porcelain          # -> only new files under docs/modernization/
+git status --porcelain
+# -> empty. Current-checkout evidence: nothing uncommitted in this checkout right now.
+
+git diff --name-status ea2552d..28e3652
+# -> 13 lines, every one an 'A' under docs/modernization/.
+#    No 'M' and no 'D' against any file that existed before.
+git diff --name-status ea2552d..28e3652 | wc -l                              # -> 13
+git diff --name-status ea2552d..28e3652 | grep -c '^A'                       # -> 13
+git diff --name-status ea2552d..28e3652 | grep -vc '^A'                      # -> 0
+git diff --name-status ea2552d..28e3652 | grep -v 'docs/modernization/' | wc -l   # -> 0
 ```
+
+`ea2552d` is the commit this documentation set was authored from and `28e3652` is the commit that completes it, so the range is exactly this engagement. The two commands are the two halves of the same acceptance criterion, and they differ in kind: the first is a statement about the checkout in front of you, the second a statement about the range — everything the engagement committed is an addition under `docs/modernization/`, and **no pre-existing repository file was modified or deleted**. During authoring the first command instead listed these thirteen files as untracked, which is the same fact at an earlier moment.
 
 All verification for this document was read-only. The one experiment that needed to write anything — the `core.ignorecase` probe of section 10.7 — was run in a throwaway repository created outside the checkout and deleted afterwards, and is flagged where it appears.
 
@@ -47,12 +62,14 @@ All verification for this document was read-only. The one experiment that needed
 
 **No user-specified rules were provided for this project.** `review_rules` returns exactly *"No user rules provided."*, re-verified while authoring this document. There is consequently no rule to name, summarize or cite, and no file forced into scope by one. The absence is not licence to lower the bar: this register is held to enterprise-standard best practice, expressed as the four contracts below.
 
-- **Citation.** Every claim about the existing system carries an inline `[<path>:<locator>]` citation at the point of the claim, with a repository-relative path that resolves in the checkout. There is no trailing reference list, because a citation collected at the end cannot be checked against the sentence it supports.
+- **Citation.** Every claim about the existing system carries an inline `[<path>:<locator>]` citation at the point of the claim, with a repository-relative path that resolves in the checkout. For a text artifact the locator is a line or a line range. For evidence that has no line to point at — a committed database binary, the tutorial PDF, the restore executable — the locator is the property that does resolve: a byte size, together with the command that reads it, never a line number the artifact cannot support. There is no trailing reference list, because a citation collected at the end cannot be checked against the sentence it supports.
 - **Reproducibility.** A claim that ranges over the repository — a count, a total, an absence — has no single line to point at, so its evidence is the command that produces it, stated adjacent to the claim and collected once more in section 14. Byte totals are summed with `awk`; `bc` is not installed on the verification host.
 - **Primacy of repository evidence.** Where this document and any other input disagree, the repository governs. Technical Specification §3.3 is cited only as a secondary cross-reference alongside repository evidence, never instead of it. Two places where a stated figure did not reproduce exactly are recorded openly, in sections 3.4 and 10.7, with the measured value and the command that produces it.
 - **One fact, one owner.** Section 1.2 is the boundary; section 13 is the routing map.
 
 Commands are given in canonical POSIX form. On the Windows verification host they were run through the bundled Git-for-Windows `bash` from the repository root, and every value shown after `# ->` is the value observed there.
+
+Markdown line length follows the corpus convention recorded in [`README.md` § 10 Markdown line-length convention](README.md#10-markdown-line-length-convention).
 
 ### 1.5 How to read an entry
 
@@ -88,7 +105,7 @@ Two metrics appear in this assessment and they answer different questions. This 
 
 Deliverable 07 estimates the authentication rewrite. Three numbers for MVC 5's `AccountController.cs` appear in this assessment, and only one of them is an estimation basis:
 
-> **382 is the figure deliverable 07 estimates against** — non-blank lines, the sizing metric [src/MVC5/MvcMusicStore/Controllers/AccountController.cs]. **The 422 and 426 quoted in section 3.3 are physical line counts and belong to the duplication comparison only.** They are not sizing figures and must not be used as one.
+> **382 is the figure deliverable 07 estimates against** — non-blank lines, the sizing metric over the whole file [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:1-422]. **The 422 and 426 quoted in section 3.3 are physical line counts and belong to the duplication comparison only.** They are not sizing figures and must not be used as one.
 
 The same discipline applies to every other pair below: a figure introduced under "diff" or "physical" never re-enters a sizing sentence.
 
@@ -133,7 +150,7 @@ for m in Album Artist Cart Genre MusicStoreEntities Order OrderDetail SampleData
 done                                    # -> Album 2, the other eight 0
 ```
 
-Eight are byte-identical; `Album.cs` shows **2 diff lines**. Both editions' `ViewModels` folders hold the same two files, `ShoppingCartViewModel.cs` and `ShoppingCartRemoveViewModel.cs`, and both pairs are byte-identical. The 826-physical-line seed [src/MVC5/MvcMusicStore/Models/SampleData.cs] is among the byte-identical files, so the largest single file in each edition is a verbatim copy of the other.
+Eight are byte-identical; `Album.cs` shows **2 diff lines**. Both editions' `ViewModels` folders hold the same two files, `ShoppingCartViewModel.cs` and `ShoppingCartRemoveViewModel.cs`, and both pairs are byte-identical. The seed — **826 LF, which is 827 content lines**, the file having no terminal newline [src/MVC5/MvcMusicStore/Models/SampleData.cs:1-827] — is among the byte-identical files, so the largest single file in each edition is a verbatim copy of the other. Deliverable 01 §2.4 owns the metric definition and gives the reproducing commands; the figure here is the physical-line metric used for duplication, never the non-blank sizing metric.
 
 ### 3.3 The one materially divergent file, in both metrics
 
@@ -166,7 +183,7 @@ done      # -> Home 7, Checkout 12, Store 25, ShoppingCart 33, StoreManager 35, 
 
 **Two of MVC 3's divergences are structural, and neither is visible in a diff count.**
 
-**First, MVC 3's cart owns its own context and commits internally.** `ShoppingCart` declares its own instance — `MusicStoreEntities storeDB = new MusicStoreEntities();` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:11] — and calls `SaveChanges()` at **five** points inside the cart itself [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:57], [:82], [:98], [:156], [:197]. Its `GetCart` overloads accordingly take **no context parameter** [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:17], [:25]. MVC 5's cart is the opposite design: it contains **zero** `SaveChanges()` calls, and both its overloads require the caller's context [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:21], [:29], so the caller owns the unit of work.
+**First, MVC 3's cart owns its own context and commits internally.** `ShoppingCart` declares its own instance — `MusicStoreEntities storeDB = new MusicStoreEntities();` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:11] — and calls `SaveChanges()` at **five** points inside the cart itself [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:57], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:82], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:98], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:156], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:197]. Its `GetCart` overloads accordingly take **no context parameter** [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:17], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs:25]. MVC 5's cart is the opposite design: it contains **zero** `SaveChanges()` calls, and both its overloads require the caller's context [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:21], [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:29], so the caller owns the unit of work.
 
 ```bash
 grep -c 'SaveChanges' src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/ShoppingCart.cs   # -> 5
@@ -199,7 +216,7 @@ done                               # -> Genre 10/15, Artist 149/303, Album 246/4
 | **Severity** | **High** — it does not break anything today, but it is the largest single quantity in this register and it multiplies every other code-debt entry below by the number of editions the entry holds in. Five byte-identical controller pairs mean five defects fixed twice or, historically, once. |
 | **Editions** | All three, but in two different relationships: MVC 4 and MVC 5 are near-copies; MVC 3 is a second architecture (section 3.4) |
 | **Evidence** | Sections 3.1–3.4: 5 of 6 controllers and 8 of 9 core models byte-identical between MVC 4 and MVC 5; MVC 3 divergent in transaction model and catalog content |
-| **Remediation** | Do **not** remediate by deleting or merging editions. Retain MVC 4 and MVC 3 read-only as the behavioural baseline the port is validated against, and let the duplication end naturally when one target application replaces the migration source. Deliverable 07 must size MVC 3 from its own measurements, never by analogy with MVC 4 or MVC 5. |
+| **Remediation** | Do **not** remediate by deleting or merging editions. Retain MVC 4 and MVC 3 read-only as **comparative and historical references** — MVC 5 is the sole executable behavioural baseline the port is validated against, and neither MVC 4 nor MVC 3 is driven by the characterization suite that captures it (F-08-15; architecture in [05](05-aspnet-core-migration-approach.md)) — and let the duplication end naturally when one target application replaces the migration source. Deliverable 07 must size MVC 3 from its own measurements, never by analogy with MVC 4 or MVC 5. |
 | **Owner** | The port (retention decision); deliverable 07 (sizing discipline) |
 
 ---
@@ -262,70 +279,304 @@ Every entry in this section was read in MVC 5 first, because MVC 5 is the migrat
 | --- | --- |
 | **F-08-02** | **Two files both register the EF database initializer** |
 | **Severity** | **Low** as a defect, but recorded because it is a real signal about ownership of startup |
-| **Editions** | MVC 5 only. MVC 4 registers no EF initializer of this kind, and MVC 3 has no `App_Start` folder at all. |
+| **Editions** | **The finding is the duplication, and the duplication is MVC 5 only.** The registration itself is **common to all three editions** — MVC 4 and MVC 3 each perform it exactly once, so neither has this defect and neither is missing the initializer. |
+| **Remediation** | One registration in one place. Under the target composition the question disappears with the two entry points, so the remediation is to make the ownership explicit while porting rather than to patch the current file. |
+| **Owner** | The migration workstream (startup composition) |
 
-`Database.SetInitializer(new SampleData())` is called twice during startup: once from the ASP.NET application object [src/MVC5/MvcMusicStore/Global.asax.cs:20] and once from the OWIN startup partial [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:16].
+`Database.SetInitializer(new SampleData())` is called **twice** during MVC 5's startup: once from the ASP.NET application object [src/MVC5/MvcMusicStore/Global.asax.cs:20] and once from the OWIN startup partial [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:16] — the two entry points deliverable 01 §3.1 records.
+
+**What the other two editions do, stated because the difference is one of count, not of kind.** Both register the same initializer with the same seed class, once each:
+
+| Edition | Registrations of `SampleData` | Where | Why one and not two |
+| --- | --- | --- | --- |
+| **MVC 5** | **2** | [src/MVC5/MvcMusicStore/Global.asax.cs:20] and [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:16] | It has two composition roots and both claim database bootstrapping |
+| **MVC 4** | **1** | [src/MVC4/MvcMusicStore/App_Start/AppConfig.cs:16], inside `AppConfig.Configure()`, which `Global.asax.cs` calls | One composition root: the application object delegates to `AppConfig` rather than registering anything itself |
+| **MVC 3** | **1** | [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:34], directly in `Application_Start` | It has no `App_Start` folder, so there is nowhere else for a second registration to live |
+
+`git grep -n 'SetInitializer' -- 'src/'` returns **five** lines outside the committed package payloads, and the fifth must not be miscounted as a sixth `SampleData` registration: `Database.SetInitializer<UsersContext>(null)` [src/MVC4/MvcMusicStore/Filters/InitializeSimpleMembershipAttribute.cs:28] does the opposite — it **disables** initialization for MVC 4's SimpleMembership context. So the correct census is four `SampleData` registrations across the three editions, distributed 2 / 1 / 1, plus one deliberate suppression in MVC 4.
 
 **What this is not.** `SetInitializer<TContext>` **sets** the strategy for a context type; it does not add to a list. The second call replaces the first, and exactly one initialization strategy is in force at runtime. This is **duplicated startup configuration, not a doubled destructive path** — the destructive behaviour is F-08-10's, and it would occur exactly once either way. Overstating this entry as "the database is initialized twice" would misrepresent the runtime.
 
-**Why it is nonetheless worth an entry.** Two files each believe they own database bootstrapping, and the repository's own documentation records the duplication as though it were intentional: the seed class is described as "configured as the database initializer in `Global.asax.cs` and `App_Start/Startup.App.cs`" [src/MVC5/README.md:31]. During the port, the two composition roots collapse into one, and a reader who trusts either file alone will conclude something different about who owns schema lifecycle. Deliverable 01 §3.4 records the same fact structurally.
+**Why it is nonetheless worth an entry.** Two files each believe they own database bootstrapping, and the repository's own documentation records the duplication as though it were intentional: the seed class is described as "configured as the database initializer in `Global.asax.cs` and `App_Start/Startup.App.cs`" [src/MVC5/README.md:31]. During the port, the two composition roots collapse into one, and a reader who trusts either file alone will conclude something different about who owns schema lifecycle. Deliverable 01 §3.4 records the same fact structurally. Note what the entry is **not** claiming: the destructive initializer is not an MVC 5 peculiarity — it is registered in all three editions and F-08-10 carries it for all three at Critical. What is peculiar to MVC 5 is that two files register it.
 
 | | |
 | --- | --- |
 | **Remediation** | One registration in one place. Under the target composition the question disappears with the two entry points, so the remediation is to make the ownership explicit while porting rather than to patch the current file. |
 | **Owner** | The migration workstream (startup composition) |
 
-### 5.2 F-08-03 — Per-page query fan-out from the shared layout (all three editions)
+### 5.2 F-08-03 — Per-page query fan-out from the shared layout (all three editions, in two different query shapes)
 
 | | |
 | --- | --- |
-| **F-08-03** | **Two uncached queries, one of them a nested aggregate, execute on every page render** |
-| **Severity** | **High** — the cost is paid by every request to every page, and one of the two queries aggregates across three tables |
-| **Editions** | MVC 5 (2 child actions in the layout), MVC 4 and MVC 3 (the same layout-level composition; deliverable 01 §5.3 and §10.3 record 4 and 2 child actions respectively) |
+| **F-08-03** | **Two uncached queries execute on every page render, and in two of the three editions one of them is a nested aggregate** |
+| **Severity** | **High** — the cost is paid by every request to every page, and in MVC 5 and MVC 4 one of the two queries aggregates across three tables |
+| **Editions** | All three carry the layout-level fan-out; **the query shapes are not the same in all three** and the table below states each. MVC 5 renders 2 child actions in the layout, MVC 4 2 of its 4, MVC 3 2 of its 2 — deliverable 01 §5.3 owns the per-edition declaration and call-site counts |
 
-Both child actions are invoked from the shared layout, so they run for every view that uses it — which is every view, since `_ViewStart.cshtml` sets the layout globally: `@Html.Action("GenreMenu", "Store")` [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25] and `@Html.Action("CartSummary", "ShoppingCart")` [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:26].
+Both child actions are invoked from the shared layout, so they run for every view that uses it — which is every view, since `_ViewStart.cshtml` sets the layout globally [src/MVC5/MvcMusicStore/Views/_ViewStart.cshtml:2]. The call sites differ by edition in helper and in line, and all six are located here rather than generalized from MVC 5's pair: `@Html.Action("GenreMenu", "Store")` [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25] and `@Html.Action("CartSummary", "ShoppingCart")` [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:26]; the same two helpers in MVC 4 at [src/MVC4/MvcMusicStore/Views/Shared/_Layout.cshtml:32] and [src/MVC4/MvcMusicStore/Views/Shared/_Layout.cshtml:25]; and `Html.RenderAction` rather than `@Html.Action` in MVC 3, at [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:21] and [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:16].
 
-- **`GenreMenu` is a nested aggregate with no cache.** It orders genres by a `Sum` over each genre's albums' order-detail quantities and takes nine [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52]. The ordering key is derived from the entire order history, and nothing memoizes it.
-- **`CartSummary` reads and materializes the cart on every page.** It loads the cart, projects and orders the titles, then enumerates the sequence twice — once for `Count()` and once for `Distinct()` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:89-96].
+**The nested aggregate exists in MVC 5 and MVC 4 only.** MVC 3's `GenreMenu` is a different query, and describing one shape as if it held in all three would misstate both the cost and the remediation:
+
+| Edition | `GenreMenu` query shape | `CartSummary` query shape |
+| --- | --- | --- |
+| **MVC 5** | **Nested aggregate.** Orders genres by a `Sum` over each genre's albums' order-detail quantities, then `Take(9)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52]. The ordering key is derived from the entire order history, and nothing memoizes it | Loads the cart, projects and orders the titles, then enumerates the sequence **twice** — once for `Count()` and once for `Distinct()` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:89-96] |
+| **MVC 4** | **The same nested aggregate** [src/MVC4/MvcMusicStore/Controllers/StoreController.cs:46-52] — the file is byte-identical to MVC 5's per section 3.1, so the shape is identical by measurement rather than by assumption | The same double enumeration [src/MVC4/MvcMusicStore/Controllers/ShoppingCartController.cs:89-96]; `ShoppingCartController.cs` is also byte-identical per section 3.1 |
+| **MVC 3** | **No aggregate at all.** `storeDB.Genres.ToList()` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:52] — no `Sum`, no ordering and **no `Take`**, so it materializes the whole genre table on every page. Cheaper per row than the aggregate and unbounded in a way the other two are not; deliverable 01 §9.2 row 5 records the same difference, as an unranked menu against MVC 5's ranked top nine | **One count, no title list.** `cart.GetCount()` into `ViewData` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:82-90] — no projection, no ordering and no second enumeration |
+
+```bash
+for e in src/MVC5/MvcMusicStore src/MVC4/MvcMusicStore \
+         src/MVC3/MvcMusicStore-Completed/MvcMusicStore; do
+  printf '%s: ' "$e"; grep -c 'OrderDetails.Sum' "$e/Controllers/StoreController.cs"
+done                                    # -> MVC5 1, MVC4 1, MVC3 0
+```
+
+**Four distinct writes change the aggregate, not one.** That is the evidence this register contributes; the caching policy built on it is not this register's to set, and section 5.2's remediation row cites its owner rather than stating a second one. The ordering key sums order-detail quantities **grouped by genre**, so it changes on any write that moves quantity between genres or changes which albums a genre owns — which is more than order placement:
+
+| Trigger | Why it changes the aggregate |
+| --- | --- |
+| **Checkout** | New `OrderDetail` rows add quantity to whichever genres the ordered albums belong to [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:44-51] |
+| **Album genre reassignment** | An album edit that changes `GenreId` moves that album's entire accumulated order-detail quantity from one genre's sum to another's, with no order written at all — the `Edit` POST marks the whole entity `Modified` and commits [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:86-94] |
+| **Album create** | A new album joins a genre's album set; it contributes zero until ordered, but it enters the set the `Sum` walks [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:53-60] |
+| **Album delete** | Removing an album removes its quantity from its genre's sum, which can reorder the top nine [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:116-121] |
 
 | | |
 | --- | --- |
-| **Remediation** | Cache the genre aggregate — its inputs change only when orders are placed — and scope the cart read so it is not recomputed for pages that do not display it. Both are behaviour-preserving. The mechanism by which the child actions become view components is deliverable 05's; this entry is about the query cost, which survives that conversion unless it is addressed deliberately. |
+| **Remediation** | **One policy governs this and it is not set here.** Deliverable 05 §8.2 owns the caching mechanism, deliverable 06 §6.4 owns cache placement and sizing, and deliverable 03 assigns the work to its workstream. That single owner-approved policy caches the genre aggregate **per instance under an absolute TTL**, **evicts the entry on the three administration writes** — create, edit and delete — and **deliberately does not evict on an order write**, so the checkout trigger above is answered by a bounded staleness window rather than by an eviction; the cart summary is **scoped rather than cached**. What this register requires is only that a policy account for **all four** triggers in the table above, and that one does: three by eviction and the fourth by a stated bound. The failure this evidence rules out is the opposite reading — an invalidation defined for checkout alone would leave an administrator's genre reassignment serving a stale menu indefinitely. MVC 3 is not a migration source and needs no aggregate cache; what its query lacks is the bound the other two have. The child-action-to-view-component conversion is deliverable 05's; this entry is about the query cost, which survives that conversion unless it is addressed deliberately. |
 | **Owner** | Performance |
 
-### 5.3 F-08-04 — Unbounded result sets (all three editions)
+#### 5.2.1 What actually invalidates the cached aggregate — four write paths, not one
+
+The genre aggregate is cacheable, but only against a correct statement of what changes it, and the obvious statement is wrong. **Its inputs are not changed only by orders.** Every write below moves the aggregate's value or its input set, and each is reachable from the shipped administration surface:
+
+| Event | Why the aggregate changes | Evidence |
+| --- | --- | --- |
+| **An order is placed** | New `OrderDetail` rows with quantities enter the `Sum` for whichever genres the ordered albums belong to | `CreateOrder` adds an `OrderDetail` per cart row [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:136-147], committed by the checkout write [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:44-51] |
+| **An album edit changes `GenreId`** | **No order is involved.** The POST binds the whole posted `Album` and marks it `EntityState.Modified`, so a changed `GenreId` reclassifies that album's *existing* order-detail quantities out of one genre's `Sum` and into another's — two genres move at once, from a single administrative action | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:86-92], specifically the `EntityState.Modified` assignment at [:91] and the save at [:92]; the aggregate it feeds is [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52] |
+| **An album is deleted** | The album leaves its genre's album set, and its order-detail quantities leave that genre's `Sum` with it | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:119-121] |
+| **An album is created** | The album joins a genre's album set immediately. Its contribution to the `Sum` is zero until it is ordered, so the *ordering* does not move on the create itself — which is precisely why a cache keyed on "orders only" would look correct in testing and drift in production | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:58-59] |
+
+The safe rule follows from the table rather than from case analysis: **invalidate on any committed write to `Albums` or `OrderDetails`**, not on order placement alone. The genre set itself is stable — no controller in any edition writes `Genres`; the seed is the only writer [src/MVC5/MvcMusicStore/Models/SampleData.cs:9] — so what moves is the ordering and the membership of the top nine, never the existence of a genre.
+
+**Cross-replica propagation is an expiry, and the staleness window is its length.** Deliverable [06](06-azure-hosting-recommendations.md) owns the caching mechanism and has taken the decision — the **layout-aggregate caching decision**, stated in full in 06 §6.4 alongside the session cache table it deliberately does not use, and recorded as **register row S7** in 06 §13.1: the aggregate is cached **in memory, per instance**, not in the SQL-backed distributed cache. This register does not re-decide that, and records only its direct consequence for invalidation: an eviction performed by the instance that handled the write is local to that instance, so **no invalidation message reaches the other replicas and the only mechanism that converges them is the entry's own expiry**. Under 06's decision that expiry is **absolute, at 60 seconds** — absolute rather than sliding, which is the property that matters here: a sliding window on a value read during every page render would be refreshed by the reads themselves, so a continuously served instance could hold a stale ordering indefinitely. With an absolute window, a replica that did not serve the write renders the previous ordering for at most 60 seconds. That is acceptable for a popularity-ordered navigation menu and would not be for anything transactional, which is the distinction a reader has to be able to make. If a tighter bound is ever required, the placement decision is 06's to revisit, not this entry's.
+
+#### 5.2.2 The rest of the contract, cited to its owners — an invalidation rule alone does not make a cache correct
+
+The four write paths above are **this register's** contribution, and the only part of the caching contract it decides. The remaining elements are decisions taken elsewhere, and they are collected here for one reason: an entry that named the invalidation paths and nothing else would be satisfied by an implementation that caches nothing at all, or that caches per user, or that stampedes on every cold start. Every row below is a **citation, not a second decision** — where this register and an owner ever differ, the owner governs. The two owners are 06 §6.4 with its register row S7 for the mechanism, and [05](05-aspnet-core-migration-approach.md)'s required-coverage table for the acceptance criteria.
+
+| Element | What the remediation must carry | Owner |
+| --- | --- | --- |
+| **Key** | One **global versioned key**, `genre-menu:v{n}`, with the version stamp bumped in-process after a committed write. One key for every user, because the aggregate is identical for all of them — a per-user or per-request key would cache nothing while appearing to | [06](06-azure-hosting-recommendations.md), the caching decision |
+| **Store and lifetime** | `IMemoryCache`, per instance, with the **absolute 60-second** expiration of the paragraph above | [06](06-azure-hosting-recommendations.md), the same decision |
+| **Invalidation** | Any **committed** write to `Albums` or `OrderDetails` — all four paths of the table above, including the administrator `GenreId` edit. After the commit, never before it: a stamp bumped ahead of a transaction that then rolls back would publish an ordering the database never held | **This register**, §5.2.1 above; executed by the port |
+| **Concurrency** | **Per-key single-flight**, so a cold instance under concurrent load issues **exactly one** database read rather than one per in-flight request. Without it, the nested aggregate is at its most expensive precisely when the instance is busiest | [06](06-azure-hosting-recommendations.md), the caching decision |
+| **Failure** | Serve the **last known good** value, or render the menu empty and log. The component renders from the shared layout on every page, so a failure in a navigation aggregate must **never** become a 500 | [06](06-azure-hosting-recommendations.md), the caching decision |
+| **Acceptance** | Exactly **one** database read on a cold miss under N concurrent requests, **zero** on a warm hit, one after the expiration elapses, and one after each invalidation event — criteria a no-cache implementation **fails** | [05](05-aspnet-core-migration-approach.md), its required-coverage table for the behaviour suite |
 
 | | |
 | --- | --- |
-| **F-08-04** | **Two list actions materialize an entire table with no paging or projection** |
-| **Severity** | **Medium** — bounded today by the seeded catalog size, unbounded in principle |
-| **Editions** | All three; the code is byte-identical between MVC 4 and MVC 5 per section 3.1 |
+| **Remediation** | **Cache the genre aggregate under the complete contract of §5.2.1 and §5.2.2** — this register's invalidation rule covering **all four write paths**, together with the key, store, absolute 60-second lifetime, per-key single-flight and never-a-500 failure fallback that deliverable [06](06-azure-hosting-recommendations.md)'s caching decision owns, and the cold-miss/warm-hit read counts that deliverable [05](05-aspnet-core-migration-approach.md)'s required-coverage table owns as acceptance. And scope the cart read so it is not recomputed for pages that do not display it — in MVC 5 and MVC 4 that also means eliminating the double enumeration and the per-row lazy load by projecting the titles in the query. Both remain behaviour-preserving. The mechanism by which the child actions become view components is deliverable 05's; this entry is about the query cost and the correctness of the invalidation rule, both of which survive the conversion unless they are addressed deliberately. |
+| **Owner** | Performance |
+
+### 5.3 F-08-04 — Unbounded result sets, and eight repeated tracked lookup reads (all three editions)
+
+| | |
+| --- | --- |
+| **F-08-04** | **Two list actions materialize an entire table with no paging or projection, and the administration controller re-reads two whole lookup tables — tracked — on every one of its four form actions** |
+| **Severity** | **Medium**, set by the two list actions: bounded today by the seeded catalog size, unbounded in principle. The eight lookup reads of §5.3.1 are **Low** in their own right — a per-request cost and a tracking defect rather than an unbounded one — and are recorded inside this entry rather than as a separate finding because they are the same shape of query at the same site. |
+| **Editions** | All three; the code is byte-identical between MVC 4 and MVC 5 per section 3.1, and MVC 3 carries the same two sites and the same eight reads at its own line numbers |
 
 `StoreController.Index` materializes every genre [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:18]. The administration list does the same for albums, with two eager `Include`s and an `OrderBy`, then `ToList()` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:22-24] — 462 albums as seeded, each with its genre and artist loaded.
 
+#### 5.3.1 The eight `SelectList` lookup reads, enumerated
+
+An inventory that stops at the two list actions understates the administration controller's read volume by a factor of four, so the eight remaining reads are named here with their sites. Each of the four form actions builds two drop-down lists, and each list is constructed from a `DbSet` directly — `new SelectList(db.Genres, "GenreId", "Name")` and the `db.Artists` equivalent — so each is an unbounded, **change-tracked** read of a whole lookup table whose rows the action never modifies.
+
+| Action | Reads | Site (MVC 5) | Same site in MVC 4 | Same site in MVC 3 |
+| --- | --- | --- | --- | --- |
+| `Create` (GET) | `Genres`, `Artists` | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:45-46] | [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:45-46] | [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:40-41] |
+| `Create` (POST, invalid model) | `Genres`, `Artists` | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:63-64] | [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:63-64] | [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:58-59] |
+| `Edit` (GET) | `Genres`, `Artists` | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:78-79] | [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:78-79] | [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:69-70] |
+| `Edit` (POST, invalid model) | `Genres`, `Artists` | [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:95-96] | [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:95-96] | [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:86-87] |
+
+**Eight reads per edition, and they are repeated rather than merely numerous.** The two POST rows execute only on the invalid-model path, so a single valid create or edit performs two of the eight; an administrator correcting a validation error performs four. Two properties make them worth an inventory row rather than a footnote:
+
+- **They are change-tracked for no reason.** A `SelectList` needs identifier and display values and never writes to the entities behind them, so every genre and artist entering the change tracker is overhead the request cannot use — and it sits in the same context instance that the action then saves, per F-08-09.
+- **They are unbounded like the two list actions.** MVC 5 seeds 15 genres and 303 artists and MVC 3 seeds 10 and 149, both counted in section 3.4 — small either way; the artist table is the one that grows with real use, and nothing in the query bounds it.
+
+**The mechanics of the replacement read are this register's own, and are stated here rather than
+routed.** No other deliverable specifies them — the port design owns the injection and lifetime change
+that these reads sit inside (F-08-09), and it owns paging and projection for the *two list pages*, but
+nothing anywhere carries a lookup-read or tracking-behaviour contract for the four administration form
+actions. So this entry carries it, in four parts:
+
+- **Projected, not entity.** Each read returns only the two values the drop-down renders — the
+  identifier and the display name — rather than a `Genre` or an `Artist` instance. That is what the
+  `SelectList` consumes today [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:45-46] and
+  it is all it consumes.
+- **Untracked.** The read must not place rows in the change tracker. This is the part with a
+  correctness dimension rather than only a cost one: the same context instance is saved on these paths,
+  so tracked lookup entities are attached state that nothing on the path intends to write.
+- **Read at most once per lookup table per request, and reused.** **This does not reduce today's
+  per-request read count**, and the entry does not claim it does: each of the four actions builds one
+  list per table, so it performs one read per table already. The rule is stated as a **bound** so that
+  a later refactor which renders these lists from more than one place — a shared editor partial, a
+  re-render after a failed save — cannot silently multiply them.
+- **Deterministically ordered.** A materialized list reused within a request must render the same
+  option order every time it is rendered, so the read carries an explicit order — display name, then
+  identifier as the tiebreaker. The source declares **no** order at all at these four sites, so this
+  makes an unspecified order specified; it changes nothing the source defines, and the selected value
+  in each drop-down is unaffected.
+
+**Acceptance**, stated so a no-op implementation fails it: for each of the four form actions, **at most
+one read per lookup table per request**, **no lookup entity in the change tracker** at the point the
+action saves, and the rendered options and their selected values **unchanged** from the baseline. No
+latency or throughput figure is asserted anywhere in this entry — this register has measured none, and
+[07](07-effort-risks-sequencing.md) is where cost is expressed.
+
 | | |
 | --- | --- |
-| **Remediation** | Paging or projection at both sites. The administration list is the one that grows with real use. |
-| **Owner** | The port |
+| **Remediation** | Paging or projection at the two list sites — the administration list is the one that grows with real use. For the eight lookup reads of §5.3.1: **projected, untracked, deterministically ordered lookups, bounded at one read per lookup table per request**, in the four parts §5.3.1 states and against the acceptance §5.3.1 states with them. Those mechanics are **this register's own remediation** — no other deliverable carries a lookup-read or tracking contract for these four actions — and they are behaviour-preserving: the rendered options and their selected values are unchanged. |
+| **Owner** | The port, for both parts, executing §5.3.1's contract; **this register** owns that contract and its acceptance; performance consulted on the lookup reads |
 
 ### 5.4 F-08-05 — Unchecked query results, unevenly distributed (all three editions)
 
 | | |
 | --- | --- |
-| **F-08-05** | **`Single` on unvalidated input, and one `Find` result dereferenced without a null check** |
+| **F-08-05** | **Four `Single` calls on unvalidated input, three unguarded `Find` results, and one guard that cannot be reached** |
 | **Severity** | **Medium** — the failure mode is an unhandled exception on a crafted or stale request, and section 7.1 establishes that nothing records it |
-| **Editions** | All three |
+| **Editions** | All three — **but not identically**: the guarded/unguarded distribution differs by edition, per the table below, and the "three of four guarded" pattern holds in two editions of the three |
+| **Remediation** | `SingleOrDefault` with an explicit not-found result at the three `Single` sites, and one null check in `DeleteConfirmed`. Four small changes, all behaviour-preserving for valid input. |
+| **Owner** | The port |
 
-The distribution matters, because most of this code is careful and an entry that flattened it would be unfair to the codebase:
+The distribution matters, because most of this code is careful and an entry that flattened it would be unfair to the codebase. It is set out twice below, because two different flattenings are possible: **by edition**, where the guarded proportion differs, and **by site**, where the earlier count of this entry was short. Neither table repeats the other.
 
-- **`.Single(g => g.Name == genre)` throws on an unknown or duplicated genre** [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:31], reached from a query-string value with no validation.
-- **The cart paths use `.Single(...)` the same way** — on an album id [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:38] and on a cart record id supplied by the AJAX caller [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:62].
-- **In the administration controller, three of four `Albums.Find(id)` calls are null-checked** and return `HttpNotFound()` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:32], [:73], [:105]. **The exception is `DeleteConfirmed`**, which passes the result of `Find` straight into `Albums.Remove` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:119-120] — one missing check in a controller that otherwise gets it right three times.
+**The guarded/unguarded distribution, per edition.** This is the correction that matters most in this entry, because "three of four guarded" is a true statement about two editions and a false one about the third:
+
+| Edition | Administration `Albums.Find` calls | Guarded | Locators |
+| --- | --- | --- | --- |
+| **MVC 5** | 4 | **3** — `Details`, `Edit`, `Delete` return `HttpNotFound()`; `DeleteConfirmed` does not check | `Find` at [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:32], [:73], [:105], [:119]; the guards' results at [:35], [:76], [:108] |
+| **MVC 4** | 4 | **3** — the same three actions, at the same line numbers | `Find` at [src/MVC4/MvcMusicStore/Controllers/StoreManagerController.cs:32], [:73], [:105], [:119]; the guards' results at [:35], [:76], [:108] |
+| **MVC 3** | 4 | **0** — no call is checked, and the edition contains **no `HttpNotFound()` call anywhere** | `Find` at [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:31] (`Details`), [:68] (`Edit`), [:96] (`Delete`), [:106] (`DeleteConfirmed`) |
+
+`git grep -c 'HttpNotFound()' -- 'src/MVC5/*.cs' 'src/MVC4/*.cs'` returns `3` for each; the same search over `src/MVC3/*.cs` returns nothing at all. MVC 3's two worst cases are worth naming rather than leaving inside a count: `Edit` dereferences the possibly-null result on the next line, `album.GenreId` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreManagerController.cs:69], and `DeleteConfirmed` passes it to `Albums.Remove` [:107]. Deliverable 12 records the same distribution from the blocker side, in [F-12-08](12-migration-blockers.md#f-12-08--three-httpnotfound-calls), where the absence is what makes MVC 3 have no not-found path to port.
+
+**The full census in MVC 5, the migration source.** The earlier version of this entry counted three `Single` sites and one unchecked `Find`. The complete count is **four** input-reachable `Single` sites and **six** `Albums.Find` sites, three of the six unguarded — and two of the unguarded ones are outside the administration controller, which is where a reader of the previous count would not have looked:
+
+| # | Site | Reached from | Guarded? | What happens with no row |
+| --- | --- | --- | --- | --- |
+| 1 | `Genres.Include("Albums").Single(g => g.Name == genre)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:31] | A query-string value, unvalidated | No | Throws — the only site where **more than one** row is also possible (see below) |
+| 2 | `Albums.Single(album => album.AlbumId == id)` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:38] | A route value, in `AddToCart` | No | Throws |
+| 3 | `Carts.Single(item => item.RecordId == id).Album.Title` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:62] | The AJAX request body, in `RemoveFromCart` | No | Throws; the read is also unscoped to the caller's cart, which deliverable 09 owns as a security finding rather than as debt |
+| 4 | `Carts.Single(cart => cart.CartId == ShoppingCartId && cart.RecordId == id)` [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:64] | The same AJAX id, one layer down | No — see the unreachable guard below | Throws |
+| 5 | `Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:32] | Administration `Details` | **Yes** [:35] | `HttpNotFound()` |
+| 6 | `Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:73] | Administration `Edit` | **Yes** [:76] | `HttpNotFound()` |
+| 7 | `Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:105] | Administration `Delete` | **Yes** [:108] | `HttpNotFound()` |
+| 8 | `Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:119] | Administration `DeleteConfirmed` | No | `null` passed to `Albums.Remove` [:119-120] |
+| 9 | `Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:38] | **The public album-detail page**, a route value | No | `null` model passed to the view [:40], which then dereferences it while rendering |
+| 10 | `Albums.Find(item.AlbumId)` [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:134] | **Order creation**, per cart line | No | `null` dereferenced at `album.Price` [:140], inside the checkout write |
+
+**One guard reads as protection and provides none.** `RemoveFromCart` tests `if (cartItem != null)` [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:70] on the result of the `Single` at [:64]. `Single` never returns `null` — it throws when the row is absent — so the guarded block is entered on every path that reaches it and the `else` case it implies is **unreachable**. This is worth recording separately from the missing guards, because it is the more dangerous shape: a reviewer scanning for null checks finds one here and moves on.
+
+**Remediation — and the two failure modes must not be collapsed, because one operator change fixes only the first.**
+
+| Failure mode | Where it applies | What actually fixes it |
+| --- | --- | --- |
+| **Zero rows** | All four `Single` sites (1-4), and the three unguarded `Find` sites (8, 9, 10) | `SingleOrDefault` at sites 1-4 — `Find` already returns `null` — followed by an **explicit** not-found result at sites 1, 2, 3, 4, 8 and 9, and by a decision at site 10, where a missing album during order creation is a checkout failure rather than a page-level 404. Sites 5, 6 and 7 need **no** remediation: they already return a not-found result, and their only change is the result type, which deliverable 12's [F-12-08](12-migration-blockers.md#f-12-08--three-httpnotfound-calls) owns. The `if (cartItem != null)` guard at [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:70] becomes meaningful once [:64] stops throwing |
+| **More than one row** | **Site 1 only.** `Genre.Name` is a plain `string` property with no key and no unique constraint declared on the model [src/MVC5/MvcMusicStore/Models/Genre.cs:8], so two genres may share a name. The other three `Single` predicates all include a primary key — `Album.AlbumId`, and `Cart.RecordId`, which carries `[Key]` [src/MVC5/MvcMusicStore/Models/Cart.cs:8-9] — so at most one row can match | **Not `SingleOrDefault`.** That operator throws on a duplicate exactly as `Single` does; changing it hides the empty case and leaves this one. A duplicate is a **data-integrity condition**, not a request error: it must be detected, logged with the offending value, and surfaced as a server error rather than as a not-found, and the durable fix is a uniqueness constraint on the column. Substituting the operator and declaring the site handled is the specific mistake this row exists to prevent |
 
 | | |
 | --- | --- |
-| **Remediation** | `SingleOrDefault` with an explicit not-found result at the three `Single` sites, and one null check in `DeleteConfirmed`. Four small changes, all behaviour-preserving for valid input. |
-| **Owner** | The port |
+| **Remediation** | Per the two-failure-mode table above: an explicit not-found path at every zero-row site, a distinct data-integrity path at site 1, and removal of the unreachable guard's false assurance. The **target contracts** — which result type each site returns, what the checkout does when an album vanishes mid-order, and what the AJAX endpoint returns — belong to deliverable 05, which owns the per-action behaviour; this register owns the census and the distinction |
+| **Owner** | The port; deliverable 05 for the target contracts |
+
+**Why this stays Medium.** The consequence at every site is an unhandled exception — a 500, or a rendering failure — with no data corruption and no authorization bypass, on input that is crafted, stale, or a deleted-album race. Two aggravating interactions are real but are owned elsewhere at their own severities: site 10 fails inside the order write, where the bare `catch` of F-08-08 (High) discards the exception and redisplays the form, and F-08-13 (Critical) means nothing anywhere records that it happened. Medium is the consequence of *this* entry; the invisibility of the failure is charged to those two.
+
+#### 5.4.1 `SingleOrDefault` closes two of these sites and only half of the third
+
+**What the operator does, stated plainly, because the difference is the whole of this sub-section.**
+`SingleOrDefault` converts the **zero-row** case into a `null` the caller can turn into a not-found
+result. It does **not** convert the multiple-row case: with more than one matching row it **still
+throws**, for the same reason `Single` does. So the substitution is a **complete** fix wherever the
+predicate can match at most one row, and a **half** fix wherever it can match more — and a remediation
+that recorded it as a fix for "an unknown or duplicated genre" would be claiming something the operator
+does not do.
+
+**Where it is complete.** Both cart sites filter on a key — `Album.AlbumId`
+[src/MVC5/MvcMusicStore/Models/Album.cs:10] and the `[Key]`-annotated `Cart.RecordId`
+[src/MVC5/MvcMusicStore/Models/Cart.cs:8-9] — so the multiple-row case cannot arise and an explicit
+not-found result answers the site entirely. The same is true of `DeleteConfirmed`'s `Find`, which takes
+a key by definition.
+
+**Where it is not.** `Browse` filters on `g.Name == genre`
+[src/MVC5/MvcMusicStore/Controllers/StoreController.cs:30-31] against a property carrying **no key, no
+unique constraint and no annotation of any kind** [src/MVC5/MvcMusicStore/Models/Genre.cs:8]; the
+entity's key is `GenreId` [:7]. Two facts make duplicate names a state the target may legally hold
+rather than a hypothetical:
+
+- **The source model establishes no uniqueness on the name**, and this assessment does not treat the
+  source *schema* as established either — it is evidence rather than proof until the extraction runs
+  [12 §5](12-migration-blockers.md), and F-08-12 records that the migration source ships no schema
+  script to check against.
+- **The migration deliberately preserves such duplicates.** Deliverable
+  [05](05-aspnet-core-migration-approach.md)'s duplicate-detection rule names `Genre.Name` explicitly
+  among the candidate natural keys the load **does not reject on** — duplicates there are counted,
+  enumerated by key in a controlled artifact and carried into the target as they stand, because
+  rejecting on an undeclared natural key would reject legitimate historical rows. So the browse path has
+  to be correct **in the presence of** duplicates, not merely correct once someone assumes there are
+  none.
+
+**The resolution contract belongs to deliverable 05, and this register does not author a second one.**
+What the browse path does in the presence of duplicate genre names is a migration-and-interface
+decision rather than a debt measurement, so under the one-fact-one-owner rule of §1.2 it is stated in
+full in [05](05-aspnet-core-migration-approach.md) — the **duplicate-`Genre` browse contract** — and
+cited here. What this register keeps is what only it carries: the measured source behaviour above, its
+throw-on-duplicate consequence, the severity, the direction of remediation and the owner.
+
+**Three properties of that contract are named here, because the debt is not provably closed without
+them.** They are named and cited, not restated: [05](05-aspnet-core-migration-approach.md) holds the
+branch mechanics, the migration stage the schema change belongs to, the routing form and the test cases.
+
+- **It is non-lossy unconditionally.** The migration **merges no `Genre` row, deletes no `Genre` row and
+  renames no `Genre` value.** Merging, deleting, renaming, and breaking a tie by assigning a distinct
+  name, are therefore **not** dispositions this register offers, and not one of the four is non-lossy:
+  merging or deleting removes a catalog row the source holds; renaming rewrites a value visitors read,
+  and one that both internal links are built from [src/MVC5/MvcMusicStore/Views/Store/Index.cshtml:13],
+  [src/MVC5/MvcMusicStore/Views/Store/GenreMenu.cshtml:9-11]; and asserting uniqueness on the name
+  before the extraction has established the target column's collation can fail, or fold two rows
+  together, under equality semantics that have not yet been configured.
+- **It is gated on the schema extraction, and both of its branches are specified there.** Whether a
+  duplicate `Genre.Name` exists under the target's configured collation is a *result* the extraction
+  produces, never a premise either document may assume: F-08-12 records that the migration source ships
+  no schema script to check against, and [12 §5](12-migration-blockers.md) records the extraction as the
+  gate. One branch applies where the extraction finds no duplicate name and one where it finds
+  duplicates; this register selects neither and pre-empts neither.
+- **The duplicates branch is a conditional approved delta, and it is governed as one.** Its approval
+  owners are **Product and Data**, and it carries its own coverage. Both records live in
+  [05](05-aspnet-core-migration-approach.md) — the approved-delta table and the required-coverage table
+  it owns — and **this register adds no row to either.** That is exactly why it must not propose a
+  data-changing or URL-changing disposition of its own: a disposition invented here would reach
+  implementation with no approval owner, no delta row and no test, which is the failure mode the
+  one-fact-one-owner rule exists to prevent.
+
+**First-match-wins remains explicitly rejected**, and that rejection is this register's to keep, because
+it is the reason the naive fix is wrong rather than merely incomplete. Silently taking one of two
+matching genres makes the other permanently unreachable, and it does so with no exception, nothing in
+the source to indicate it happened, and — per section 7.1 — nothing anywhere that would record it.
+
+**Acceptance for this finding, which is two cases and not one.** The browse path must be exercised with
+**zero** matching genres and with **more than one**, and neither may produce an unhandled exception. The
+zero-row case is closed at this site by `SingleOrDefault` and an explicit not-found result — the
+remediation direction this entry states for all three `Single` sites. The multiple-row case is answered
+by whichever branch [05](05-aspnet-core-migration-approach.md)'s contract selects, so **its coverage row
+is 05's to place**, in the required-coverage table 05 owns: this register does not place it, does not add
+a coverage row of its own, and does not assume one is already there. What this entry fixes is that the
+multiple-match case exists as a case at all and is not answered by an operator substitution that
+still throws. The two key-predicate sites need their not-found paths exercised for the same reason at
+a lower severity.
+
+| | |
+| --- | --- |
+| **Remediation** | `SingleOrDefault` with an explicit not-found result at the two key-predicate `Single` sites, and one null check in `DeleteConfirmed` — three small changes, all behaviour-preserving for valid input. **The genre-browse site needs more than the operator substitution**, and §5.4.1 states what: `SingleOrDefault` leaves a duplicated genre name throwing, so the substitution plus an explicit not-found result closes only the zero-row case there, and the multiple-row case is answered by the **duplicate-`Genre` browse contract** that deliverable [05](05-aspnet-core-migration-approach.md) owns and §5.4.1 cites — non-lossy unconditionally, gated on the schema extraction, its duplicates branch governed as a conditional approved delta in 05's own delta and coverage tables. This register proposes no merge, deletion, rename or uniqueness disposition of its own, and first-match-wins stays rejected. |
+| **Owner** | The port, for the three code changes and for the browse site's zero-row not-found result; **05** for the duplicate-`Genre` browse contract that answers the multiple-row case, including the approval owners and coverage its conditional branch carries |
 
 ### 5.5 F-08-06 — Anti-forgery validation covers one controller of the four that need it
 
@@ -335,7 +586,7 @@ The distribution matters, because most of this code is careful and an entry that
 | **Severity** | **High** — cross-site request forgery against album administration, cart removal and order placement |
 | **Editions** | MVC 5 and MVC 4 both leave 5 of their state-changing POSTs unvalidated; **MVC 3 validates nothing anywhere** |
 
-**MVC 5, measured.** Thirteen POST actions exist across the six controllers. All eight in `AccountController` carry `[ValidateAntiForgeryToken]` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:55], [:88], [:113], [:147], [:199], [:236], [:264], [:301]. None of the other five does:
+**MVC 5, measured.** Thirteen POST actions exist across the six controllers. All eight in `AccountController` carry `[ValidateAntiForgeryToken]` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:55], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:88], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:113], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:147], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:199], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:236], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:264], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:301]. None of the other five does:
 
 | Unvalidated state-changing POST | Locator | Effect |
 | --- | --- | --- |
@@ -345,7 +596,7 @@ The distribution matters, because most of this code is careful and an entry that
 | `ShoppingCartController.RemoveFromCart` | [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:54] | Removes a cart line and commits |
 | `CheckoutController.AddressAndPayment` | [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:25] | Writes an order and empties the cart |
 
-**One state-changing action is a `GET` and no anti-forgery policy can cover it.** `AddToCart` declares no verb attribute, loads the album [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:37-38], mutates the cart [:43] and commits [:45] before redirecting [:48] — the whole action spanning [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:33-49]. Token emission is not the gap: ten MVC 5 views emit `@Html.AntiForgeryToken()` (`git ls-files 'src/MVC5/*.cshtml' | xargs grep -l AntiForgeryToken | wc -l` → `10`). **Emission is not validation.**
+**One state-changing action is a `GET` and no anti-forgery policy can cover it.** `AddToCart` declares no verb attribute, loads the album [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:37-38], mutates the cart [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:43] and commits [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:45] before redirecting [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:48] — the whole action spanning [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:33-49]. Token emission is not the gap: ten MVC 5 views emit `@Html.AntiForgeryToken()` (`git ls-files 'src/MVC5/*.cshtml' | xargs grep -l AntiForgeryToken | wc -l` → `10`). **Emission is not validation.**
 
 **Per edition, so the finding is not over-generalized:**
 
@@ -383,7 +634,7 @@ grep -n  'HttpPost'    src/MVC5/MvcMusicStore/Controllers/StoreManagerController
 #  116:        [HttpPost, ActionName("Delete")]
 ```
 
-`StoreManagerController` has **three** POST actions [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:53], [:86], [:116]. A register reporting two would understate the exposed surface by one delete action.
+`StoreManagerController` has **three** POST actions [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:53], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:86], [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:116]. A register reporting two would understate the exposed surface by one delete action.
 
 | | |
 | --- | --- |
@@ -397,28 +648,40 @@ grep -n  'HttpPost'    src/MVC5/MvcMusicStore/Controllers/StoreManagerController
 | **F-08-07** | **An administrator username and password are committed in cleartext application settings and consumed at startup** |
 | **Severity** | **High** — a credential in version control is compromised for the life of the history, and it provisions the account that owns the administration surface |
 | **Editions** | MVC 5 and MVC 4, with the same two setting keys and the same committed value. MVC 3 has no provisioning path at all — deliverable 01 §9.3 records the consequence. |
+| **Remediation** | Remove the credential from source entirely and provision the administrator through an operator-invoked command that takes the secret from a non-persistent channel. The mechanism, the audit record and the idempotence requirements are specified by the migration approach; the security analysis is deliverable 09's. **This register does not repair it** — see section 1.3. |
+| **Owner** | Security |
 
 Both editions commit `DefaultAdminUsername` and `DefaultAdminPassword` as plaintext `appSettings` values — [src/MVC5/MvcMusicStore/Web.config:16-17] and [src/MVC4/MvcMusicStore/Web.config:25-26] — and both read them at startup to create the account and its role: MVC 5 through `ConfigurationManager.AppSettings` in a fire-and-forget `private async void CreateAdminUser()` [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:21-24], MVC 4 through the equivalent SimpleMembership path in `AppConfig`. The literal values are deliberately not reproduced in this document; they are readable at the locators above.
 
 Two aggravating properties, both structural:
 
 - **The provisioning call is `async void`** [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:21], so a failure inside it is unobservable — and section 7.1 establishes there is no log to observe it in.
-- **The credential store itself is committed.** F-08-11 records fourteen database binaries in the repository, including all three editions' credential stores, so the provisioned account exists in tracked data as well as in tracked configuration.
+- **The credential store itself is committed.** F-08-11 records fourteen database binaries in the repository, including the declared credential stores of **both editions this entry holds in** — MVC 5's ASP.NET Identity 1.0 pair and MVC 4's SimpleMembership pair — so the provisioned account exists in tracked data as well as in tracked configuration. (MVC 3 has no provisioning path and its committed credential-bearing file is a tutorial artifact whose active-store status F-08-11 leaves unresolved; it is not evidence about a provisioned administrator, because no MVC 3 code provisions one.)
+- **The store the credential provisions into is itself committed — in the two editions that provision.** F-08-11 records fourteen tracked database binaries, and its table locates the two that matter here: MVC 5's ASP.NET Identity 1.0 pair and MVC 4's SimpleMembership pair, both under the applications' own `App_Data`. In those two editions the provisioned account can therefore exist in tracked data as well as in tracked configuration. **The scope stops there.** MVC 3 has no provisioning path, so no provisioned account is attributable to it, and the credential-shaped database committed under its *tutorial assets* is neither its configured store nor evidence of a provisioned account — F-08-11 records what that file is and is not.
 
 | | |
 | --- | --- |
 | **Remediation** | Remove the credential from source entirely and provision the administrator through an operator-invoked command that takes the secret from a non-persistent channel. The mechanism, the audit record and the idempotence requirements are specified by the migration approach; the security analysis is deliverable 09's. **This register does not repair it** — see section 1.3. |
 | **Owner** | Security |
 
-### 5.7 F-08-08 — Swallowed checkout errors (MVC 5 and MVC 4)
+### 5.7 F-08-08 — Swallowed checkout errors (all three editions)
 
 | | |
 | --- | --- |
 | **F-08-08** | **The order-writing transaction is wrapped in a bare `catch` that discards the exception** |
 | **Severity** | **High** — combined with section 7.1, a failed order leaves no trace anywhere |
-| **Editions** | MVC 5 and MVC 4 (byte-identical file, section 3.1). MVC 3's `CheckoutController` differs by 12 diff lines and carries the same shape. |
+| **Editions** | **All three.** MVC 5 and MVC 4 are the byte-identical file (section 3.1); MVC 3's `CheckoutController` differs by 12 diff lines but carries the same bare `catch` around the same write |
+| **Remediation** | Catch narrowly, log with correlation, and surface a distinguishable failure. The error-handling and disclosure analysis is deliverable 09's; the target pipeline is deliverable 05's. |
+| **Owner** | The port, with security reviewing disclosure |
 
 The entire order write — add order, create order details from the cart, commit [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:44-51] — is enclosed in `catch` with **no exception variable** [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:58], which redisplays the view [:61] and records nothing. The customer sees the form again; the operator sees nothing at all.
+
+**MVC 3 has the same defect and is counted here rather than noted beside it**, because a bare `catch` at [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/CheckoutController.cs:56] discards the exception identically. What differs in MVC 3 is only the *transaction shape* it discards the exception from: its cart owns its own context and commits internally at five points (section 3.4), so a failure mid-sequence can leave a partially-committed order where MVC 5's single `SaveChanges` cannot. That makes MVC 3's instance worse rather than absent, and the remediation below covers all three:
+
+```bash
+git grep -n 'catch' -- 'src/*/Controllers/CheckoutController.cs' 'src/*/*/*/Controllers/CheckoutController.cs'
+# -> MVC3 CheckoutController.cs:56, MVC4 :58, MVC5 :58 — all bare
+```
 
 | | |
 | --- | --- |
@@ -433,7 +696,7 @@ The entire order write — add order, create order details from the cart, commit
 | **Severity** | **Medium** — correct as written, and a defect the moment ownership of the lifetime moves |
 | **Editions** | All three for `StoreManagerController`; MVC 5 additionally for the user manager |
 
-`StoreManagerController` disposes the context it constructed [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:125-128], and MVC 5's `AccountController` disposes the `UserManager` built by its own chained constructor [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:324-331]. The construction sites they pair with are field initializers and an ad hoc instance inside a method — [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:15], [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:11], [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:12], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:19] and [:32].
+`StoreManagerController` disposes the context it constructed [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:125-128], and MVC 5's `AccountController` disposes the `UserManager` built by its own chained constructor [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:324-331]. The construction sites they pair with are field initializers and an ad hoc instance inside a method — [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:15], [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:11], [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:12], [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:19] and [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:32].
 
 The debt is not that disposal is wrong; it is that ownership is implicit and distributed, so the overrides are correct only for as long as the controller is also the constructor. Deliverable 01 §5.4 inventories the construction sites; the injection design and the disposal consequence are deliverable 05's.
 
@@ -453,6 +716,8 @@ The debt is not that disposal is wrong; it is that ownership is implicit and dis
 | **F-08-10** | **The database initializer drops and recreates the catalog database whenever the model changes** |
 | **Severity** | **Critical** — it destroys orders and personally identifiable customer data, it is armed today, and its trigger is an ordinary development action |
 | **Editions** | All three. The seed class declares the same base type at the same line in each: [src/MVC5/MvcMusicStore/Models/SampleData.cs:9], [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/SampleData.cs:9], and MVC 4's copy, which is byte-identical to MVC 5's (section 3.2). |
+| **Remediation** | Replace automatic destructive initialization with versioned schema change applied at deployment time, and make any seeding an explicit, guarded, non-production action. The mechanism, the guard design and the deployment ordering are owned by deliverables 05 and 06; the migration of the existing data is a workstream deliverable 03 sequences. |
+| **Owner** | The data workstream |
 
 `public class SampleData : DropCreateDatabaseIfModelChanges<MusicStoreEntities>` [src/MVC5/MvcMusicStore/Models/SampleData.cs:9]. Any change to an entity class that alters the model hash causes the entire catalog database — `Orders`, `OrderDetails`, `Carts` and the customer names, addresses, emails and phone numbers those orders carry — to be dropped and rebuilt from the hardcoded seed.
 
@@ -461,20 +726,22 @@ Two facts make this more than theoretical:
 - **It is registered, not dormant.** F-08-02 records the two registration sites [src/MVC5/MvcMusicStore/Global.asax.cs:20], [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:16].
 - **The repository's own documentation teaches the destructive workflow as a fix.** The MVC 5 README instructs a reader hitting connection errors to delete the `.mdf` and `.ldf` files and rebuild, "the database will be recreated automatically" [src/MVC5/README.md:98-99]. Recreation is presented as a routine remedy, which is exactly how a production dataset gets destroyed by someone following the documentation.
 
-The seed being rebuilt is **826 physical lines** of hardcoded C# [src/MVC5/MvcMusicStore/Models/SampleData.cs] — 820 by the sizing metric, F-08-01's largest single file and 39 percent of the migration source by section 4.2.
+The seed being rebuilt is **826 LF — 827 content lines** — of hardcoded C# [src/MVC5/MvcMusicStore/Models/SampleData.cs:1-827]. That is the physical-line metric; **820** is the same file by the non-blank sizing metric, and the two are named separately here rather than in one figure, per deliverable 01 §2.4. It is F-08-01's largest single file and 39 percent of the migration source by section 4.2.
 
 | | |
 | --- | --- |
 | **Remediation** | Replace automatic destructive initialization with versioned schema change applied at deployment time, and make any seeding an explicit, guarded, non-production action. The mechanism, the guard design and the deployment ordering are owned by deliverables 05 and 06; the migration of the existing data is a workstream deliverable 03 sequences. |
 | **Owner** | The data workstream |
 
-### 6.2 F-08-11 — Fourteen database binaries committed, 43,376,640 bytes, including three credential stores
+### 6.2 F-08-11 — Fourteen database binaries committed, 43,376,640 bytes, including three credential-bearing stores
 
 | | |
 | --- | --- |
-| **F-08-11** | **Live database files — catalogs and credential stores — are tracked in version control** |
-| **Severity** | **High** — tracked credential stores and customer data, permanent repository weight, and a merge hazard on any binary that is ever opened |
-| **Editions** | All three |
+| **F-08-11** | **Live database files — catalogs and credential-bearing stores — are tracked in version control** |
+| **Severity** | **High** — tracked credential-bearing stores and customer data, permanent repository weight, and a merge hazard on any binary that is ever opened |
+| **Editions** | All three. **Two of the three credential-bearing stores are their edition's declared store; MVC 3's is a tutorial artifact whose status as the completed application's active store is unresolved** — the qualification below states why, and the severity is unaffected by it |
+| **Remediation** | Untracking these files does not remove them from history; only a history rewrite does, and that is a decision with consequences for every fork and clone. The choices are (a) accept the history and untrack going forward, or (b) rewrite. Either way, no environment should ever attach a tracked file — the setup guidance for this repository already requires serving a copy outside the checkout so SQL Server cannot write to tracked binaries, which is a mitigation, not a fix. Beyond that, the two credential-bearing application stores in history — MVC 4's and MVC 5's — should be treated as compromised, because F-08-07's committed credential provisions into them and the material is therefore known to be there. The tutorial `ASPNETDB.MDF` should be handled the same way, but as a **conservative precaution, pending content verification**: what is established is that a credential-shaped, unreferenced database is tracked, not what accounts it holds, so precautionary handling is the correct response while an assertion that its credentials are exposed is not one this register can make. Deliverable [09 §6.9](09-security-assessment.md) carries the same qualification and owns the exposure analysis. |
+| **Owner** | The repository owner (history decision); security (credential-store exposure) |
 
 ```bash
 git ls-files | grep -icE '\.(mdf|ldf)$'                                    # -> 14
@@ -482,13 +749,26 @@ git ls-files | grep -iE  '\.(mdf|ldf)$' | xargs -d '\n' stat -c '%s' \
   | awk '{s+=$1} END {print s}'                                           # -> 43376640
 ```
 
-`awk` performs the sum because `bc` is not installed on the verification host.
+`awk` performs the sum because `bc` is not installed on this host.
 
 | Location | Files | What they are |
 | --- | --- | --- |
-| `src/MVC3/MvcMusicStore-Assets/Data/` | 4 | The tutorial catalog pair plus `ASPNETDB.MDF` and its log — MVC 3's classic Membership credential store, and at 10,485,760 bytes the largest single file in the set |
-| `src/MVC4/MvcMusicStore/App_Data/` | 6 | The catalog pair, the SimpleMembership credential pair, **and an unreferenced scratch pair** |
-| `src/MVC5/MvcMusicStore/App_Data/` | 4 | The catalog pair and the ASP.NET Identity 1.0 credential pair |
+| `src/MVC3/MvcMusicStore-Assets/Data/` | 4 | The tutorial catalog pair plus `ASPNETDB.MDF` and its log — a **credential-bearing tutorial artifact** carrying a classic ASP.NET Membership schema, and at 10,485,760 bytes the largest single file in the set. Whether it is the completed MVC 3 application's active store is **unresolved**; see below |
+| `src/MVC4/MvcMusicStore/App_Data/` | 6 | The catalog pair, the SimpleMembership credential pair **declared by the edition's own `DefaultConnection`** [src/MVC4/MvcMusicStore/Web.config:12-17], **and an unreferenced scratch pair** |
+| `src/MVC5/MvcMusicStore/App_Data/` | 4 | The catalog pair and the ASP.NET Identity 1.0 credential pair, both **declared by the edition's own connection strings** [src/MVC5/MvcMusicStore/Web.config:12-13] |
+
+**MVC 3's credential-bearing file is a tutorial artifact, and its status as the completed application's active store is expressly unresolved.** It sits under `src/MVC3/MvcMusicStore-Assets/Data/`, the tutorial payload, not under the completed application — which has **no `App_Data` directory at all**:
+
+```bash
+git ls-files 'src/MVC3/MvcMusicStore-Completed/*' | grep App_Data | wc -l   # -> 0
+git ls-files 'src/MVC3/MvcMusicStore-Assets/Data/*'
+# -> ASPNETDB.MDF, MvcMusicStore-Create.sql, MvcMusicStore.mdf,
+#    MvcMusicStore_log.ldf, aspnetdb_log.ldf
+```
+
+The completed application's `web.config` enables `<roleManager enabled="true" />` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:15] and Forms authentication [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:26], but declares **no membership provider, no role provider and no `LocalSqlServer` connection string** — its only connection string is the SQL Server Compact catalogue entry [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:55-59]. Classic `Membership` and `Roles` therefore resolve through the **machine-level** ASP.NET SQL providers against the host's own connection-string setting, which is a property of the host rather than of this repository. Deliverable 01 §8.3 owns that architectural fact and deliverable 10 §10.2 owns the database consequence, **retaining the store's identity as a question to be settled by verifying the machine-level provider and connection string on the supported Windows runtime before the requirement is stated as final.** This register therefore records what is certain — a tracked binary carrying credential material — and does **not** assert that the completed application reads it.
+
+**The severity does not depend on that question.** A credential-bearing database file in version control is exposure whichever application activates it, and none of the four MVC 3 files is covered by an ignore rule at all (section 10.7). The unresolved part is *which application uses it*, not *what it contains*.
 
 **The scratch pair is debt in its own right.** `src/MVC4/MvcMusicStore/App_Data/MvcMusicStore-work.mdf` and `src/MVC4/MvcMusicStore/App_Data/MvcMusicStore_log-work.ldf` are referenced by no tracked source, configuration, project or solution file — 4,259,840 bytes of committed working copy:
 
@@ -501,7 +781,39 @@ git ls-files '*.cs' '*.config' '*.cshtml' '*.csproj' '*.sln' | grep -v /packages
 
 | | |
 | --- | --- |
-| **Remediation** | Untracking these files does not remove them from history; only a history rewrite does, and that is a decision with consequences for every fork and clone. The choices are (a) accept the history and untrack going forward, or (b) rewrite. Either way, no environment should ever attach a tracked file — the setup guidance for this repository already requires serving a copy outside the checkout so SQL Server cannot write to tracked binaries, which is a mitigation, not a fix. Credential stores in history should additionally be treated as compromised, per F-08-07. |
+| **Remediation** | Untracking these files does not remove them from history; only a history rewrite does, and that is a decision with consequences for every fork and clone. The choices are (a) accept the history and untrack going forward, or (b) rewrite. Either way, no environment should ever attach a tracked file — the setup guidance for this repository already requires serving a copy outside the checkout so SQL Server cannot write to tracked binaries, which is a mitigation, not a fix. Credential-bearing stores in history should additionally be treated as compromised, per F-08-07 — **including MVC 3's tutorial artifact**, because the compromise follows from the file being tracked rather than from which application reads it, and that is exactly why the unresolved active-store question does not gate this remediation. |
+| **Owner** | The repository owner (history decision); security (credential-store exposure) |
+
+#### 6.2.1 `ASPNETDB.MDF` is a tutorial and schema-evidence asset, and is **not** MVC 3's runtime credential store
+
+The classification matters more than it looks. An inventory row that calls a committed binary an edition's runtime credential store turns repository weight into a stated runtime dependency, and a migration reading that row would plan to move a database no application is configured to open. The correction is narrow and evidenced.
+
+**Nothing in the repository references it.** The probe is repository-wide and its result is zero:
+
+```bash
+git grep -il 'ASPNETDB' -- 'src/'   # -> exit 1, no matching file
+```
+
+**And MVC 3 declares no store for it to be.** `<roleManager enabled="true" />` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:15] and Forms authentication [:26-28] are both on, but the file declares **no** `<membership>` element, **no** `<providers>` collection and **no** `LocalSqlServer` connection string — its only connection string is the SQL Server Compact catalog one [:55-59]. So the credential store MVC 3 actually resolves to at runtime is the **machine-level inherited ASP.NET SQL provider**, and its identity — the provider actually configured on the host, and the connection string it resolves — **remains unverified.** Deliverable 10 §10.1 and §10.2 own the per-edition topology and state it correctly; deliverable 10 §13.2 keeps that verification open as item 2, to be answered on a supported Windows runtime rather than guessed at here. **This register does not guess, and no entry in it should be read as naming MVC 3's runtime store.**
+
+**What the file is, positively, in three parts:**
+
+- **Tutorial payload.** It sits in the tutorial asset tree, and the tree's own note describes the directory as carrying "a database (only used if you won't be using SQL Server CE)" [src/MVC3/MvcMusicStore-Assets/readme.txt:6] — a supplied alternative for a reader working through the tutorial, not a component of the completed application, which ships no `App_Data` directory of its own.
+- **Schema evidence.** It is the repository's only artifact carrying the classic ASP.NET Membership schema, and deliverable 09 §6.9 uses a printable-string probe of it as such. That is evidence of a schema, not proof of a deployment, and it is the only role in which a downstream deliverable may cite it.
+- **A committed credential store all the same.** Whatever it was supplied *for*, it is a Membership database in version control, 10,485,760 bytes with a 516,096-byte log alongside it. Its exposure is real and independent of which application ever opened it.
+
+**Both debt categories therefore apply, and neither is a substitute for the other:**
+
+| Category | The debt | Where it is owned |
+| --- | --- | --- |
+| **Repository debt** | 11,001,856 bytes of committed binary weight for an artifact no configuration references, and — per §10.7 — one of the four database binaries **no ignore rule matches at all**, so nothing in the repository ever expressed an intent to exclude it | The repository owner, as part of the history decision in this entry's remediation |
+| **Security debt** | A credential store with its password material in tracked history, on the same footing as the other two even though it is unreferenced | Security; deliverable 09 F-09-34 owns the exposure analysis |
+
+The reclassification changes no quantity in this entry: the set is still **14 files** and **43,376,640 bytes**, and the location table above still counts four files under `src/MVC3/MvcMusicStore-Assets/Data/`. What changes is what the row asserts about MVC 3's runtime.
+
+| | |
+| --- | --- |
+| **Remediation** | Untracking these files does not remove them from history; only a history rewrite does, and that is a decision with consequences for every fork and clone. The choices are (a) accept the history and untrack going forward, or (b) rewrite. Either way, no environment should ever attach a tracked file — the setup guidance for this repository already requires serving a copy outside the checkout so SQL Server cannot write to tracked binaries, which is a mitigation, not a fix. Credential stores in history should additionally be treated as compromised, per F-08-07. The unreferenced tutorial artifact of §6.2.1 is the one member of the set whose removal has no runtime consequence to weigh, because no configuration opens it. |
 | **Owner** | The repository owner (history decision); security (credential-store exposure) |
 
 ### 6.3 F-08-12 — Schema scripts not runnable as written, and duplicated (MVC 4)
@@ -552,6 +864,8 @@ git ls-files --eol '*.sql'          # -> i/-text w/-text for all three: git trea
 | **F-08-13** | **No logging, no tracing, no metrics, no health endpoint anywhere in the repository** |
 | **Severity** | **Critical** for a hosted target, and already consequential today |
 | **Editions** | All three, and the repository root |
+| **Remediation** | Net-new capability, not a migration: structured logging with correlation, a health endpoint, and platform-collected telemetry. The telemetry mechanism and the platform integration are owned by deliverable 06; the workstream that introduces them is sequenced by deliverable 03. |
+| **Owner** | Operations and platform |
 
 Verified across every tracked `.cs` and `.cshtml` file outside the committed package trees. Every count is zero:
 
@@ -564,12 +878,15 @@ git ls-files '*.config' | grep -v /packages/ | xargs grep -c 'healthMonitoring' 
                                                         # -> 0  (no healthMonitoring section in any config)
 ```
 
-There is no logging abstraction, no logging framework, no `TraceSource`, no ASP.NET health-monitoring configuration, no health endpoint and no metric of any kind. Error display is not observability either: the `customErrors` element appears 24 times across the six XDT transform files and **every occurrence is inside a comment block**, so no edition configures it live:
+There is no logging abstraction, no logging framework, no `TraceSource`, no ASP.NET health-monitoring configuration, no health endpoint and no metric of any kind. Error display is not observability either: the `customErrors` **name token** — the unit deliverable [09](09-security-assessment.md) §6.10 owns, which is not the same as an element — appears 24 times across the six XDT transform files, and **every occurrence is inside a comment block**, so no edition configures it live. 09 carries the breakdown: of those 24 tokens only 12 carry a leading angle bracket and only **6** are an element's opening tag, one commented example per file; the rest are prose references. All three units are zero live.
 
 ```bash
 git ls-files '*.config' | grep -v /packages/ | xargs grep -h 'customErrors' | wc -l    # -> 24
-# each of the six Web.Debug.config / Web.Release.config files: 4 occurrences,
-# all inside <!-- ... --> template blocks (verified by an awk comment-block pass, section 14)
+# each of the six Web.Debug.config / Web.Release.config files: 4 name tokens on 4
+# distinct lines, all inside <!-- ... --> template blocks (verified by an awk
+# comment-block pass, section 14). Per file those four are: a prose <customErrors>
+# reference, a prose "customErrors section" mention, the commented example element's
+# opening tag, and that element's closing tag.
 ```
 
 **The consequence, stated plainly: a failed checkout in production today leaves no trace.** F-08-08's bare `catch` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:58] discards the exception, and there is no sink it could have been written to. The customer sees the form redisplayed, the order does not exist, and no operator can discover that it happened, let alone why. The same is true of the `async void` administrator provisioning of F-08-07 [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:21].
@@ -595,9 +912,17 @@ git ls-files | grep -ciE 'dockerfile|docker-compose|\.ya?ml$'            # -> 0
 git ls-files | grep -v /packages/ | grep -ciE '\.(ps1|sh|cmd|bat)$'      # -> 0
 ```
 
-`.gitignore` anticipates publish profiles at `PublishProfiles/` [.gitignore:18] and build output at `build/` [.gitignore:29], and neither has ever existed in the tree. What build logic the repository does have lives inside the MSBuild project files and MVC 4's `.nuget/NuGet.targets`, which deliverable 02 §5 inventories and deliverable 10 owns as build requirements.
+`.gitignore` anticipates publish profiles at `PublishProfiles/` [.gitignore:18] and build output at `build/` [.gitignore:29], and neither directory exists in the current checkout. The tracked history says the same thing, and because that is a claim about history it carries a history command: no publish-profile path has been added on any ref in this clone.
 
-This entry compounds F-08-16 and F-08-17: warnings are not errors, no analyzer runs, and there is no pipeline that would fail if either changed. Deliverable 02 §8.2 records the same shape for dependency advisories — 43 restore warnings that no artifact retains and no gate consumes.
+```bash
+git log --all --diff-filter=A --name-only --pretty=format: -- '*.pubxml' '*.pubxml.user' | sort -u
+git log --all --diff-filter=A --name-only --pretty=format: -- '*PublishProfiles/*' 'build/*' | sort -u
+# -> both produce no output: no such path was ever added on any ref in this clone
+```
+
+What build logic the repository does have lives inside the MSBuild project files and MVC 4's `.nuget/NuGet.targets`, which deliverable 02 §5 inventories and deliverable 10 owns as build requirements.
+
+This entry compounds F-08-16 and F-08-17: warnings are not errors, no analyzer runs, and there is no pipeline that would fail if either changed. Deliverable 02 §8.2 records the same shape for dependency advisories — 43 restore warnings that no build, tooling or CI artifact in this repository retains and no gate consumes. The only retained record of them is the dated snapshot deliverable 02 §8.2.1 embeds, and that is a record rather than a gate: it does not fail a build, and nothing re-reads it.
 
 | | |
 | --- | --- |
@@ -639,7 +964,12 @@ Deliverable 01 §10.3 records the same absence. Its significance for this regist
 
 `<MvcBuildViews>false</MvcBuildViews>` [src/MVC5/MvcMusicStore/MvcMusicStore.csproj:17], and the target that would compile them is gated on the property being `true` — `<Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">` [src/MVC5/MvcMusicStore/MvcMusicStore.csproj:274]. The target is therefore dead as configured.
 
-The migration consequence is concrete. Deliverable 01 §2.5 counts 29 Razor files in MVC 5, five of which name legacy types or non-portable members. A build today reports nothing about any of them, so the port cannot lean on the compiler to enumerate what breaks — it has to be read.
+The migration consequence is concrete, and it is stated against **two different named units**, because collapsing them is how a view inventory goes wrong. Deliverable 01 §2.5 counts the **29** Razor files in MVC 5. Deliverable 05 owns how those 29 divide, and it divides them two ways that must not be substituted for each other:
+
+- **Six** of the 29 are **source views naming a removed API or type** — the broad unit. Five are found by a legacy *namespace or type* search; the sixth, `Account/_ExternalLoginsListPartial.cshtml`, is missed by that search because its removed members are OWIN rather than Identity, and deliverable 05 §8.4 owns both the correction and the command that finds all six.
+- **3 + 5 + 21 = 29** is the **disposition partition** — three views become view components' `Default.cshtml`, five need per-line work, and twenty-one port mechanically. Deliverable 05 §8.3 and §8.4 own it. The **five** here is a *per-line work* count, not the removed-API count, and the two differ by exactly the one view that is counted as a component rather than a per-line rewrite.
+
+A build today reports nothing about any of the 29, so the port cannot lean on the compiler to enumerate what breaks — it has to be read, against whichever of the two units the reader is actually using.
 
 | | |
 | --- | --- |
@@ -663,7 +993,7 @@ git ls-files '*.csproj' | grep -v /packages/ | xargs grep -c 'TreatWarningsAsErr
 git ls-files | grep -ciE '\.ruleset$|\.editorconfig$|Directory\.Build\.props'          # -> 0
 ```
 
-So warnings are produced and then ignored: no `TreatWarningsAsErrors` in any configuration of any project, no `.ruleset`, no `.editorconfig`, no `Directory.Build.props` to apply a policy centrally, no analyzer package in any manifest — deliverable 02 §8.2 verifies that last point across all three `packages.config` files — and, per F-08-14, no pipeline that could fail on a warning even if a policy existed. Nothing in the repository has ever recorded how many warnings a clean build produces.
+So warnings are produced and then ignored: no `TreatWarningsAsErrors` in any configuration of any project, no `.ruleset`, no `.editorconfig`, no `Directory.Build.props` to apply a policy centrally, no analyzer package in any manifest — deliverable 02 §8.2 verifies that last point across all three `packages.config` files — and, per F-08-14, no pipeline that could fail on a warning even if a policy existed. **The evidence stops at the checkout, and the claim stops with it:** the current checkout tracks no build log or warning record of any kind (`git ls-files | grep -ciE '\.(log|binlog)$'` → `0`), so this register states no warning count for any edition. Nor could it: MVC 5's build status is **blocked pending a Windows verification run** ([10](10-build-and-deployment-requirements.md)), which owns every per-edition build outcome.
 
 | | |
 | --- | --- |
@@ -674,16 +1004,20 @@ So warnings are produced and then ignored: no `TreatWarningsAsErrors` in any con
 
 | | |
 | --- | --- |
-| **F-08-18** | **Restore depends on an executable committed to source control, and transitive resolution is not reproducible** |
+| **F-08-18** | **Restore depends on an executable committed to source control, and no lockfile records a content hash or enforces the resolved set at restore time** |
 | **Severity** | **Medium** |
 | **Editions** | MVC 4 commits the client; the missing lockfile is all three |
+| **Remediation** | The target's SDK-integrated restore replaces the committed client, and lockfiles plus an explicit source configuration replace the current ambiguity. The pins, the source configuration and the lockfile decision are deliverable 04's; the build requirements are deliverable 10's. |
+| **Owner** | The port, with operations and platform for the pipeline side |
 
 ```bash
 stat -c '%s' src/MVC4/MvcMusicStore/.nuget/NuGet.exe      # -> 630784
 git ls-files 'packages.lock.json' | wc -l                 # -> 0
 ```
 
-A 630,784-byte NuGet client, version `2.0.30828.5`, is tracked at [src/MVC4/MvcMusicStore/.nuget/NuGet.exe] and is what MVC 4's MSBuild-integrated restore invokes — a restore mechanism deprecated since NuGet 3. No edition has a `packages.lock.json`, so exact direct pins do not fix what resolves transitively. Deliverable 02 owns the inventory detail: §5.1 for the client and its properties, §7.1 for the absent lockfile and central version management, and §6 for the finding that no package source is configured anywhere, which is what makes the effective source set unknowable from the repository.
+A 630,784-byte NuGet client, version `2.0.30828.5`, is tracked at [src/MVC4/MvcMusicStore/.nuget/NuGet.exe:630,784 bytes, FileVersion 2.0.30828.5] — a binary carries no line range, so the locator names the evidence form instead: the size from the `stat` command above, the version fields from the PowerShell probe deliverable 02 §5.1 carries. It is what MVC 4's MSBuild-integrated restore invokes — a restore mechanism deprecated since NuGet 3. No edition has a `packages.lock.json`.
+
+**What the missing lockfile costs here is not floating versions, and stating it as such would be wrong about the format.** `packages.config` is a flat list of every installed package **including transitive ones**, each at one exact version, and restore installs the list rather than re-resolving a graph — deliverable 02 §7.1 establishes this and §7.2 corroborates it from the two committed payloads. So the enumerated package set is exact. What no entry carries is a **content hash**, so a package with the expected id and version but different content restores without complaint; what no entry binds is the **source** it resolves from, which §6 shows is configured nowhere; and what no restore performs is a **locked-mode comparison** against a previously recorded resolution, because nothing records one. Deliverable 02 owns the inventory detail: §5.1 for the client and its properties, §7.1 for the absent lockfile and central version management, and §6 for the unconfigured source that makes the effective source set unknowable from the repository.
 
 Two hygiene consequences are recorded elsewhere in this register rather than here: the committed restored payloads are F-08-25, and the ignore rule that was supposed to exclude this executable is F-08-28.
 
@@ -699,8 +1033,10 @@ Two hygiene consequences are recorded elsewhere in this register rather than her
 | **F-08-19** | **The MVC 4 project cannot be built from its committed configuration without command-line compensation, and one of the four solution files points at a project path that does not exist** |
 | **Severity** | **High** for the affected edition |
 | **Editions** | MVC 4 |
+| **Remediation** | Not repaired here (section 1.3), and not carried forward: the target has one solution and SDK-style projects, so the defects are retired rather than fixed. Until then the established fact is the negative one: the edition cannot be built from its committed configuration, so any build of it would require some form of command-line compensation. Deliverable [10 §6.3](10-build-and-deployment-requirements.md) owns that ground and states its limit — it identifies candidate host-side compensations, records that no MVC 4 build under the prescribed toolchain was performed, and therefore leaves their sufficiency unestablished. This register names no invocation and claims none works, because none has been observed. |
+| **Owner** | Deliverable 10 (build ownership); the repository owner if the legacy edition is ever to be built without compensation |
 
-**Deliverable 10 owns the build outcomes, the diagnosis and the workarounds, and this register does not restate them.** What belongs here is that the debt exists, is platform-independent, and lives in committed files: an unconditional import and a set of package paths in [src/MVC4/MvcMusicStore/MvcMusicStore.csproj], and the stale solution at [src/MVC4/MvcMusicStore/MvcMusicStore.sln:4], whose project declaration resolves one directory too deep. The equivalent declaration in the correct solution [src/MVC4/MvcMusicStore.sln:4] carries the identical relative path from one level up, which is exactly why the deeper file is the stale one. Section 10.2 records the solution-count hygiene aspect.
+**Deliverable 10 owns the build outcomes, the diagnosis and the workarounds, and this register does not restate them.** What belongs here is that the debt exists, is platform-independent, and lives in committed files: an unconditional import [src/MVC4/MvcMusicStore/MvcMusicStore.csproj:360] and a set of 24 `HintPath` package paths [:66-157] in the MVC 4 project file, and the stale solution at [src/MVC4/MvcMusicStore/MvcMusicStore.sln:4], whose project declaration resolves one directory too deep. The equivalent declaration in the correct solution [src/MVC4/MvcMusicStore.sln:4] carries the identical relative path from one level up, which is exactly why the deeper file is the stale one. Section 10.2 records the solution-count hygiene aspect.
 
 | | |
 | --- | --- |
@@ -713,17 +1049,23 @@ Two hygiene consequences are recorded elsewhere in this register rather than her
 
 Template scaffolding that executes, or ships, while serving nothing. Each entry has a cost: startup work, deployed surface, or a reader's time spent understanding a capability that does not exist.
 
-### 9.1 F-08-20 — Area registration with no areas (MVC 5 and MVC 4)
+### 9.1 F-08-20 — Area registration with no areas (all three editions)
 
 | | |
 | --- | --- |
 | **F-08-20** | **`AreaRegistration.RegisterAllAreas()` runs at every application start and discovers nothing** |
 | **Severity** | **Low** — a reflection scan at startup and a misleading signal about the application's structure |
-| **Editions** | MVC 5 and MVC 4 both call it; MVC 3 does not, having no `App_Start` composition at all |
+| **Editions** | **All three.** Each calls it from its own `Application_Start`, and none has an `Areas` folder, so the scan discovers nothing in any edition |
+| **Remediation** | Do not carry the call into the target composition. Nothing else is required. |
+| **Owner** | The migration workstream |
 
-`AreaRegistration.RegisterAllAreas();` is the first statement of `Application_Start` [src/MVC5/MvcMusicStore/Global.asax.cs:15]. No edition has an `Areas` folder:
+`AreaRegistration.RegisterAllAreas();` is the first statement of `Application_Start` in MVC 5 [src/MVC5/MvcMusicStore/Global.asax.cs:15] and in MVC 4 [src/MVC4/MvcMusicStore/Global.asax.cs:19], and MVC 3 calls it too [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:36] — from the application class itself rather than from an `App_Start` file, because MVC 3 has no `App_Start` folder (deliverable 01 §3.6, which owns MVC 3's composition shape). The absence of the composition folder is a difference in *where* the call is written, not in whether it happens, and an earlier reading of this entry mistook the one for the other. No edition has an `Areas` folder:
 
 ```bash
+git grep -n 'RegisterAllAreas' -- 'src/*' | grep -v /packages/
+# -> src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:36
+#    src/MVC4/MvcMusicStore/Global.asax.cs:19
+#    src/MVC5/MvcMusicStore/Global.asax.cs:15
 git ls-files | grep -ci '/Areas/'      # -> 0
 ```
 
@@ -739,6 +1081,8 @@ git ls-files | grep -ci '/Areas/'      # -> 0
 | **F-08-21** | **MVC 4 maps an API route and carries four Web API packages to serve zero controllers** |
 | **Severity** | **Low** — deployed surface and dependency weight for a capability the edition does not have |
 | **Editions** | MVC 4 only |
+| **Remediation** | Nothing to migrate: the route and its four packages are dropped. If an HTTP API is ever wanted, it is net-new work with its own approval. |
+| **Owner** | The port (as a non-migration); deliverable 04 for the package disposition |
 
 `config.Routes.MapHttpRoute(name: "DefaultApi", routeTemplate: "api/{controller}/{id}", ...)` [src/MVC4/MvcMusicStore/App_Start/WebApiConfig.cs:12-16]. There is no `ApiController` implementation anywhere in the repository:
 
@@ -747,20 +1091,24 @@ git ls-files '*.cs' | grep -v /packages/ | xargs grep -c 'ApiController' \
   | awk -F: '{s+=$NF} END {print s}'          # -> 0
 ```
 
-Deliverable 02 records the dependency side as F-02-07: four Web API packages pinned and referenced, one of them a metapackage with no assembly, serving this route. Deliverable 01 §9.3 marks the HTTP API capability absent for MVC 4 rather than implemented — the correction that keeps a mapped route from being read as a delivered feature.
+Deliverable 02 records the dependency side as F-02-07: four Web API packages pinned and referenced, one of them a metapackage with no assembly, serving this route. Deliverable 01 §9.3 marks the HTTP API capability **Unreachable** for MVC 4 rather than implemented — the surface exists, because the route template is mapped at [src/MVC4/MvcMusicStore/App_Start/WebApiConfig.cs:12-16], and it cannot be exercised, because no `ApiController` implements it. That is the distinction that keeps a mapped route from being read as a delivered feature, and it is not the same as **Absent**, which is the mark 01 gives the same capability in MVC 3 and MVC 5, where no such route is mapped at all.
 
 | | |
 | --- | --- |
 | **Remediation** | Nothing to migrate: the route and its four packages are dropped. If an HTTP API is ever wanted, it is net-new work with its own approval. |
 | **Owner** | The port (as a non-migration); deliverable 04 for the package disposition |
 
-### 9.3 F-08-22 — A scaffolded, disabled external-login surface (MVC 5 and MVC 4)
+### 9.3 F-08-22 — Scaffolded, disabled external-login provider registrations and their dormant packages (MVC 5 and MVC 4)
 
 | | |
 | --- | --- |
 | **F-08-22** | **Every external sign-in registration is commented out with empty credentials, while the packages that would serve them ship and deploy** |
 | **Severity** | **Low** as dead code; it becomes **High** the moment anyone uncomments a registration without supplying and protecting real credentials |
 | **Editions** | MVC 5 and MVC 4 both carry the disabled surface, in different stacks. MVC 3 has no external-login surface at all. |
+| **Remediation** | Scoped to the **provider registrations and the dormant provider packages**: drop the commented registrations and the packages that exist only to serve them, or enable one provider deliberately with credentials supplied from a secret store — but do not carry registrations forward commented out, which reproduces the debt in the target. The linked-login list and its removal action are **outside this remediation**: they are preserved and migrated per deliverable [05 §8.3](05-aspnet-core-migration-approach.md)'s selected split, which this register cites rather than re-decides. |
+| **Owner** | The port, with security if the surface is ever enabled; deliverable 05 for the ported-versus-removed split |
+| **Remediation** | Decide, rather than port: either remove the disabled surface and its packages entirely, or enable it deliberately with credentials supplied from a secret store. Carrying it forward commented out reproduces the debt in the target. |
+| **Owner** | The port, with security if the surface is ever enabled |
 
 **MVC 5.** `ConfigureAuth` is 37 physical lines, of which 14 are comment lines, and the four commented-out provider registrations — Microsoft Account, Twitter, Facebook, Google — span [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35], each with empty string literals where a client id and secret would go. Only two calls are live: cookie authentication [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:14-18] and the external sign-in cookie [:20], the latter existing solely to support the providers that are disabled.
 
@@ -774,7 +1122,9 @@ done                                    # -> 37/14 and 32/12
 
 The dependency cost is deliverable 02's, and it is not symmetric: MVC 5 ships **four** dormant `Microsoft.Owin.Security.*` provider packages (§3.1.2, F-02-03) and MVC 4 ships **six** DotNetOpenAuth packages plus the WebPages OAuth surface (§3.2.3, F-02-08). One package is easy to miscount here: `Microsoft.Owin.Security.OAuth` is **OAuth infrastructure, not a fifth provider** — deliverable 02 §3.1.2 states it explicitly.
 
-A related consequence sits in the views rather than the startup files: MVC 5's account management views render an external-login removal list that can never have entries while every provider is disabled. Deliverable 05 owns whether that surface is ported or removed.
+A related consequence sits in the views rather than the startup files: MVC 5's account management views render an external-login removal list [src/MVC5/MvcMusicStore/Views/Account/Manage.cshtml:22] whose provider-enumeration partial has **no provider to enumerate**, because every registration is commented out [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:22-35] — so the sign-in-with-a-provider path is unreachable as shipped, and `_ExternalLoginsListPartial.cshtml`'s empty-provider branch [src/MVC5/MvcMusicStore/Views/Account/_ExternalLoginsListPartial.cshtml:7-13] is the branch that renders today. The same holds in MVC 4 [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29].
+
+**That is the whole of what the evidence supports, and the stronger claim is deliberately not made.** "No provider is registered" does **not** establish that no persisted external-login association exists or can be removed: an association row can predate a registration being commented out, and the removal list is populated from the user's stored logins rather than from the registered providers, so a row that exists would still render and still be removable. Establishing that the removal list is genuinely always empty would require authoritative row evidence from the committed Identity database — which is tracked in this repository (F-08-11) but whose contents this assessment does not read, for the reason deliverable 12 F-12-21 states: probing a database binary is evidence, not proof, and the authoritative answer is a query against the attached database. This register therefore records the registration state, which is a repository fact, and not the row state, which is not. Deliverable 05 owns whether that surface is ported or removed.
 
 | | |
 | --- | --- |
@@ -789,7 +1139,7 @@ All entries in this section are **Low** severity with **no migration impact**. T
 
 ### 10.1 The primary evidence: root `.gitignore`, line by line
 
-A tracked file that the repository's own rules exclude was added before the rule existed, and `.gitignore` cannot untrack it. That asymmetry is what distinguishes debt from an intentional decision, so the root `.gitignore` [.gitignore] is cited by line as the primary evidence for the whole gitignored-yet-tracked class:
+A tracked file that the repository's own rules exclude was added before the rule existed, and `.gitignore` cannot untrack it. That asymmetry is what distinguishes debt from an intentional decision, so the root `.gitignore` — 34 pattern lines in all [.gitignore:1-34] — is cited line by line as the primary evidence for the whole gitignored-yet-tracked class:
 
 | `.gitignore` line | Pattern | What is tracked despite it |
 | --- | --- | --- |
@@ -812,6 +1162,8 @@ Two of these rows are findings in their own right rather than just evidence, and
 | **F-08-23** | **Four `.sln` files exist for three `.csproj` projects; the fourth is stale and unbuildable** |
 | **Severity** | **Low** as hygiene. The build consequence is F-08-19 and is owned by deliverable 10. |
 | **Editions** | MVC 4 (the stale file); the four-solutions-for-three-projects shape is repository-wide |
+| **Remediation** | Retire the stale file when the target's single solution replaces all four. Not removed here (section 1.3). |
+| **Owner** | The repository owner |
 
 ```bash
 git ls-files '*.sln'                                     # -> 4
@@ -820,9 +1172,9 @@ git ls-files '*.csproj' | grep -v /packages/             # -> 3
 
 | Solution | Status |
 | --- | --- |
-| [src/MVC5/MvcMusicStore.sln] | Current, MVC 5 |
-| [src/MVC4/MvcMusicStore.sln] | Current, MVC 4 |
-| [src/MVC3/MvcMusicStore-Completed/MvcMusicStore.sln] | Current, MVC 3 |
+| [src/MVC5/MvcMusicStore.sln:6] | Current, MVC 5 — its project declaration resolves |
+| [src/MVC4/MvcMusicStore.sln:4] | Current, MVC 4 — its project declaration resolves |
+| [src/MVC3/MvcMusicStore-Completed/MvcMusicStore.sln:4] | Current, MVC 3 — its project declaration resolves |
 | [src/MVC4/MvcMusicStore/MvcMusicStore.sln:4] | **Stale** — its project declaration resolves one directory too deep |
 
 The hazard is not that the file exists but that its name and location make it the one a newcomer opens first, inside the project folder rather than beside it.
@@ -839,8 +1191,10 @@ The hazard is not that the file exists but that its name and location make it th
 | **F-08-24** | **`MvcMusicStore-Create.sql` exists at two paths in MVC 4, byte-identical** |
 | **Severity** | **Low** as hygiene; the usability defect the two copies share is F-08-12 (Medium) |
 | **Editions** | MVC 4 only |
+| **Remediation** | De-duplicate only in conjunction with F-08-12's decision about whether either copy has a future. |
+| **Owner** | The repository owner |
 
-[src/MVC4/MvcMusicStore-Create.sql] and [src/MVC4/MvcMusicStore/MvcMusicStore-Create.sql], 629 lines each, `cmp`-identical. Two copies of an unrunnable script are two chances to adopt the wrong baseline.
+[src/MVC4/MvcMusicStore-Create.sql:1-629] and [src/MVC4/MvcMusicStore/MvcMusicStore-Create.sql:1-629], 629 lines each, `cmp`-identical. Two copies of an unrunnable script are two chances to adopt the wrong baseline.
 
 | | |
 | --- | --- |
@@ -862,7 +1216,7 @@ git ls-files | grep -c 'src/MVC3/MvcMusicStore-Completed/packages/'           # 
 git ls-files | grep -c 'src/MVC4/MvcMusicStore/packages/'                     # -> 169
 ```
 
-Tracked against [.gitignore:15] and [.gitignore:33]. Deliverable 02 §7.2 owns the inventory (F-02-20) and records the asymmetry that matters more than the count: MVC 5 commits **no** packages, so the two editions cannot be prepared the same way — a fact deliverable 10 carries as a build requirement.
+**Tracked against [.gitignore:33] — and the exclusion, unlike the count, is host-dependent.** `Packages/` is the only rule that matches these paths: its sole separator is trailing, so it matches a directory of that name at any depth, and it reaches the lowercase `packages` directories only because `core.ignorecase` is `true` on this checkout. `packages/*` [.gitignore:15] does **not** cover them: an interior separator anchors a pattern to the directory holding the `.gitignore`, so that rule reaches a root-level `packages/` and nothing nested. On a case-sensitive filesystem neither rule matches, so *gitignored-yet-tracked* is the accurate description of these 215 files on a case-insensitive host and *simply tracked* is the accurate description elsewhere. Section 10.7 carries the probe, the `core.ignorecase` experiment and the second finding this dependence belongs to (F-08-28), and deliverable [04 §A.6](04-dotnet8-migration-strategy.md) states the same pattern analysis. The debt is unchanged either way: 215 tracked files of restored third-party payload, 32 of them binaries, is the finding — the ignore rules only narrow *why* the tracking is anomalous. Deliverable 02 §7.2 owns the inventory (F-02-20) and records the asymmetry that matters more than the count: MVC 5 commits **no** packages, so the two editions cannot be prepared the same way — a fact deliverable 10 carries as a build requirement.
 
 | | |
 | --- | --- |
@@ -876,6 +1230,8 @@ Tracked against [.gitignore:15] and [.gitignore:33]. Deliverable 02 §7.2 owns t
 | **F-08-26** | **A 4.99 MB tutorial document is committed, and its licence differs from the code's** |
 | **Severity** | **Low** |
 | **Editions** | MVC 3 (the tutorial payload) |
+| **Remediation** | Retain or relocate as the repository owner prefers; if retained, keep the licence statement adjacent to it. No migration impact either way. |
+| **Owner** | The repository owner |
 
 ```bash
 stat -c '%s' 'src/MVC3/MVC Music Store - Tutorial - v3.0.pdf'      # -> 4993295
@@ -884,7 +1240,7 @@ git ls-files | grep -ivE '\.(mdf|ldf)$' | xargs -d '\n' stat -c '%s %n' | sort -
 # -> 1416507 src/MVC4/MvcMusicStore/packages/EntityFramework.5.0.0/EntityFramework.5.0.0.nupkg
 ```
 
-[src/MVC3/MVC Music Store - Tutorial - v3.0.pdf] is the single largest non-database file in the repository, more than three times the size of the next largest. The licensing distinction is the part worth recording, because it survives any decision about the file: the code is under the Microsoft Public License while the tutorial document is under Creative Commons Attribution 3.0 [src/MVC3/readme.txt:5]. Anything derived from the document therefore carries an attribution obligation that the code does not. This document treats the PDF as repository weight and licensing evidence only; it was not read for requirements.
+[src/MVC3/MVC Music Store - Tutorial - v3.0.pdf:4,993,295 bytes] is the single largest non-database file in the repository, more than three times the size of the next largest — the locator is the byte size, established by the two commands above, because a PDF carries no line range. The licensing distinction is the part worth recording, because it survives any decision about the file: the code is under the Microsoft Public License while the tutorial document is under Creative Commons Attribution 3.0 [src/MVC3/readme.txt:5]. Anything derived from the document therefore carries an attribution obligation that the code does not. This document treats the PDF as repository weight and licensing evidence only; it was not read for requirements.
 
 | | |
 | --- | --- |
@@ -916,7 +1272,7 @@ The `.v11.suo` is a Visual Studio 2012-era binary solution-state file — unread
 
 This entry exists because the register's contract is that a reader who checks one item at random finds it exact. Checking the ignore rules produced a correction and a portability finding, and both are reported.
 
-**First, the correct probe.** `git check-ignore -v <path>` exits **1 with no output for every tracked file** in this repository — verified on `NuGet.exe`, both `App_Data` catalogs, both `.csproj.user` files, the `.suo` and a `packages/` payload — because `check-ignore` consults the index before the ignore rules. The exit code therefore says nothing about whether a rule matches. `--no-index` is the probe that answers the question, and with it every gitignored-yet-tracked claim in section 10.1 verifies:
+**First, the correct probe.** `git check-ignore -v <path>` exits **1 with no output for every tracked file** in this repository — verified on `NuGet.exe`, both `App_Data` catalogs, both `.csproj.user` files, the `.suo` and a `packages/` payload — because `check-ignore` consults the index before the ignore rules. The exit code therefore says nothing about whether a rule matches. `--no-index` is the probe that answers the question, and with it every gitignored-yet-tracked claim in section 10.1 verifies — each against the rule the probe names, which for the two `packages/` trees is `Packages/` [.gitignore:33] rather than the root-anchored `packages/*` [.gitignore:15], and with the case dependency that finding two attaches to it:
 
 ```bash
 git check-ignore --no-index -v src/MVC4/MvcMusicStore/.nuget/NuGet.exe
@@ -925,13 +1281,26 @@ git check-ignore --no-index -v src/MVC5/MvcMusicStore/App_Data/MvcMusicStore.mdf
 # -> .gitignore:32:App_Data/        src/MVC5/MvcMusicStore/App_Data/MvcMusicStore.mdf
 git check-ignore --no-index -v src/MVC4/MvcMusicStore/MvcMusicStore.v11.suo
 # -> .gitignore:8:*.suo             src/MVC4/MvcMusicStore/MvcMusicStore.v11.suo
+git check-ignore --no-index -v src/MVC4/MvcMusicStore/packages/repositories.config
+# -> .gitignore:33:Packages/        src/MVC4/MvcMusicStore/packages/repositories.config
 git check-ignore --no-index -v src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF
 # -> (exit 1, no output: no rule matches this path at all)
 ```
 
-**Finding one — four of the fourteen database binaries are not ignored by any rule.** The last probe above is the interesting one. `.gitignore:32` is `App_Data/`, and MVC 3's four binaries live under `Data/`, which no pattern covers. So F-08-11 splits cleanly: **ten** files are gitignored-yet-tracked, and **four** are simply tracked, with no rule ever having expressed an intent to exclude them. A remediation that assumes one uniform cause would miss the second group.
+**Finding one — four of the fourteen database binaries are not ignored by any rule.** The last probe above is the interesting one. `.gitignore:32` is `App_Data/`, and MVC 3's four binaries live under `Data/`, which no pattern covers. So F-08-11 splits cleanly: **ten** files are gitignored-yet-tracked, and **four** are simply tracked, with no rule in the current `.gitignore` matching their path. A remediation that assumes one uniform cause would miss the second group.
 
-**Finding two — the `nuget.exe` rule stops matching on a case-sensitive filesystem.** [.gitignore:28] spells the pattern in lowercase while the tracked path is `NuGet.exe` [src/MVC4/MvcMusicStore/.nuget/NuGet.exe]. Whether the pattern matches depends on `core.ignorecase`, which is `true` on this Windows checkout. Verified by a controlled experiment in a throwaway repository created **outside** the checkout with the same `.gitignore` and deleted afterwards — the one non-read-only command in this document, and it touched no repository file:
+**Both statements are extended from the checkout to the tracked history by command, because history is not something a snapshot can establish.** `.gitignore` has exactly two revisions in this clone, `App_Data/` is the only `Data`-bearing rule either of them ever introduced, and the binaries entered the index before that rule existed:
+
+```bash
+git log --all -p --pretty=format:'%h' -- .gitignore | grep -E '^\+[^+]' | sort -u | grep -i data
+# -> +App_Data/   the only Data-bearing rule in any revision; nothing matches src/MVC3/.../Data/
+git merge-base --is-ancestor 1a374e6 80d24f4 && echo 'binaries precede the first App_Data/ rule'
+# -> binaries precede the first App_Data/ rule
+#    1a374e6 'Added MVC 4 and MVC 5 versions' 2022-11-04 16:31; 80d24f4, the first .gitignore
+#    revision carrying App_Data/ at its line 32, 2022-11-04 17:18
+```
+
+**Finding two — two rules stop matching on a case-sensitive filesystem, and one of them carries a whole classification with it.** The first is `nuget.exe`: [.gitignore:28] spells the pattern in lowercase while the tracked path is `NuGet.exe` [src/MVC4/MvcMusicStore/.nuget/NuGet.exe:630,784 bytes] — a binary again, so the size is its locator and the probes below print the tracked spelling verbatim. Whether the pattern matches depends on `core.ignorecase`, which is `true` on this Windows checkout. Verified by a controlled experiment in a throwaway repository created **outside** the checkout with the same `.gitignore` and deleted afterwards — the one non-read-only command in this document, and it touched no repository file:
 
 ```bash
 T=$(mktemp -d); mkdir -p "$T/.nuget"; cp .gitignore "$T/"; : > "$T/.nuget/NuGet.exe"
@@ -945,12 +1314,25 @@ cd - && rm -rf "$T"
 # core.ignorecase=false -> no output                                   (exit 1: NOT ignored)
 ```
 
+**The second rule is `Packages/`, and there the case dependence decides how 215 tracked files are classified.** [.gitignore:33] is spelled with a capital while both committed directories are lowercase, so it reaches them only under `core.ignorecase = true`; `packages/*` [.gitignore:15] never reaches them at all, because its interior separator anchors it to the directory holding the `.gitignore` — the repository root. Both halves are established inside the checkout and read-only, because `-c` supplies the setting for one invocation and writes nothing:
+
+```bash
+git -c core.ignorecase=false check-ignore --no-index -v \
+  src/MVC4/MvcMusicStore/packages/repositories.config \
+  src/MVC3/MvcMusicStore-Completed/packages/repositories.config
+# -> no output (exit 1: on a case-sensitive host NEITHER tree is matched by any rule)
+git -c core.ignorecase=false check-ignore --no-index -v packages/x
+# -> .gitignore:15:packages/*  packages/x   (the root-level path the anchored rule does cover)
+```
+
+So the 215 files of F-08-25 are gitignored-yet-tracked on this checkout and simply tracked on a case-sensitive one. That narrows the reason they are anomalous without reducing the debt, which is the tracking of restored third-party payload; section 10.4 states it that way, and deliverable [04 §A.6](04-dotnet8-migration-strategy.md) records the same two-rule analysis for the payload the assessment's own restores wrote.
+
 | | |
 | --- | --- |
-| **F-08-28** | **The hygiene configuration is itself host-dependent: one ignore rule's effect changes with filesystem case sensitivity, and one class of committed binary is covered by no rule** |
+| **F-08-28** | **The hygiene configuration is itself host-dependent: the effect of two ignore rules changes with filesystem case sensitivity, and one class of committed binary is covered by no rule** |
 | **Severity** | **Low** in its own right. Its value is corroborative. |
 | **Editions** | Repository-wide — the root `.gitignore` and the paths it does and does not cover |
-| **Evidence** | The two experiments above |
+| **Evidence** | The probes and experiments above |
 | **Remediation** | Express ignore patterns so they hold on both a case-insensitive and a case-sensitive filesystem, and add a rule that actually covers `Data/` if those binaries are meant to be excluded. |
 | **Owner** | The repository owner |
 
@@ -972,16 +1354,16 @@ All 28 entries, with the editions each holds in. Severity is defined in section 
 | # | Finding | Category | Severity | Editions | Owner |
 | --- | --- | --- | --- | --- | --- |
 | F-08-01 | Triplication of one application, byte-identical between two editions | Duplication | High | 3, 4, 5 | The port; 07 for sizing discipline |
-| F-08-02 | Two files register the EF initializer (duplicated configuration) | Code | Low | 5 | Migration workstream |
+| F-08-02 | Two files register the EF initializer (duplicated configuration) | Code | Low | 5 for the duplication; the registration itself is in 3, 4, 5 — §5.1 | Migration workstream |
 | F-08-03 | Uncached nested aggregate and cart read on every page | Code | High | 3, 4, 5 | Performance |
 | F-08-04 | Unbounded result sets in two list actions | Code | Medium | 3, 4, 5 | The port |
-| F-08-05 | `Single` on unvalidated input; one unchecked `Find` | Code | Medium | 3, 4, 5 | The port |
+| F-08-05 | 4 `Single` calls on unvalidated input; 3 unguarded `Find` results; 1 unreachable guard | Code | Medium | 3, 4, 5 (guard distribution differs — §5.4) | The port; 05 for target contracts |
 | F-08-06 | 5 unvalidated state-changing POSTs; a state-changing `GET`; MVC 3 validates nothing | Code | High | 3, 4, 5 | Security |
 | F-08-07 | Plaintext administrator credential, consumed at startup | Code | High | 4, 5 | Security |
-| F-08-08 | Bare `catch` around the order write | Code | High | 4, 5 (3 same shape) | The port |
+| F-08-08 | Bare `catch` around the order write | Code | High | 3, 4, 5 — §5.7; MVC 3's split-save transaction shape makes its instance worse, not absent | The port |
 | F-08-09 | Hand-constructed contexts with `Dispose(bool)` overrides | Code | Medium | 3, 4, 5 | The port |
 | F-08-10 | `DropCreateDatabaseIfModelChanges` over orders and PII | Data | **Critical** | 3, 4, 5 | Data workstream |
-| F-08-11 | 14 database binaries, 43,376,640 bytes, three credential stores | Data | High | 3, 4, 5 | Repository owner; security |
+| F-08-11 | 14 database binaries, 43,376,640 bytes, three credential-bearing stores (two declared, MVC 3's a tutorial artifact — §6.2) | Data | High | 3, 4, 5 | Repository owner; security |
 | F-08-12 | Schema scripts not runnable as written; none for MVC 5 | Data | Medium | 4 (3 assets; 5 none) | Data workstream |
 | F-08-13 | No logging, tracing, metrics or health endpoint | Operational | **Critical** | 3, 4, 5 | Operations and platform |
 | F-08-14 | No CI, no deployment automation, no publish artifact | Operational | High | repo-wide | Operations and platform |
@@ -990,7 +1372,7 @@ All 28 entries, with the editions each holds in. Severity is defined in section 
 | F-08-17 | Warning level 4 set, enforcement absent | Build | Medium | 3, 4, 5 | The port; operations |
 | F-08-18 | Committed 2012-era restore client; no lockfile | Build | Medium | 4; all for the lockfile | The port; operations |
 | F-08-19 | MVC 4 build configuration broken; fourth solution stale | Build | High | 4 | Deliverable 10; repository owner |
-| F-08-20 | Area registration with no areas | Dead scaffolding | Low | 4, 5 | Migration workstream |
+| F-08-20 | Area registration with no areas | Dead scaffolding | Low | 3, 4, 5 — §9.1; MVC 3 calls it from the application class rather than an `App_Start` file | Migration workstream |
 | F-08-21 | Mapped HTTP API route, zero `ApiController` | Dead scaffolding | Low | 4 | The port; 04 |
 | F-08-22 | External-login surface scaffolded and disabled | Dead scaffolding | Low | 4, 5 | The port; security |
 | F-08-23 | Four solutions for three projects, one stale | Hygiene | Low | 4 | Repository owner |
@@ -1002,7 +1384,48 @@ All 28 entries, with the editions each holds in. Severity is defined in section 
 
 **Distribution: 3 Critical, 8 High, 7 Medium, 10 Low.** The three Critical entries share a property worth naming: none of them is a bug in the ordinary sense. Two are absences — no observability, no tests — and one is a configured behaviour working exactly as designed. A defect-hunting review would have found none of the three, which is why an assessment that inventories absence as well as presence is the only kind that reaches them.
 
-**The four owners with the most entries** are the repository owner (7, all Low), the port (7 across Code, Build and Operational), security (3 with one shared) and the data workstream (2, including the only Critical entry that is fixable by a design decision rather than by new capability).
+**Owner roll-up, counted from the table above on a stated basis.** Two different numbers can be called "the owner count", so both are given rather than blended. A row's **primary owner** is the first role named in its Owner cell — the one accountable for the remediation decision — and every one of the register's **28 rows** has exactly one, so that column sums to 28. Where a cell names a **second owner** as well, the appearance is counted in its own column instead of being folded into the first. Deliverable numbers appearing in the same cells (07, 05, 04) are consuming deliverables under section 1.2, not owner roles, and are not counted as owners.
+
+| Owner | Rows as primary owner | Severity split of those rows | Also named as a second owner |
+| --- | --- | --- | --- |
+| The port | **11** — F-08-01, 04, 05, 08, 09, 15, 16, 17, 18, 21, 22 | 1 Critical, 2 High, 6 Medium, 2 Low | — |
+| The repository owner | **7** — F-08-11, 23, 24, 25, 26, 27, 28 | 1 High, 6 Low | F-08-19 |
+| Security | **2** — F-08-06, F-08-07 | 2 High | F-08-11, F-08-22 |
+| The data workstream | **2** — F-08-10, F-08-12 | 1 Critical, 1 Medium | — |
+| Operations and platform | **2** — F-08-13, F-08-14 | 1 Critical, 1 High | F-08-17, F-08-18 |
+| The migration workstream | **2** — F-08-02, F-08-20 | 2 Low | — |
+| Performance | **1** — F-08-03 | 1 High | — |
+| Deliverable 10 | **1** — F-08-19 | 1 High | — |
+| **Total** | **28** | **3 Critical, 8 High, 7 Medium, 10 Low** | — |
+
+One row's primary owner is a deliverable rather than one of the roles section 1.5 lists, and that is deliberate rather than an omission: section 1.2 assigns build outcomes to deliverable 10, so the remediation decision behind F-08-19's build defects sits there, with the repository owner named second for the case where the legacy edition must be built without command-line compensation.
+
+Three readings of the table matter more than its arithmetic. **The port carries 11 of the 28**, and they are not confined to one category — duplication (F-08-01), code (F-08-04, 05, 08, 09), operational (F-08-15), build (F-08-16, 17, 18) and dead scaffolding (F-08-21, 22) — so the porting workstream inherits debt from every category this register has. **The repository owner's seven are not uniformly Low:** six are hygiene entries with no migration impact, but F-08-11 is High, because tracked credential-bearing stores and customer data are a different kind of problem from repository weight. And **security's exposure is wider than its two primary rows:** adding F-08-11 and F-08-22 gives four entries in which security has a say, three of them High.
+
+---
+
+### 11.1 Owner roll-up, with its counting rule stated
+
+**The counting rule, because the answer depends on it.** A finding is counted **once for every owner named in its row of the table above**, so a finding with two owners appears in two rows of the roll-up and the per-owner counts sum to more than 28. The `Owner` column of that table is the canonical input: where an entry's own `Owner` line names an additional *reviewing* party that the table row compresses — §5.7 names security as reviewing disclosure on F-08-08 — the review is not counted as an owner assignment. Deliverables named as co-owners are counted separately from the seven roles of section 1.5, because a deliverable owns a decision rather than a remediation.
+
+| Owner | Entries | The entries | Severity mix |
+| --- | --- | --- | --- |
+| The port | **11** | F-08-01, 04, 05, 08, 09, 15, 16, 17, 18, 21, 22 | 1 Critical, 2 High, 6 Medium, 2 Low |
+| The repository owner | **8** | F-08-11, 19, 23, 24, 25, 26, 27, 28 | **2 High** (F-08-11, F-08-19), 6 Low |
+| Security | **4** | F-08-06, 07, 11, 22 | 3 High, 1 Low |
+| Operations and platform | **4** | F-08-13, 14, 17, 18 | 1 Critical, 1 High, 2 Medium |
+| The data workstream | **2** | F-08-10, 12 | 1 Critical, 1 Medium |
+| The migration workstream | **2** | F-08-02, 20 | 2 Low |
+| Performance | **1** | F-08-03 | 1 High |
+| **Total role assignments** | **32** | 28 findings, of which **4** name two roles each (F-08-11, F-08-17, F-08-18, F-08-22) — 28 + 4 = 32 | — |
+| Deliverables named as co-owners | **5** | 07 (F-08-01, F-08-15), 10 (F-08-19), 04 (F-08-21), 05 (F-08-22) | — |
+
+Two properties of these counts are stated explicitly, because a roll-up that summarizes severity loosely is worse than no roll-up at all:
+
+- **The repository owner's set is not uniformly Low.** Six of the eight are Low hygiene items, but **F-08-11 (14 committed database binaries — two credential-bearing application stores plus one unreferenced credential-shaped tutorial database) and F-08-19 (MVC 4's broken build configuration and the stale solution) are both High**, and F-08-19 is co-owned with deliverable 10. Summarizing this owner's set as low-consequence would invite deferring the two items in it that are not.
+- **The port carries the largest set, at 11, and it spans all four severities** — one Critical (F-08-15, no test of any kind), two High, six Medium, two Low. The Critical one is the entry the pre-port sequencing in deliverable 03 turns on.
+
+Nothing in this roll-up changes an entry's severity, owner or identifier: it is the same 28 findings, distributed 3 Critical, 8 High, 7 Medium, 10 Low.
 
 ---
 
@@ -1020,7 +1443,7 @@ Deliverable 07 builds the effort model. This section states which of this regist
 | Ordinary application code | **895** non-blank lines (~43% of 2,097) | Sizing | Entities, cart, checkout, catalog, administration, startup |
 | MVC 4, total | **2,142** non-blank across 26 files | Sizing | Reference edition only — not ported |
 | MVC 3, total | **1,326** non-blank across 19 files | Sizing | Reference edition only — **size independently**, never by analogy (section 3.4) |
-| Views to port | **29** Razor files in MVC 5, 5 of them naming legacy types | Deliverable 01 §2.5, §2.4 | Cite 01, not this register |
+| Views to port | **29** Razor files in MVC 5, dividing **3 component + 5 other special + 21 mechanical = 29**; separately, **6** of the 29 are source views naming a removed API or type | Count: deliverable 01 §2.5. Both divisions: deliverable 05 §8.3, §8.4 | Cite 01 for the 29 and 05 for either division, not this register. **Do not substitute one unit for the other** — the 5 is per-line work, the 6 is removed-API surface, and section 8.1 states why they differ |
 | Static assets to relocate | **27** in MVC 5's four asset groups | Deliverable 01 §2.3 | Cite 01 |
 | Unvalidated state-changing POSTs | **5** in MVC 5, **5** in MVC 4, **8** in MVC 3 | Census, section 5.5 | Scope of the anti-forgery work per edition |
 | Manual construction sites | **10** in MVC 5 | Deliverable 01 §5.4 | Scope of the injection work |
@@ -1032,8 +1455,8 @@ Deliverable 07 builds the effort model. This section states which of this regist
 
 - **422 and 426 physical lines** for `AccountController.cs` (section 3.3) — duplication metric. The sizing figure is 382.
 - **All diff-line counts** in section 3 — 397, 414, 668, 272, the 7-to-35 range, the 2-line `Album.cs` delta. They measure divergence between two existing files, not work to be done.
-- **826 physical lines** for the seed (section 6.1) — the sizing figure is 820.
-- **Severity ratings.** Severity is consequence, not cost. A Low-severity entry can be expensive (F-08-11's history decision) and a Critical one can be cheap to decide (F-08-10 is a design choice).
+- **826 LF, 827 content lines** for the seed (section 6.1) — the physical-line metric, per deliverable 01 §2.4. The sizing figure for the same file is 820 non-blank lines, and the two must not be added or substituted for one another.
+- **Severity ratings.** Severity is consequence, not cost. A Low-severity entry can be expensive (F-08-25's 215 committed package files are Low, and remediating them is a repository-history decision) and a Critical one can be cheap to decide (F-08-10 is a design choice).
 - **Entry counts.** "28 findings" is not a workload; the entries are not comparable units.
 
 ### 12.3 What this register asks deliverable 07 to carry as risk
@@ -1056,13 +1479,14 @@ Where each fact recorded here is consumed, and where each decision this register
 | --- | --- | --- |
 | Byte-identical duplication between MVC 4 and MVC 5; MVC 3 divergence | F-08-01, §3 | 07 (sizing); 01 §7 and §10 (the architectures) |
 | The two counting methods | §2 | This register (owner); 07 consumes |
-| Layout query fan-out | F-08-03 | 05 (view components); 06 (caching platform) |
+| Layout query fan-out per edition; the four cache-invalidation paths | F-08-03, §5.2.1 | 05 (view components; and the acceptance criteria — one database read on a cold miss, zero on a warm hit); **06** (the caching decision — global versioned key, `IMemoryCache` per instance, absolute 60-second expiration, per-key single-flight and failure fallback, so cross-replica convergence is that expiry). Both cited element by element in §5.2.2 |
 | Anti-forgery coverage today; the state-changing `GET` | F-08-06 | 05 (policy, verb change, token transport); 09 (posture) |
 | Plaintext credential and the `async void` provisioning | F-08-07 | 09 (security analysis); 05 (provisioning mechanism) |
 | Bare `catch` and absent logging together | F-08-08, F-08-13 | 09 (disclosure); 06 (telemetry); 05 (pipeline) |
+| Duplicate `Genre.Name` and what the browse path must do about it | F-08-05, §5.4.1 | **05** — the duplicate-`Genre` browse contract in full: non-lossy unconditionally, gated on the schema extraction, with the duplicates branch a conditional approved delta whose approval owners (Product and Data) and coverage rows 05 records. **This register** records the measured source behaviour, the debt and the rejection of first-match-wins, and adds no delta or coverage row |
 | Hand-constructed contexts and disposal overrides | F-08-09 | 05 (injection and lifetimes) |
 | Destructive initializer; no schema script for MVC 5 | F-08-10, F-08-12 | 05 and 06 (schema lifecycle, deployment-time application); 12 (differing defaults) |
-| 14 committed binaries, three credential stores | F-08-11 | 09 (credential exposure); 10 (database components); repository owner (history) |
+| 14 committed binaries, three credential databases; the tutorial artifact's classification | F-08-11, §6.2.1 | 09 (credential exposure); **10 §10.1–§10.2** (per-edition database topology, and §13.2 item 2 keeping MVC 3's inherited store unverified); repository owner (history) |
 | No observability; no CI; no tests | F-08-13, F-08-14, F-08-15 | 03 (workstreams and gates); 06 (telemetry); 07 (risk) |
 | Disabled view compilation; absent enforcement | F-08-16, F-08-17 | 10 (build requirements); 04 (target project properties) |
 | Committed restore client; no lockfile; unpinned source | F-08-18 | 02 §5–§7 (inventory); 04 (target pins and lockfile); 10 (build) |
@@ -1070,6 +1494,10 @@ Where each fact recorded here is consumed, and where each decision this register
 | Dormant provider and Web API packages | F-08-21, F-08-22 | 02 §3.1.2 and §3.2.3 (inventory); 04 (disposition) |
 | Path casing in the ignore rules and in the bundle registration | F-08-28 | 06 and 11 (Linux hosting and the casing audit) |
 | Repository weight and hygiene | F-08-23 – F-08-27 | Repository owner; none blocks the migration |
+| Layout query fan-out | F-08-03 | 05 (view components); 06 (caching platform) |
+| 14 committed binaries, three credential-bearing stores | F-08-11 | 09 (credential exposure); 10 (database components, and the unresolved MVC 3 active-store question); repository owner (history) |
+| Layout query fan-out | F-08-03 | 05 (view components); 06 (caching platform) |
+| 14 committed binaries: two credential-bearing application stores plus one unreferenced credential-shaped tutorial database | F-08-11 | 09 (credential exposure); **10** (database components per edition, and MVC 3's host-inherited store); repository owner (history) |
 
 **Inputs consumed by this register:** deliverable 01 §2.3–§2.5 (counts and code volume), §3.4 (double registration), §5.3–§5.4 (child actions and construction sites), §6.4 (schema lifecycle and seed), §7 (the two unit-of-work models), §9.3 (capability gaps), §10 (cross-edition comparison); deliverable 02 §3.1.2, §3.2.2, §3.2.3 (dormant and unused packages), §5.1 (the committed client), §6 (the unconfigured source), §7.1–§7.2 (lockfile and committed payloads), §8.2 (advisory evidence retained by nothing).
 
@@ -1150,6 +1578,9 @@ for d in src/MVC3/MvcMusicStore-Assets/Data src/MVC4/MvcMusicStore/App_Data src/
 done                                                                             # -> 4, 6, 4
 git ls-files '*.cs' '*.config' '*.cshtml' '*.csproj' '*.sln' | grep -v /packages/ \
   | xargs grep -il 'MvcMusicStore-work' | wc -l                                  # -> 0
+git ls-files '*.cs' '*.config' '*.cshtml' '*.csproj' '*.sln' '*.sql' '*.txt' '*.md' \
+  | grep -v /packages/ | grep -v '^docs/' | xargs grep -il 'ASPNETDB' | wc -l    # -> 0
+#    the tutorial credential-shaped database is referenced by no tracked application artifact
 
 # --- §6.3  Schema scripts ----------------------------------------------------------
 git ls-files '*.sql'                                                             # -> 3, none under MVC 5
@@ -1162,14 +1593,24 @@ for p in ILogger log4net NLog Serilog TraceSource 'Trace\.Write' 'System\.Diagno
          HealthCheck healthMonitoring; do
   printf '%-30s %s\n' "$p" "$(echo "$FILES" | xargs -d '\n' grep -l "$p" | wc -l)"
 done                                                                             # -> 0 for all nine
-git ls-files '*.config' | grep -v /packages/ | xargs grep -h 'customErrors' | wc -l   # -> 24
-git ls-files '*.config' | grep -v /packages/ | while read -r f; do                    # all 24 are commented
-  awk -v F="$f" '/<!--/{i=1} /customErrors/{if(i)a++;else b++} /-->/{i=0}
-                 END{if(a||b) printf "%s inside=%d outside=%d\n", F, a+0, b+0}' "$f"
-done                                          # -> six files, inside=4 outside=0 each
+# customErrors: three counting units, each with its own command
+git ls-files -- '*Web.Debug.config' '*Web.Release.config' | grep -v '/packages/' \
+  | xargs grep -o 'customErrors'  | wc -l     # -> 24  occurrences of the word (4 per file)
+git ls-files -- '*Web.Debug.config' '*Web.Release.config' | grep -v '/packages/' \
+  | xargs grep -o '<customErrors' | wc -l     # -> 12  matches of the literal (2 per file)
+git ls-files -- '*Web.Debug.config' '*Web.Release.config' | grep -v '/packages/' | while read -r f; do
+  awk -v F="$f" '/<!--/{i=1} /<customErrors/{if(i)a++;else b++} /-->/{i=0}
+                 END{printf "%s inside=%d outside=%d\n", F, a+0, b+0}' "$f"
+done                     # -> all six files inside=2 outside=0: zero live elements
+sed -n '19,29p' src/MVC5/MvcMusicStore/Web.Release.config
+# -> the representative comment block: <!-- at :19, example element at :25, --> at :29
 git ls-files | grep -c '^\.github/'                                              # -> 0
 git ls-files | grep -ciE 'azure-pipelines|jenkinsfile|appveyor|\.travis'          # -> 0
 git ls-files | grep -ci 'pubxml'                                                 # -> 0
+git log --all --diff-filter=A --name-only --pretty=format: -- '*.pubxml' '*.pubxml.user' | sort -u
+git log --all --diff-filter=A --name-only --pretty=format: -- '*PublishProfiles/*' 'build/*' | sort -u
+# -> both produce no output: no such path was added on any ref in this clone
+git ls-files | grep -ciE '\.(log|binlog)$'                                       # -> 0  no warning record
 git ls-files | grep -ciE 'dockerfile|docker-compose|\.ya?ml$'                     # -> 0
 git ls-files | grep -v /packages/ | grep -ciE '\.(ps1|sh|cmd|bat)$'               # -> 0
 git ls-files '*.cs' '*.csproj' | grep -v /packages/ \
@@ -1180,10 +1621,12 @@ grep -n 'MvcBuildViews' src/MVC5/MvcMusicStore/MvcMusicStore.csproj             
 git ls-files '*.csproj' | grep -v /packages/ | xargs grep -n 'WarningLevel'       # -> 4 in all three
 git ls-files '*.csproj' | grep -v /packages/ | xargs grep -c 'TreatWarningsAsErrors'   # -> 0
 git ls-files | grep -ciE '\.ruleset$|\.editorconfig$|Directory\.Build\.props'     # -> 0
-git ls-files 'packages.lock.json' | wc -l                                        # -> 0
+git ls-files | grep -E '(^|/)packages\.lock\.json$'   # -> no output; matches at any depth, not just root
 stat -c '%s' src/MVC4/MvcMusicStore/.nuget/NuGet.exe                             # -> 630784
 
 # --- §9  Dead scaffolding ---------------------------------------------------------
+git ls-files '*Global.asax.cs' | grep -v /packages/ | xargs grep -n 'AreaRegistration'
+#  -> MVC3 .../Global.asax.cs:36, MVC4 .../Global.asax.cs:19, MVC5 .../Global.asax.cs:15
 git ls-files | grep -ci '/Areas/'                                                # -> 0
 git ls-files '*.cs' | grep -v /packages/ | xargs grep -c 'ApiController' | awk -F: '{s+=$NF} END {print s}'
                                                                                  # -> 0
@@ -1207,7 +1650,19 @@ git check-ignore -v src/MVC4/MvcMusicStore/.nuget/NuGet.exe; echo "exit=$?"
 git check-ignore --no-index -v src/MVC4/MvcMusicStore/.nuget/NuGet.exe     # -> .gitignore:28:nuget.exe
 git check-ignore --no-index -v src/MVC5/MvcMusicStore/App_Data/MvcMusicStore.mdf  # -> .gitignore:32:App_Data/
 git check-ignore --no-index -v src/MVC4/MvcMusicStore/MvcMusicStore.v11.suo       # -> .gitignore:8:*.suo
+git check-ignore --no-index -v src/MVC4/MvcMusicStore/packages/repositories.config # -> .gitignore:33:Packages/
 git check-ignore --no-index -v src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF    # -> exit 1: no rule matches
+# the nested packages/ trees match Packages/ [.gitignore:33] only under core.ignorecase; -c writes nothing
+git -c core.ignorecase=false check-ignore --no-index -v \
+  src/MVC4/MvcMusicStore/packages/repositories.config \
+  src/MVC3/MvcMusicStore-Completed/packages/repositories.config
+# -> no output, exit 1: on a case-sensitive host no rule matches either tree
+git -c core.ignorecase=false check-ignore --no-index -v packages/x  # -> .gitignore:15:packages/* (root only)
+git log --all -p --pretty=format:'%h' -- .gitignore | grep -E '^\+[^+]' | sort -u | grep -i data
+# -> +App_Data/  the only Data-bearing rule in any revision of the ignore file
+git merge-base --is-ancestor 1a374e6 80d24f4 && echo 'binaries precede the first App_Data/ rule'
+# -> true: 1a374e6 added the App_Data binaries at 2022-11-04 16:31; 80d24f4, the first .gitignore
+#    revision carrying App_Data/, is 2022-11-04 17:18
 
 # --- §10.7  The ONE non-read-only command: a throwaway repo outside the checkout ---
 T=$(mktemp -d); mkdir -p "$T/.nuget"; cp .gitignore "$T/"; : > "$T/.nuget/NuGet.exe"
@@ -1222,10 +1677,16 @@ cd - >/dev/null && rm -rf "$T"
 grep -n 'site.css' src/MVC5/MvcMusicStore/App_Start/BundleConfig.cs      # -> 28: "~/Content/site.css"
 git ls-files 'src/MVC5/MvcMusicStore/Content/*'                          # -> Content/Site.css
 
-# --- The constraint this work was held to -----------------------------------------
-git status --porcelain          # -> only new files under docs/modernization/
+# --- The constraint this work was held to (all four, per section 1.3) -------------
+git diff --name-status ea2552d6eda7c20e9477a512e5c615665618cf35..HEAD
+# -> exactly 13 rows, every one an 'A' under docs/modernization/; no M and no D row
+git diff --name-status ea2552d6eda7c20e9477a512e5c615665618cf35..HEAD | grep -c '^A'   # -> 13
+git status --porcelain          # -> no output: no tracked file modified, none untracked
+git status --porcelain --ignored # -> no output: no ignored file present — the restored
+#    packages/ and the bin/ and obj/ trees the assessment's builds wrote are gone
+git clean -ndX                  # -> no output (dry run): nothing ignored left to remove
 ```
 
 ---
 
-*Deliverable 08 of 13. Supporting assessment record: it consumes deliverables 01 and 02 and feeds deliverable 07's effort model and risk register. Twenty-eight entries, each with a severity, a remediation and an owner; every quantity re-derivable from the file or command cited beside it. No repository file was modified in producing it, and no user-specified rules govern it — `review_rules` returns "No user rules provided."*
+*Deliverable 08 of 13. Supporting assessment record: it consumes deliverables 01 and 02 and feeds deliverable 07's effort model and risk register. Twenty-eight entries, each with a severity, a remediation and an owner; every quantity re-derivable from the file or command cited beside it. No **tracked** repository file was modified in producing it — the ignored restore and build output the assessment did write was removed and its absence verified by the four commands of section 1.3 — and no user-specified rules govern it — `review_rules` returns "No user rules provided."*
