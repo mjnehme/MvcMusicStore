@@ -77,14 +77,16 @@ and that none changes any recorded outcome:
   path.
 
 Together the eight held **527 files and 114,310,394 bytes**, which is more payload than the entire tracked
-checkout carries. **All eight have been removed and their absence verified.** Those two figures were
-measured before removal and are not reproducible afterwards by construction; what a reader reproduces now
-is the emptied state the same two commands report:
+checkout carries. **All eight were removed once the assessment had finished with them, and their absence
+was verified at that point.** Those two figures were measured before removal and are not reproducible
+afterwards by construction. What the same two commands report afterwards is the emptied state — but only
+while nothing generates new ignored payload, because they see ignored content regardless of what produced
+it, so in a checkout where a build or restore has run since they will legitimately be non-empty:
 
 ```bash
-git ls-files --others --ignored --exclude-standard | wc -l          # before removal -> 527; now -> 0
+git ls-files --others --ignored --exclude-standard | wc -l          # before removal -> 527; 0 when cleared
 git ls-files --others --ignored --exclude-standard -z \
-  | xargs -0 -r stat -c %s | awk '{s+=$1} END {print s+0}'          # before -> 114310394; now -> 0
+  | xargs -0 -r stat -c %s | awk '{s+=$1} END {print s+0}'          # before -> 114310394; 0 when cleared
 ```
 
 **Bare `git status --porcelain` could not have detected any of that, which is why the acceptance check is
@@ -113,16 +115,25 @@ git check-ignore -v --no-index \
 git config core.ignorecase                              # -> true
 ```
 
-Every result below was observed on the committed assessment checkout:
+Every result below was observed on the committed assessment checkout with no generated output present.
+Commands 1 to 3 describe a working tree at the moment they run, and 2 and 3 see ignored content, so a
+checkout in which any build or restore has run since will report those trees; command 4 is a property of
+the committed range and is the durable claim.
 
 ```bash
 # 1. Nothing uncommitted. Says nothing whatever about ignored paths.
 git status --porcelain                                  # -> 0 lines
 # 2. The same question with ignored paths included: the check that sees bin/, obj/ and packages/.
-git status --porcelain --ignored                        # -> 0 lines
+git status --porcelain --ignored                        # -> 0 lines in that cleared state
 # 3. What `git clean -X` would remove, listed rather than removed: ignored payload, if any survives.
-git clean -ndX                                          # -> no output
-# 4. The tracked change against the pre-assessment baseline commit.
+git clean -ndX                                          # -> no output in that cleared state
+# 4. The tracked change against the pre-assessment baseline commit. The left side is the
+#    immutable pre-assessment revision ea2552d6eda7c20e9477a512e5c615665618cf35, the last
+#    commit before this assessment began; the right side is HEAD, the delivery commit the
+#    reviewer has checked out, which is named as HEAD rather than as a hash because a
+#    document cannot cite the commit that creates it. Every source path cited in this
+#    document is byte-identical at the two revisions, which is what makes the citations and
+#    this check answer the same question.
 git diff --name-status ea2552d6eda7c20e9477a512e5c615665618cf35..HEAD
 # -> exactly 13 rows, every one an A, every path under docs/modernization/:
 #    A docs/modernization/01-architecture-overview.md
@@ -141,6 +152,19 @@ git diff --name-status ea2552d6eda7c20e9477a512e5c615665618cf35..HEAD
 # No M row, no D row, no R row, and nothing outside docs/modernization/.
 ```
 
+**Only one end of command 4's range is a literal hash, and the asymmetry is deliberate rather than an
+omission.** The baseline endpoint is pinned in full — `ea2552d6eda7c20e9477a512e5c615665618cf35`, the last
+commit before this engagement — so the range is exactly this engagement and nothing else. The far end is
+written `HEAD` rather than a second hash because **no document can contain the hash of the commit that adds
+it**: that hash exists only once the commit does, which is after this file has reached the content the
+commit records, so a literal in its place would necessarily name some other commit. A reader who wants both
+ends pinned resolves it once on their own checkout — `git rev-parse HEAD` — and substitutes the result
+wherever `HEAD` appears, here and in [section 8](#8-reproducibility-appendix). **The substitution changes
+none of the four values the assertion expects:** 13 rows, 13 `A` rows, 0 rows that are not an `A`, and 0
+paths outside `docs/modernization/`. Each is a property of the range rather than of the particular tip it
+ends at, so all four hold at every tip at which the thirteen-file set is complete — including the tip that
+lands the last correction to it.
+
 Commands 1 and 4 answer *what is tracked*; commands 2 and 3 answer *what is ignored*, and only those two
 could have found the eight trees. Neither pair substitutes for the other, and both are required: 1, 2 and 3
 together establish that nothing at all remains in the working tree, tracked or ignored, and 4 establishes
@@ -155,7 +179,7 @@ attribute value, `<httpRuntime targetFramework="4.5"/>`
 [src/MVC5/MvcMusicStore/Web.config:34], disagreeing with
 `<compilation … targetFramework="4.8"/>` one line above it [src/MVC5/MvcMusicStore/Web.config:33] — and
 the path casing at [F-12-17](#f-12-17--filesystem-path-casing), a two-character difference in one bundle
-registration string.
+registration string in each of the two editions that has one.
 
 **One construct a reader may come here looking for is deliberately not enumerated below.** The
 state-changing `GET` on the cart-add action is a **security** finding rather than a portability one — it
@@ -178,7 +202,10 @@ best practice applies instead, and this document holds itself to four explicit c
    sentence, an earlier table row or the enclosing section, so a lone locator such as `:29` and a bare
    filename such as `Order.cs:8` are both disqualified forms, and neither appears as a citation anywhere
    below. The cost is repetition; the benefit is that every citation can be checked, and re-checked after
-   an edit, without reading anything above it.
+   an edit, without reading anything above it. **A tracked binary is cited the same way, by the one
+   locator it can support:** a database file has no line to point at, so its locator is its byte size —
+   `[<path>:<N> bytes]` — with the command that reads the size stated beside the claim, and a line number
+   invented for it would be a fiction rather than a locator.
 2. **Every entry states which edition or editions it holds in.** "The application" is three
    applications, and a blocker in one is not a blocker in the others. MVC 3's SQL Server Compact
    dependency is MVC 3's alone; the OWIN constructs are MVC 5's alone; `TryUpdateModel` is in all three.
@@ -363,9 +390,9 @@ runtime provider activation — it is the row whose single stage is neither comp
 | [F-12-01](#f-12-01--sql-server-compact-40-as-the-catalogue-provider) | SQL Server Compact 4.0 as the catalogue provider | MVC 3 | **Runtime — provider activation.** Named only as a `providerName` in configuration with no assembly reference anywhere, so no build finds it; it throws on first data access. The one group-two row with **no successor of any kind**, and the one that fails **loudly** rather than silently |
 | [F-12-15](#f-12-15--lazy-loading-is-on-by-default-in-ef-6-and-off-in-ef-core) | Lazy loading is on by default in EF 6 and off in EF Core | all three | **Silent runtime** |
 | [F-12-16](#f-12-16--json-property-naming-flips-to-camelcase) | JSON property naming flips to camelCase | all three | **Silent runtime** |
-| [F-12-17](#f-12-17--filesystem-path-casing) | Filesystem path casing | MVC 5 | **Silent runtime** |
+| [F-12-17](#f-12-17--filesystem-path-casing) | Filesystem path casing | MVC 5, MVC 4 | **Silent runtime** |
 | [F-12-18](#f-12-18--a-framework-version-mismatch-inside-mvc-5s-own-configuration) | A framework-version mismatch inside MVC 5's own configuration | MVC 5 | **Silent runtime** |
-| [F-12-19](#f-12-19--connection-string-resolution-by-convention) | Connection-string resolution by convention, two conventions | MVC 5 | **Silent runtime for the class-name convention** — the explicit `: base("DefaultConnection")` call in the same entry breaks the build; see the entry's two stages |
+| [F-12-19](#f-12-19--connection-string-resolution-by-convention) | Connection-string resolution by convention, two conventions | all three | **Silent runtime for the class-name convention** — the explicit `: base("DefaultConnection")` call in the same entry breaks the build; see the entry's two stages |
 | [F-12-20](#f-12-20--dispose-overrides-on-objects-a-container-will-own) | `Dispose` overrides on objects a container will own | all three | **Silent runtime** |
 | [F-12-21](#f-12-21--the-identity-schema-is-not-knowable-from-the-repository) | The Identity schema is not knowable from the repository | MVC 5 | **Silent runtime** |
 | [F-12-22](#f-12-22--no-usable-schema-baseline-exists) | No usable schema baseline exists | MVC 5, MVC 4 | **Silent runtime** |
@@ -380,70 +407,6 @@ source binds to, so a build names it. The register's lowest identifier is delibe
 configuration, with no assembly reference for a build to fail on, so it sits in
 [section 4](#4-group-two--the-successor-exists-and-its-default-differs-silent-breakage) under the
 placement rule of §2.1.
-
-### F-12-01 — SQL Server Compact 4.0 as the catalogue provider
-
-**Editions:** MVC 3 only.
-
-`web.config` declares the catalogue connection as `Data Source=|DataDirectory|MvcMusicStore.sdf` with
-`providerName="System.Data.SqlServerCe.4.0"`
-[src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:56-58]. That is the **only** connection string
-the file declares — there is no second entry, which is the same evidence
-[09 §5.1](09-security-assessment.md) uses to establish that MVC 3's credential store is inherited from
-machine configuration rather than declared.
-
-Two facts make this a hard stop rather than a provider swap:
-
-- **No `.sdf` is tracked at HEAD.** `git ls-files '*.sdf' | wc -l` returns `0`, so the database the
-  connection string names is not present in the checkout and is created on first run by a provider that
-  must already be installed machine-wide.
-
-  **It was, however, tracked historically, and the distinction matters.** The file was added as
-  `MvcMusicStore/App_Data/MvcMusicStore.sdf` in `d4ff979` (2011-04-18, "Updated for v3.0 release (ASP.NET
-  MVC 3 Tools Update)"), renamed to `src/MVC3/MvcMusicStore/App_Data/MvcMusicStore.sdf` in `fb88f8b`
-  (2022-11-04, "Moved source to subfolder") and **deleted** in `d2dec66` (2022-11-04, "Replaced MVC 3 with
-  release assets"). Its blob is still reachable — `8d8a3c458d70425b5f1942e7acc25911bc1d8042`, 217,088
-  bytes — so a clone carries it even though no working-tree path resolves to it:
-
-  ```bash
-  git ls-files '*.sdf' | wc -l                                   # -> 0 at HEAD
-  git log --all --name-status --format='%h %ad %s' --date=short -- '*.sdf'
-  # -> d2dec66 ... D  src/MVC3/MvcMusicStore/App_Data/MvcMusicStore.sdf
-  #    fb88f8b ... R100 MvcMusicStore/App_Data/MvcMusicStore.sdf -> src/MVC3/...
-  #    d4ff979 ... A  MvcMusicStore/App_Data/MvcMusicStore.sdf
-  git rev-list --all --objects | grep '\.sdf'
-  # -> 8d8a3c458d70425b5f1942e7acc25911bc1d8042 src/MVC3/MvcMusicStore/App_Data/MvcMusicStore.sdf
-  git cat-file -s 8d8a3c458d70425b5f1942e7acc25911bc1d8042        # -> 217088
-  ```
-
-  Neither fact softens the blocker: what the *current* MVC 3 project needs at run time is a first-run SQL
-  Server Compact database, and the engine that would create it has no supported successor for the target
-  (below). The deleted blob is a repository-weight and history observation rather than a usable artifact,
-  and it is not part of the fourteen committed credential-shaped binaries that
-  [09 §6.9](09-security-assessment.md) inventories.
-  What *is* committed under the tutorial assets is
-  `src/MVC3/MvcMusicStore-Assets/Data/MvcMusicStore.mdf` — a SQL Server file for a **different engine**
-  than the one the application's own configuration names.
-- **The data layer is bound to the EF 4.1 generation.** The project references `EntityFramework`
-  4.1.0.0 by `HintPath` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/MvcMusicStore.csproj:37-40] and
-  the framework assembly `System.Data.Entity`
-  [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/MvcMusicStore.csproj:41], and nothing else.
-
-**Failure mode: compile-time.** The provider assembly `System.Data.SqlServerCe.4.0` has no build for the
-target framework, so the reference cannot resolve. A community EF Core provider for SQL Server Compact
-exists but was **abandoned at the EF Core 2.2 generation**, so there is no supported provider for any
-current target either — this is not a version-lag problem that waiting solves.
-
-**Successor: none for the engine.** MVC 3's data layer cannot be ported without **re-targeting the
-provider outright**, which means choosing a different database engine, not upgrading a package.
-[02 §4.1](02-dependency-inventory.md) records the provider as an undeclared machine-wide dependency and
-[09 §5.8](09-security-assessment.md) records that it is out of support and receives no security
-servicing. [10 §10.2](10-build-and-deployment-requirements.md) owns the two-engine topology this
-produces — MVC 3 needs SQL Server Compact for the catalogue **and** a SQL Server instance for
-credentials, simultaneously.
-
-**Owner:** [10](10-build-and-deployment-requirements.md) for the topology; the triage decision that MVC 3
-is not a migration source is [03](03-modernization-roadmap.md)'s to sequence.
 
 ### F-12-02 — `System.Web.Optimization` bundling
 
@@ -668,20 +631,26 @@ middleware forwards to, the status-code behaviour, what is logged and what may b
 **Editions:** all three — the call is identical in each.
 
 `TryUpdateModel(order)` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:29], applied to an
-`Order` instance constructed one line earlier [:28], inside the checkout POST action whose parameter is a
-raw `FormCollection` [:26].
+`Order` instance constructed one line earlier [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:28], inside the checkout POST action whose parameter is a
+raw `FormCollection` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:26].
 
 What makes the call safe today is a **separate** construct: a class-level attribute on the entity,
 `[Bind(Include = "FirstName,LastName,Address,City,State,PostalCode,Country,Phone,Email")]`
 [src/MVC5/MvcMusicStore/Models/Order.cs:8]. That include list is the entire over-posting control at
-checkout — [09 §6.4](09-security-assessment.md) owns that consequence — and both halves of the mechanism
-have to move together.
+checkout — [09 §6.4](09-security-assessment.md) owns that consequence as finding **F-09-28** — and both
+halves of the mechanism have to move together. **MVC 3's attribute is the opposite kind**, an exclude list
+[src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Models/Order.cs:8], which is
+[09 §5.7](09-security-assessment.md)'s finding **F-09-22**. The portability classification below is
+unaffected by which kind it is — both forms are the same class-level attribute reached by the same
+synchronous call — and [§9.1](#91-the-reverse-direction--the-two-09-rows-this-document-discharges) records
+how each of those two rows is discharged here.
 
 **Failure mode: compile-time — and the break is the method, not the attribute.** The two halves fail for
 different reasons, and getting them the wrong way round misdirects the fix:
 
 - **The synchronous `TryUpdateModel` is the genuine removal.** The target exposes **only** the
-  asynchronous form, `TryUpdateModelAsync`; there is no synchronous overload, so the call at [:29] does
+  asynchronous form, `TryUpdateModelAsync`; there is no synchronous overload, so the call at
+  [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:29] does
   not compile and no namespace substitution reaches it. The signature changes, and with it the action's
   own signature, because the caller must become asynchronous.
 - **`[Bind]` is *not* removed. It still exists in ASP.NET Core**, as a model-binding attribute applicable
@@ -714,7 +683,8 @@ different reasons, and getting them the wrong way round misdirects the fix:
   An explicit input model is therefore the replacement for those three reasons, and not because the
   attribute vanished — it did not.
 
-`Order.cs` carries `using System.Web.Mvc` [:4] purely to reference that attribute — a model-layer file
+`Order.cs` carries `using System.Web.Mvc`
+[src/MVC5/MvcMusicStore/Models/Order.cs:4] purely to reference that attribute — a model-layer file
 with an MVC dependency, and the directive goes when the attribute does, which is why the port of this file
 is not confined to `Controllers/`.
 
@@ -725,17 +695,18 @@ the action actually reads:
 - **Nine** come from the `[Bind]` include list [src/MVC5/MvcMusicStore/Models/Order.cs:8].
 - **The tenth is `PromoCode`**, which the action reads **separately, straight out of the raw form** —
   `values["PromoCode"]` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:33], compared
-  case-insensitively against `const string PromoCode = "FREE"` [:12], with the form collection arriving
-  as the action parameter [:26]. It is not on the `[Bind]` list because it is not bound at all.
+  case-insensitively against `const string PromoCode = "FREE"` [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:12], with the form collection arriving
+  as the action parameter [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:26]. It is not on the `[Bind]` list because it is not bound at all.
 - **`PromoCode` belongs on the input model and *not* on the `Order` entity.** `Order` has no such
   property. Its whole surface is fourteen properties: the nine the bind list names, four suppressed with
-  `[ScaffoldColumn(false)]` — `OrderId` [src/MVC5/MvcMusicStore/Models/Order.cs:11-12], `OrderDate` [:14-15], `Username` [:17-18] and
-  `Total` [:63-64] — and the `OrderDetails` navigation collection [:66]. Adding a tenth persisted property
+  `[ScaffoldColumn(false)]` — `OrderId` [src/MVC5/MvcMusicStore/Models/Order.cs:11-12], `OrderDate` [src/MVC5/MvcMusicStore/Models/Order.cs:14-15], `Username` [src/MVC5/MvcMusicStore/Models/Order.cs:17-18] and
+  `Total` [src/MVC5/MvcMusicStore/Models/Order.cs:63-64] — and the `OrderDetails` navigation collection [src/MVC5/MvcMusicStore/Models/Order.cs:66]. Adding a tenth persisted property
   would put a transient form value on the entity.
 
 A plan that carries nine properties compiles, binds and persists correctly, and **silently loses
-promo-code handling** — which in this application means the order-completion branch [:38-55] is
-unreachable and every checkout returns to the form at [:36]. The nine-versus-ten fact is recorded here
+promo-code handling** — which in this application means the order-completion branch
+[src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:38-55] is
+unreachable and every checkout returns to the form at [src/MVC5/MvcMusicStore/Controllers/CheckoutController.cs:36]. The nine-versus-ten fact is recorded here
 because it is a property of the *current* code that no automated tool infers;
 [09 §6.4](09-security-assessment.md) states the same ten and defers the model to 05.
 
@@ -844,8 +815,11 @@ records rather than re-opens:
   serve it: the `ChallengeResult` type [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:394-420]
   and its `ExecuteResult` override [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:411], the
   `IAuthenticationManager` property [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:338-344], the
-  four commented registrations [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:23-35] and the external
-  sign-in cookie [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:20].
+  four commented registrations [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:23-35], the external
+  sign-in cookie [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:20] and the **five sign-in-and-linking
+  action paths** that constitute the flow — together with the failure display removed alongside them —
+  which [§7.3](#73-the-three-decisions-this-document-defers-to-05--and-what-05-has-settled)
+  names individually with their locators rather than restating them here.
 - **The linked-login list and its removal surface are retained and ported**, because they have a direct
   successor where the challenge flow has none. `RemoveAccountList`
   [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:316-322], its partial
@@ -1008,7 +982,7 @@ current assembly does not have.
 
 Each file is **35 lines** [src/MVC5/MvcMusicStore/Properties/AssemblyInfo.cs:1-35], of which the twelve
 attribute lines above are the whole of the migratable content; the remainder is three `using` directives
-[:1-3] and four comment blocks, the last of which explains the version wildcard [:25-33].
+[src/MVC5/MvcMusicStore/Properties/AssemblyInfo.cs:1-3] and four comment blocks, the last of which explains the version wildcard [src/MVC5/MvcMusicStore/Properties/AssemblyInfo.cs:25-33].
 
 **Failure mode: compile-time**, and it is the mildest in this group: the SDK project format generates
 these attributes from build properties, so a hand-written file that declares the same attributes produces
@@ -1025,7 +999,7 @@ these attributes from build properties, so a hand-written file that declares the
 MVC 5 declares two connection strings, and both are unusable against a managed SQL service as written:
 `Data Source=(LocalDb)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\aspnet-MvcMusicStore-20131025034205.mdf;Initial Catalog=...;Integrated Security=True`
 [src/MVC5/MvcMusicStore/Web.config:12] and the catalogue equivalent with
-`AttachDbFilename=|DataDirectory|\MvcMusicStore.mdf` and `Integrated Security=True` [:13].
+`AttachDbFilename=|DataDirectory|\MvcMusicStore.mdf` and `Integrated Security=True` [src/MVC5/MvcMusicStore/Web.config:13].
 
 Three properties each have to change, and they are independent:
 
@@ -1039,7 +1013,7 @@ Three properties each have to change, and they are independent:
 - **`(LocalDb)\...`** names a developer-machine engine, not a server.
 
 **MVC 4 compounds it with an internal contradiction.** Its committed connection strings target
-`(LocalDb)\v11.0` [src/MVC4/MvcMusicStore/Web.config:13] and `(LocalDB)\v11.0` [:19] — SQL Server 2012
+`(LocalDb)\v11.0` [src/MVC4/MvcMusicStore/Web.config:13] and `(LocalDB)\v11.0` [src/MVC4/MvcMusicStore/Web.config:19] — SQL Server 2012
 LocalDB — while **its own README documents `(LocalDB)\MSSQLLocalDB`** [src/MVC4/README.md:45], and Visual
 Studio 2022, the README's stated prerequisite, installs no v11.0 instance. The repository therefore
 disagrees with itself about which engine the application needs, and neither statement can be assumed
@@ -1081,7 +1055,7 @@ themselves each fail at a different moment, and only the first is caught by a bu
 
 | Part | What fails | Stage |
 | --- | --- | --- |
-| **The reading API** | `ConfigurationManager.AppSettings`, read directly from startup code [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:23-24] behind `using System.Configuration;` [:7]. The type is not part of the target's shared framework, so the call does not resolve as written | **Compile-time (API).** The build names the file and the line. This is the part that places the entry in group one |
+| **The reading API** | `ConfigurationManager.AppSettings`, read directly from startup code [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:23-24] behind `using System.Configuration;` [src/MVC5/MvcMusicStore/App_Start/Startup.App.cs:7]. The type is not part of the target's shared framework, so the call does not resolve as written | **Compile-time (API).** The build names the file and the line. This is the part that places the entry in group one |
 | **The configuration source** | `Web.config`'s `connectionStrings` and `appSettings` sections are **not a configuration source** in the target. Left in place, they are neither read nor reported — the setting is simply absent, and the consumer receives a null or empty value | **Configuration.** Nothing fails to compile and nothing warns. It surfaces on the first read: at host build for a connection string bound during startup, or at first use for a setting read later |
 | **The values themselves** | `(LocalDb)\MSSQLLocalDB`, `AttachDbFilename=\|DataDirectory\|\…` and `Integrated Security=True` [src/MVC5/MvcMusicStore/Web.config:12-13] are valid connection-string syntax that a managed SQL service cannot honour: no LocalDB engine, no file to attach, no Windows identity to present | **Runtime / cloud.** Re-expressed faithfully into the new configuration mechanism, these values compile, bind and read successfully, then fail on the first connection attempt — and **only in the target environment**. A developer workstation with LocalDB installed connects happily, so this part passes every local check and fails in the cloud |
 
@@ -1123,13 +1097,28 @@ diagnosis is not restated: 10 §6 records the two independent, platform-independ
 committed project and solution files, and [10 §13.1](10-build-and-deployment-requirements.md) records the
 outcome — MVC 4 **fails as committed**, in **both** solutions, **before compilation**.
 
-**That negative is the whole of the established position, and this entry states nothing beyond it.**
-[10 §6.3](10-build-and-deployment-requirements.md) identifies the minimum host-side compensations such a
-build would *need*, and records that they were **not exercised** — no MVC 4 build under the prescribed
-toolchain was performed anywhere in this assessment, so **whether those compensations would be sufficient
-is unestablished**, and they are in any case workarounds applied to nothing in the repository. So this
-document does **not** say that MVC 4 builds under overrides, and a reader must not infer it: the only
-thing established about this edition's build is that its committed configuration fails.
+**That negative is what this entry classifies, and it is not the whole of what has been observed — so the
+distinction is drawn here rather than left to a reader.** [10 §6.3](10-build-and-deployment-requirements.md)
+identifies the minimum host-side compensations an MVC 4 build *needs*, and records that they **were
+exercised**: on a Windows host carrying the prescribed toolchain, after a standalone restore and with
+exactly those two properties supplied on the command line, MVC 4 built to exit `0`. That observation is
+[10 §3.2](10-build-and-deployment-requirements.md)'s — its host and tool inventory, its commands, its
+per-edition results and its two qualifications are recorded there once — and this document cites it
+without restating it, per [§1.5](#15-what-this-document-does-not-own).
+
+**What the observation does and does not license, in the two respects that bear on this classification.**
+It is a **command-line workaround, not a repair**: both committed defects are still present exactly as
+cited below, so a plain invocation with no overrides still fails during evaluation, and the compensations
+are applied to **nothing in the repository**. And it covers **build only, not runtime** — MVC 4's runtime
+remains broken for an unrelated reason, its committed catalogue and membership connection strings naming a
+local database instance that cannot be created on a current Windows Server
+[src/MVC4/MvcMusicStore/Web.config:13], [src/MVC4/MvcMusicStore/Web.config:19], which
+[10 §3.2](10-build-and-deployment-requirements.md) records as an `HTTP 500` on the application's root
+request and [10 §10.3](10-build-and-deployment-requirements.md) diagnoses. So *"MVC 4 builds under
+overrides"* and *"MVC 4's committed configuration is broken"* are **both true and neither cancels the
+other**, which is why [10 §13.1](10-build-and-deployment-requirements.md) still carries this edition as
+failing **as committed** — in **both** solutions, before compilation — and why that is the fact this
+entry classifies.
 
 The locations being classified, for reference only — 10 owns what is wrong with each and why. The two
 project-file defects: an **unconditional** NuGet target import,
@@ -1151,8 +1140,12 @@ it removes MVC 4 from the set of candidate runtime baselines and leaves MVC 5 as
 that it does.** MVC 5's build status is **blocked pending a Windows verification run**
 ([10](10-build-and-deployment-requirements.md)) — the prescribed toolchain of .NET Framework 4.8
 targeting pack, Visual Studio 2022 MSBuild and a restore against a declared package source was not
-available where this assessment ran, so what was observed for MVC 5 is a **precondition** failure from an
-un-restored checkout, not a statement about whether the application compiles once restored. So the
+available on the host this assessment was written on
+([10 §2.1](10-build-and-deployment-requirements.md)), so what was observed for MVC 5 there is a
+**precondition** failure from an un-restored checkout, not a statement about whether the application
+compiles once restored. The post-freeze host of [10 §3.2](10-build-and-deployment-requirements.md)
+restored and built MVC 5 as well, and that section states the rule this document follows: the carried
+status is unchanged, and no deliverable may report MVC 5's build as verified on the strength of it. So the
 classification is narrower still: MVC 4 is removed from the candidate set on established,
 platform-independent grounds, and MVC 5 remains the only candidate **whose availability as a baseline is
 itself unverified**. A reader must not convert "the only candidate" into "a working baseline"; that
@@ -1167,8 +1160,10 @@ is repaired** — neither defect is fixed and no compensation is applied to any 
 [§1.3](#13-the-no-modification-constraint)'s gate forbids it. Remediation is
 [08 §8.4](08-technical-debt-register.md)'s to own, for a separately approved phase.
 
-**Owner:** [10](10-build-and-deployment-requirements.md) for the diagnosis and for the compensations it
-identifies as necessary-but-unverified; [08 §8.4](08-technical-debt-register.md) for severity and owner.
+**Owner:** [10](10-build-and-deployment-requirements.md) for the diagnosis, for the compensations
+[10 §6.3](10-build-and-deployment-requirements.md) identifies and for the one post-freeze observation in
+which they were exercised ([10 §3.2](10-build-and-deployment-requirements.md));
+[08 §8.4](08-technical-debt-register.md) for severity and owner.
 
 ---
 
@@ -1189,9 +1184,9 @@ beside each:
 
 | Edition | `[ChildActionOnly]` declarations | View call sites |
 | --- | --- | --- |
-| **MVC 5** | **3** — `GenreMenu` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:43], `CartSummary` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:86], `RemoveAccountList` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:316] | **3**, all `@Html.Action` — [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25] (`GenreMenu`), [:26] (`CartSummary`), [src/MVC5/MvcMusicStore/Views/Account/Manage.cshtml:22] (`RemoveAccountList`) |
-| **MVC 4** | **4** — `GenreMenu` [src/MVC4/MvcMusicStore/Controllers/StoreController.cs:43], `CartSummary` [src/MVC4/MvcMusicStore/Controllers/ShoppingCartController.cs:86], `ExternalLoginsList` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:322], `RemoveExternalLogins` [:329] | **5**, all `@Html.Action` — [src/MVC4/MvcMusicStore/Views/Shared/_Layout.cshtml:25] (`CartSummary`), [:32] (`GenreMenu`), [src/MVC4/MvcMusicStore/Views/Account/Login.cshtml:45] (`ExternalLoginsList`), [src/MVC4/MvcMusicStore/Views/Account/Manage.cshtml:24] (`RemoveExternalLogins`), [:27] (`ExternalLoginsList`) |
-| **MVC 3** | **2** — `CartSummary` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:82], `GenreMenu` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:49] | **2**, both `Html.RenderAction` rather than `@Html.Action` — [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:16] (`CartSummary`), [:21] (`GenreMenu`) |
+| **MVC 5** | **3** — `GenreMenu` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:43], `CartSummary` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:86], `RemoveAccountList` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:316] | **3**, all `@Html.Action` — [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25] (`GenreMenu`), [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:26] (`CartSummary`), [src/MVC5/MvcMusicStore/Views/Account/Manage.cshtml:22] (`RemoveAccountList`) |
+| **MVC 4** | **4** — `GenreMenu` [src/MVC4/MvcMusicStore/Controllers/StoreController.cs:43], `CartSummary` [src/MVC4/MvcMusicStore/Controllers/ShoppingCartController.cs:86], `ExternalLoginsList` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:322], `RemoveExternalLogins` [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:329] | **5**, all `@Html.Action` — [src/MVC4/MvcMusicStore/Views/Shared/_Layout.cshtml:25] (`CartSummary`), [src/MVC4/MvcMusicStore/Views/Shared/_Layout.cshtml:32] (`GenreMenu`), [src/MVC4/MvcMusicStore/Views/Account/Login.cshtml:45] (`ExternalLoginsList`), [src/MVC4/MvcMusicStore/Views/Account/Manage.cshtml:24] (`RemoveExternalLogins`), [src/MVC4/MvcMusicStore/Views/Account/Manage.cshtml:27] (`ExternalLoginsList`) |
+| **MVC 3** | **2** — `CartSummary` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/ShoppingCartController.cs:82], `GenreMenu` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Controllers/StoreController.cs:49] | **2**, both `Html.RenderAction` rather than `@Html.Action` — [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:16] (`CartSummary`), [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Views/Shared/_Layout.cshtml:21] (`GenreMenu`) |
 
 `git grep -n 'ChildActionOnly' -- 'src/' | grep -v '/packages/' | wc -l` returns exactly `9` — 3 plus 4
 plus 2 — so the declaration side is a census rather than a sample. MVC 3's use of the `RenderAction`
@@ -1228,10 +1223,11 @@ MVC 5 occurrences.** All three become view components — `GenreMenu`, `CartSumm
 `Views/Shared/Components/<name>/Default.cshtml` ([05 §8.2](05-aspnet-core-migration-approach.md)). The
 third is worth a sentence because it reads like an exception and is not: `RemoveAccountList` serves the
 external-login surface whose every provider registration is commented out, but the *management* half of
-that surface is **retained and mapped**, per the settled disposition recorded at
+that surface is **retained**, per the settled disposition recorded at
 [F-12-09](#f-12-09--challengeresult-and-its-executeresult-override) and
 [§7.3](#73-the-three-decisions-this-document-defers-to-05--and-what-05-has-settled) — what is deleted
-there is the `ChallengeResult` type and the OWIN plumbing beneath it, not the views or the actions. The
+there is the `ChallengeResult` type, the OWIN plumbing beneath it and the five sign-in-and-linking action
+paths, while this child action and the `Disassociate` POST it drives are the half that stays. The
 target therefore holds **three** components, not two, and no source declaration is dropped. This document
 records the conversion and cites the disposition; it makes neither, exactly as it makes no other
 blocker's target design.
@@ -1278,6 +1274,78 @@ provider activation rather than silently. Everything from
 [F-12-15](#f-12-15--lazy-loading-is-on-by-default-in-ef-6-and-off-in-ef-core) onward is silent, and those
 eight are what §2.2's argument about naming sites in advance is about.
 
+### F-12-01 — SQL Server Compact 4.0 as the catalogue provider
+
+**Editions:** MVC 3 only.
+
+`web.config` declares the catalogue connection as `Data Source=|DataDirectory|MvcMusicStore.sdf` with
+`providerName="System.Data.SqlServerCe.4.0"`
+[src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:56-58]. That is the **only** connection string
+the file declares — there is no second entry, which is the same evidence
+[09 §5.1](09-security-assessment.md) uses to establish that MVC 3's credential store is inherited from
+machine configuration rather than declared.
+
+Two facts make this a hard stop rather than a provider swap:
+
+- **No `.sdf` is tracked at HEAD.** `git ls-files '*.sdf' | wc -l` returns `0`, so the database the
+  connection string names is not present in the checkout and is created on first run by a provider that
+  must already be installed machine-wide.
+
+  **It was, however, tracked historically, and the distinction matters.** The file was added as
+  `MvcMusicStore/App_Data/MvcMusicStore.sdf` in `d4ff979` (2011-04-18, "Updated for v3.0 release (ASP.NET
+  MVC 3 Tools Update)"), renamed to `src/MVC3/MvcMusicStore/App_Data/MvcMusicStore.sdf` in `fb88f8b`
+  (2022-11-04, "Moved source to subfolder") and **deleted** in `d2dec66` (2022-11-04, "Replaced MVC 3 with
+  release assets"). Its blob is still reachable — `8d8a3c458d70425b5f1942e7acc25911bc1d8042`, 217,088
+  bytes — so a clone carries it even though no working-tree path resolves to it:
+
+  ```bash
+  git ls-files '*.sdf' | wc -l                                   # -> 0 at HEAD
+  git log --all --name-status --format='%h %ad %s' --date=short -- '*.sdf'
+  # -> d2dec66 ... D  src/MVC3/MvcMusicStore/App_Data/MvcMusicStore.sdf
+  #    fb88f8b ... R100 MvcMusicStore/App_Data/MvcMusicStore.sdf -> src/MVC3/...
+  #    d4ff979 ... A  MvcMusicStore/App_Data/MvcMusicStore.sdf
+  git rev-list --all --objects | grep '\.sdf'
+  # -> 8d8a3c458d70425b5f1942e7acc25911bc1d8042 src/MVC3/MvcMusicStore/App_Data/MvcMusicStore.sdf
+  git cat-file -s 8d8a3c458d70425b5f1942e7acc25911bc1d8042        # -> 217088
+  ```
+
+  Neither fact softens the blocker: what the *current* MVC 3 project needs at run time is a first-run SQL
+  Server Compact database, and the engine that would create it has no supported successor for the target
+  (below). The deleted blob is a repository-weight and history observation rather than a usable artifact,
+  and it is not part of the fourteen committed credential-shaped binaries that
+  [09 §6.9](09-security-assessment.md) inventories.
+  What *is* committed under the tutorial assets is
+  `src/MVC3/MvcMusicStore-Assets/Data/MvcMusicStore.mdf` — a SQL Server file for a **different engine**
+  than the one the application's own configuration names.
+- **The data layer is bound to the EF 4.1 generation.** The project references `EntityFramework`
+  4.1.0.0 by `HintPath` [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/MvcMusicStore.csproj:37-40] and
+  the framework assembly `System.Data.Entity`
+  [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/MvcMusicStore.csproj:41], and nothing else.
+
+**Failure mode: runtime — provider activation. No build finds it, and it is the one group-two entry that
+fails loudly.** `System.Data.SqlServerCe.4.0` is named only as a `providerName` attribute in configuration
+[src/MVC3/MvcMusicStore-Completed/MvcMusicStore/web.config:58] and the project file declares **no
+reference to the provider assembly at all** — the two data references it carries are `EntityFramework`
+4.1.0.0 and the framework assembly `System.Data.Entity`, cited above — so nothing in the source binds to
+the provider and nothing about it reaches the compiler. `git grep -n 'SqlServerCe' -- 'src/' | grep -v
+'/packages/'` returns that single configuration line and nothing else, and the same search restricted to
+`'*.csproj'` returns nothing. The failure is therefore raised when the provider is activated on the first
+data access, as an exception rather than as a wrong answer. This is also why §2.1's placement A community EF Core provider for SQL Server
+rule files this entry in group two rather than among the fourteen.
+Compact exists but was **abandoned at the EF Core 2.2 generation**, so there is no supported provider for
+any current target either — this is not a version-lag problem that waiting solves.
+
+**Successor: none for the engine.** MVC 3's data layer cannot be ported without **re-targeting the
+provider outright**, which means choosing a different database engine, not upgrading a package.
+[02 §4.1](02-dependency-inventory.md) records the provider as an undeclared machine-wide dependency and
+[09 §5.8](09-security-assessment.md) records that it is out of support and receives no security
+servicing. [10 §10.2](10-build-and-deployment-requirements.md) owns the two-engine topology this
+produces — MVC 3 needs SQL Server Compact for the catalogue **and** a SQL Server instance for
+credentials, simultaneously.
+
+**Owner:** [10](10-build-and-deployment-requirements.md) for the topology; the triage decision that MVC 3
+is not a migration source is [03](03-modernization-roadmap.md)'s to sequence.
+
 ### F-12-15 — Lazy loading is on by default in EF 6 and off in EF Core
 
 **Editions:** all three (the site census below is MVC 5, the migration source).
@@ -1287,21 +1355,38 @@ unloaded reference navigation is simply `null`. The code that depends on this co
 both.
 
 **The mechanism is precise, and it explains which sites are affected and which are not.** EF 6 lazy
-loading requires the navigation property to be `virtual`, and in this model they are not uniformly so:
+loading requires the navigation property to be `virtual`, and in this model they are not uniformly so.
+The table below is **the whole navigation set of the six catalogue entities — eight properties**, not
+the affected subset: `Artist` declares none, and the properties no code reads are listed with the rest
+because an unread navigation still has to have its relationship configured in the target model, and an
+initial migration generated from a model that dropped one produces a different schema. The last column
+means *dereferenced* — read — so the seed's assignment of `Album.Genre` and `Album.Artist` on entities
+it constructs [src/MVC5/MvcMusicStore/Models/SampleData.cs:24-485] is deliberately not counted: writing
+a navigation on a new entity loads nothing.
 
-| Navigation | Declared | Lazy-loadable under EF 6 |
-| --- | --- | --- |
-| `Album.Genre` | `virtual` [src/MVC5/MvcMusicStore/Models/Album.cs:30] | Yes |
-| `Album.Artist` | `virtual` [src/MVC5/MvcMusicStore/Models/Album.cs:31] | Yes |
-| `Album.OrderDetails` | `virtual` [src/MVC5/MvcMusicStore/Models/Album.cs:32] | Yes |
-| `Cart.Album` | `virtual` [src/MVC5/MvcMusicStore/Models/Cart.cs:17] | Yes |
-| `Genre.Albums` | **not** `virtual` [src/MVC5/MvcMusicStore/Models/Genre.cs:10] | **No** |
+| Navigation | Declared | Lazy-loadable under EF 6 | Read anywhere in source or views |
+| --- | --- | --- | --- |
+| `Album.Genre` | `virtual` [src/MVC5/MvcMusicStore/Models/Album.cs:30] | Yes | **Yes, client-side** — sites 1 and 2 of category (a) |
+| `Album.Artist` | `virtual` [src/MVC5/MvcMusicStore/Models/Album.cs:31] | Yes | **Yes, client-side** — sites 1 and 2 of category (a) |
+| `Album.OrderDetails` | `virtual` [src/MVC5/MvcMusicStore/Models/Album.cs:32] | Yes | **Yes, but only inside a server-translated query** — the two aggregates of category (c) [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:49], [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:30] |
+| `Cart.Album` | `virtual` [src/MVC5/MvcMusicStore/Models/Cart.cs:17] | Yes | **Yes, client-side** — sites 3 to 6 of category (a); and once inside a translated query, category (b) |
+| `OrderDetail.Album` | `virtual` [src/MVC5/MvcMusicStore/Models/OrderDetail.cs:11] | Yes | **No** — declared and never read |
+| `OrderDetail.Order` | `virtual` [src/MVC5/MvcMusicStore/Models/OrderDetail.cs:12] | Yes | **No** — declared and never read |
+| `Genre.Albums` | **not** `virtual` [src/MVC5/MvcMusicStore/Models/Genre.cs:10] | **No** | **Yes** — client-side in the browse view [src/MVC5/MvcMusicStore/Views/Store/Browse.cshtml:11], where it is eager-loaded, and inside the category (c) aggregate [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:48] |
+| `Order.OrderDetails` | **not** `virtual` [src/MVC5/MvcMusicStore/Models/Order.cs:66] | **No** | **No** — declared and never read; order-detail rows are written through the `DbSet` instead [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:147] |
 
-That table is the reason the affected set is exactly what it is. Every silent-failure site below reaches
-through one of the three `virtual` navigations, and the one non-`virtual` collection navigation is
-**already eager-loaded out of necessity** — `storeDB.Genres.Include("Albums")`
-[src/MVC5/MvcMusicStore/Controllers/StoreController.cs:30] is not an optimization, it is mandatory, which
-is why the genre-browse page is unaffected.
+That table is the reason the affected set is exactly what it is, and the reason it is **not** larger than
+it is. Every silent-failure site below reaches through one of **three of the six** `virtual`
+navigations — `Album.Genre`, `Album.Artist` and `Cart.Album`. A fourth, `Album.OrderDetails`, is read
+only inside the two server-translated aggregates, which is category (c)'s different problem with a
+different fix. The remaining two, `OrderDetail.Album` and `OrderDetail.Order`, are read nowhere at all,
+so no site can break on them and no `Include` is owed for them; they bear on the target's relationship
+configuration and on nothing else in this entry. And the only non-`virtual` navigation any code reads
+client-side is `Genre.Albums`, which is **already eager-loaded out of necessity** —
+`storeDB.Genres.Include("Albums")` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:30] is not an
+optimization, it is mandatory, which is why the genre-browse page is unaffected even though its view
+enumerates the collection. `Order.OrderDetails`, the other non-`virtual` one, is never read, so its
+declaration carries no runtime consequence in either runtime.
 
 **Three mechanisms, not one.** A flat list of "navigation dereferences" conflates cases that need
 opposite treatment, so the census separates them:
@@ -1312,17 +1397,17 @@ reference or renders empty. **Six sites:**
 
 | # | Query (no `Include`) | Dereference | Effect in the target |
 | --- | --- | --- | --- |
-| 1 | `storeDB.Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:38] | `@Model.Genre.Name` [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:16] and `@Model.Artist.Name` [:20] | Album detail page throws |
-| 2 | `db.Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:32] | `@Html.DisplayFor(model => model.Artist.Name)` [src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml:18] and `model.Genre.Name` [:26] | Admin detail page renders empty or throws |
-| 3 | `storeDB.Carts.Single(item => item.RecordId == id)` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:61-62] | `.Album.Title` on the same line [:62] | Cart removal throws before it responds |
+| 1 | `storeDB.Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:38] | `@Model.Genre.Name` [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:16] and `@Model.Artist.Name` [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:20] | Album detail page throws |
+| 2 | `db.Albums.Find(id)` [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:32] | `@Html.DisplayFor(model => model.Artist.Name)` [src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml:18] and `model.Genre.Name` [src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml:26] | Admin detail page renders empty or throws |
+| 3 | `storeDB.Carts.Single(item => item.RecordId == id)` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:61-62] | `.Album.Title` on the same line [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:62] | Cart removal throws before it responds |
 | 4 | `cart.GetCartItems()` — `ToList()` with no `Include` [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:100] | `.Select(a => a.Album.Title)` [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:91-92] | Cart summary in the shared layout throws — on **every** page, since it is a layout-level child action |
-| 5 | `cart.GetCartItems()` via the cart view model [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:17-24] | `item.Album.Title` [src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:64] and `@item.Album.Price` [:68] | Cart page throws |
-| 6 | `GetCartItems()` inside order creation [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:129] | `item.Album.Price` [:145] | **Order total silently wrong or checkout throws** |
+| 5 | `cart.GetCartItems()` via the cart view model [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:17-24] | `item.Album.Title` [src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:64] and `@item.Album.Price` [src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:68] | Cart page throws |
+| 6 | `GetCartItems()` inside order creation [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:129] | `item.Album.Price` [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:145] | **Order total silently wrong or checkout throws** |
 
 Site 6 deserves its own sentence, because it is the one with a financial consequence and it sits three
 lines from a site that is *not* affected. The same loop explicitly loads the album for the order-detail
-row — `var album = _db.Albums.Find(item.AlbumId);` [:134], used for `UnitPrice` at [:140] — and then
-computes the running order total from the **lazy** navigation instead [:145]. One loop, two ways of
+row — `var album = _db.Albums.Find(item.AlbumId);` [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:134], used for `UnitPrice` at [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:140] — and then
+computes the running order total from the **lazy** navigation instead [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:145]. One loop, two ways of
 reaching the same price, only one of which survives the port.
 
 Site 4 deserves the second sentence, for reach rather than consequence: both child actions render from
@@ -1343,7 +1428,7 @@ with the same frequency, so the census keeps them apart:
 
 | Site | The aggregate | Where it runs |
 | --- | --- | --- |
-| Genre menu | A **nested `SUM`** — `g.Albums.Sum(a => a.OrderDetails.Sum(od => od.Quantity))`, ordered descending and `Take(9)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52] | A `[ChildActionOnly]` action [:43] rendered from the shared layout [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25-26], so **every page** |
+| Genre menu | A **nested `SUM`** — `g.Albums.Sum(a => a.OrderDetails.Sum(od => od.Quantity))`, ordered descending and `Take(9)` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52] | A `[ChildActionOnly]` action [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:43] rendered from the shared layout [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25-26], so **every page** |
 | Home top sellers | A **`COUNT`** — `a.OrderDetails.Count()`, ordered descending and `Take(6)` [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:29-32] | The private helper it sits in is called only from `Index` [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:18], so **the home page only** — not every page |
 
 **The usual framing of this — "EF 6 quietly ran it in memory, EF Core throws" — is wrong in both halves,
@@ -1378,6 +1463,51 @@ pages is what the pre-port baseline captures. And the two sites' *reach* differs
 records: the genre menu, like site 4 above, renders from the layout on every page, while the home page's
 query runs on one page — so a regression in the first is a whole-site regression and a regression in the
 second is a landing-page one.
+
+**The site and file tally, stated once here and derived from the census above.** The nine sites are the
+six rows of category (a), the single site of category (b) and the two rows of category (c) —
+6 + 1 + 2 = **9**. They sit in **eight** distinct files. This table is the only enumeration of those files
+in this document; every count of them elsewhere here, and in the deliverables that consume this entry, is
+a reference to it rather than a second census:
+
+| File | The sites it carries, and in what role |
+| --- | --- |
+| `src/MVC5/MvcMusicStore/Controllers/StoreController.cs` | site 1's query [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:38]; category (c)'s nested `SUM` [src/MVC5/MvcMusicStore/Controllers/StoreController.cs:46-52] |
+| `src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs` | site 2's query [src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:32] |
+| `src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs` | site 3's query and dereference [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:61-62]; site 4's dereference [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:91-92]; site 5's query [src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs:17-24] |
+| `src/MVC5/MvcMusicStore/Controllers/HomeController.cs` | category (c)'s `COUNT` [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:29-32], reached only from `Index` [src/MVC5/MvcMusicStore/Controllers/HomeController.cs:18] |
+| `src/MVC5/MvcMusicStore/Models/ShoppingCart.cs` | site 4's query [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:100]; site 6's query and dereference [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:129], [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:145]; category (b)'s translated query [src/MVC5/MvcMusicStore/Models/ShoppingCart.cs:119-122] |
+| `src/MVC5/MvcMusicStore/Views/Store/Details.cshtml` | site 1's dereference [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:16], [src/MVC5/MvcMusicStore/Views/Store/Details.cshtml:20] |
+| `src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml` | site 2's dereference [src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml:18], [src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml:26] |
+| `src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml` | site 5's dereference [src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:64], [src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:68] |
+
+Five C# files and three views, 5 + 3 = **8**. Both figures are arithmetic over this one list: nine site
+rows across the three category tables, eight rows here. **The file count is a property of the census and
+not of any single search** — a file carries a site because a query without an `Include` and a dereference
+of one of the `virtual` navigations meet there, which no one pattern matches — so the command verifies the
+eight named paths rather than rediscovering them, and the second command names the two eager-loading sites
+that decide the exclusions below:
+
+```bash
+git ls-files -- 'src/MVC5/MvcMusicStore/Controllers/StoreController.cs' \
+  'src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs' \
+  'src/MVC5/MvcMusicStore/Controllers/ShoppingCartController.cs' \
+  'src/MVC5/MvcMusicStore/Controllers/HomeController.cs' \
+  'src/MVC5/MvcMusicStore/Models/ShoppingCart.cs' \
+  'src/MVC5/MvcMusicStore/Views/Store/Details.cshtml' \
+  'src/MVC5/MvcMusicStore/Views/StoreManager/Details.cshtml' \
+  'src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml' | wc -l          # -> 8
+git grep -n 'Include(' -- 'src/MVC5/MvcMusicStore/Controllers'
+# -> StoreController.cs:30 (string form) and StoreManagerController.cs:22 (typed form)
+```
+
+**Two files a dereference search returns and this census excludes, each for a stated reason.**
+`Views/StoreManager/Index.cshtml` reads `Genre.Name` and `Artist.Name` at [src/MVC5/MvcMusicStore/Views/StoreManager/Index.cshtml:27], [src/MVC5/MvcMusicStore/Views/StoreManager/Index.cshtml:30], [src/MVC5/MvcMusicStore/Views/StoreManager/Index.cshtml:45] and [src/MVC5/MvcMusicStore/Views/StoreManager/Index.cshtml:48],
+but its query eager-loads both — `db.Albums.Include(a => a.Genre).Include(a => a.Artist)`
+[src/MVC5/MvcMusicStore/Controllers/StoreManagerController.cs:22] — so nothing there breaks, which is the
+same fact recorded under *Successor* below. `Views/Shared/_Layout.cshtml` renders two affected components
+at [src/MVC5/MvcMusicStore/Views/Shared/_Layout.cshtml:25-26] but neither queries nor dereferences: it carries the *reach* of site 4 and of category (c)'s
+genre menu, not a site of its own.
 
 **Failure mode: silent runtime.** Nothing in category (a) produces a compiler diagnostic: the code is
 valid, the navigation property exists on the type, and only its *value at runtime* changes.
@@ -1713,7 +1843,7 @@ proof of absence, and nothing downstream may treat it as one.**
 
 **What the evidence does support.** The result is *consistent with* the independently established fact
 that the application runs **ASP.NET Identity 1.0** — `Microsoft.AspNet.Identity.Core` 1.0.0
-[src/MVC5/MvcMusicStore/packages.config:8] and `Microsoft.AspNet.Identity.EntityFramework` 1.0.0 [:9] —
+[src/MVC5/MvcMusicStore/packages.config:8] and `Microsoft.AspNet.Identity.EntityFramework` 1.0.0 [src/MVC5/MvcMusicStore/packages.config:9] —
 whose schema predates all six of those columns. Two independent lines of evidence pointing the same way
 is a strong prior. It is still a prior. [09](09-security-assessment.md) reaches the same conclusion by the
 same route under finding **F-09-03** and qualifies it identically; this document's run corroborates it
@@ -1745,15 +1875,30 @@ the second of them:
 - **One of the three committed credential stores is simultaneously the only authoritative schema evidence
   and part of a Critical security finding, and it is worth naming rather than generalizing.** The pair the
   extraction needs is **MVC 5's Identity store alone** —
-  [src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf] with
-  [src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf] — because MVC 5 is the
-  sole migration source and ships no schema script (F-12-22). The other two are **not** target migration
-  inputs and no plan may treat them as such: MVC 3's
-  [src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF] is a tutorial asset rather than that edition's runtime
-  credential store, as [09 §6.9](09-security-assessment.md) and [10 §10.1](10-build-and-deployment-requirements.md)
-  both classify it, and MVC 4's [src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf]
-  is its edition's live SimpleMembership store but is not migrated, because MVC 4 is retained read-only as
-  a behavioural reference. All three remain in scope for **F-09-34**, which
+  [src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf:3,211,264 bytes] with
+  [src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf:3,211,264 bytes] — because
+  MVC 5 is the sole migration source and ships no schema script (F-12-22). The other two are **not** target
+  migration inputs and no plan may treat them as such: MVC 3's
+  [src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF:10,485,760 bytes] is a tutorial asset rather than that
+  edition's runtime credential store, as [09 §6.9](09-security-assessment.md) and
+  [10 §10.1](10-build-and-deployment-requirements.md) both classify it, and MVC 4's
+  [src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf:3,211,264 bytes] is its
+  edition's live SimpleMembership store but is not migrated, because MVC 4 is retained read-only as
+  a behavioural reference. Every locator in this bullet is a byte size and not a line, per section 1.4,
+  because none of these four files has a line to point at; one command reads all four:
+
+  ```bash
+  stat -c '%s %n' src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf \
+                  src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf \
+                  src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF \
+                  src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf
+  # ->  3211264 src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf
+  #     3211264 src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf
+  #    10485760 src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF
+  #     3211264 src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf
+  ```
+
+  All three stores remain in scope for **F-09-34**, which
   [09 §6.9](09-security-assessment.md) owns as the committed-credential-store exposure at Critical
   severity; F-09-05 is the separate administrator-secret finding and is not the owner here.
 - **The sequencing that follows is specific, not a general caution.** Because the MVC 5 Identity pair is
@@ -1772,7 +1917,8 @@ reconciliation; [03](03-modernization-roadmap.md) for placing the extraction bef
 
 ### F-12-22 — No usable schema baseline exists
 
-**Editions:** MVC 5 (nothing ships) and MVC 4 (two copies of an unusable script).
+**Editions:** MVC 5 and MVC 4 — MVC 5 ships nothing and MVC 4 ships two copies of an unusable script,
+both stated below.
 
 **MVC 5 ships no schema script at all.** Three `.sql` files are tracked in the whole repository and none
 of them is MVC 5's:
@@ -1938,23 +2084,48 @@ whole existence is being retired along with the credential it reads.
 
 ### 7.1 Distribution
 
+**Every figure in this section is derived from the register above rather than maintained beside it.** A
+blocker's group is the section its entry sits in; its reach is the subject of its own `**Editions:**`
+declaration. The script at the end of this section computes all of it from those two properties and its
+output is quoted beneath it, so no count here is a second declaration — each is a derivation of the
+twenty-three entries [§2.3](#23-blocker-index) indexes, and each total is asserted to sum to that number.
+
 | Group | Count | Discovered by | IDs |
 | --- | --- | --- | --- |
-| One — no successor or the API is gone | **14** | The compiler, for free | F-12-01 to F-12-14 |
-| Two — the successor exists, its default differs | **8** | Only by someone who was told to look | F-12-15 to F-12-22 |
+| One — no successor or the API is gone | **14** | The compiler, for free | F-12-02 to F-12-14, plus F-12-23 |
+| Two — not found by compiling: the successor exists and its default differs, plus F-12-01, which has no successor and no reference for a build to fail on | **9** | Only by someone who was told to look | F-12-01, plus F-12-15 to F-12-22 |
 | Portability findings in the application's favour | 4 | — | P-12-01 to P-12-04 |
+
+**14 + 9 = 23**, the row count of §2.3's index, and each group's ID list is the set of entries physically
+under its section: group one is the thirteen consecutive identifiers F-12-02 through F-12-14 plus F-12-23,
+and group two is F-12-01 at the head of [section 4](#4-group-two--the-successor-exists-and-its-default-differs-silent-breakage)
+followed by F-12-15 through F-12-20 there and F-12-21 and F-12-22 in
+[section 5](#5-the-riskiest-data-operation--and-the-honest-limit-of-the-evidence). Neither list is a
+numeric range: `F-12-01` holds the lowest identifier and sits in group two, and `F-12-23` holds the
+highest and sits in group one, both for the reasons §2.1 and §2.3 state.
 
 **By edition, with the counting rule stated first, because several declarations carry commentary that
 looks like a tally entry.** Each blocker counts toward the editions named in its own `**Editions:**`
 declaration, and **a clause or parenthetical inside that declaration that explains, bounds or excludes is
-commentary, not a declaration**. Six declarations exercise the rule, in both directions:
+commentary, not a declaration**. Seven declarations are the ones a tally most easily gets wrong, in both
+directions:
 
 - [F-12-02](#f-12-02--systemweboptimization-bundling) declares *MVC 5 and MVC 4* and adds parenthetically
   that MVC 3 has no bundling implementation at all — commentary confirming an exclusion, so MVC 3 gets no
   tally entry.
-- [F-12-08](#f-12-08--three-httpnotfound-calls) and
+- [F-12-08](#f-12-08--three-httpnotfound-calls),
+  [F-12-13](#f-12-13--windows-authentication-connection-strings-and-file-attached-databases) and
   [F-12-17](#f-12-17--filesystem-path-casing) declare *MVC 5 and MVC 4* and each states the evidence for
-  excluding MVC 3 — again commentary confirming an exclusion, not a third entry.
+  excluding MVC 3 — again commentary confirming an exclusion, not a third entry. F-12-13's declaration is
+  the one most easily mis-tallied, because it reads *"MVC 5 and MVC 4, with MVC 4 the worst case. **Not
+  MVC 3**, for the reason stated below"*: the severity clause and the exclusion are both commentary, so it
+  contributes two incidences and not three.
+- [F-12-13](#f-12-13--windows-authentication-connection-strings-and-file-attached-databases) declares
+  *MVC 5 and MVC 4* and then says **not MVC 3** in terms, with the exclusion argued in three parts inside
+  the entry: MVC 3 declares neither `Integrated Security` nor `AttachDbFilename`, its `|DataDirectory|`
+  reference is a SQL Server Compact `.sdf` rather than an attached `.mdf`, and it reads no app setting at
+  all. It is an MVC 5 and MVC 4 blocker in every table below, and naming MVC 3 in the declaration is the
+  exclusion rather than a third entry.
 - [F-12-15](#f-12-15--lazy-loading-is-on-by-default-in-ef-6-and-off-in-ef-core) and
   [F-12-16](#f-12-16--json-property-naming-flips-to-camelcase) declare *all three* and then name the
   edition the site census was taken from — commentary narrowing the *evidence*, not the applicability, so
@@ -1965,26 +2136,34 @@ commentary, not a declaration**. Six declarations exercise the rule, in both dir
 
 | Edition | Blockers | IDs |
 | --- | --- | --- |
-| MVC 5 — the migration source | **20** | Every blocker except F-12-01 (MVC 3 only) and F-12-14 (MVC 4 only) |
-| MVC 4 | **16** | F-12-02, F-12-04, F-12-05, F-12-07, F-12-08, F-12-10, F-12-11, F-12-12, F-12-13, F-12-14, F-12-15, F-12-16, F-12-17, F-12-19, F-12-20, F-12-22 |
-| MVC 3 | **12** | F-12-01, F-12-04, F-12-05, F-12-07, F-12-10, F-12-11, F-12-12, F-12-13, F-12-15, F-12-16, F-12-19, F-12-20 |
-| Holding in **all three** | **11** | F-12-04, F-12-05, F-12-07, F-12-10, F-12-11, F-12-12, F-12-13, F-12-15, F-12-16, F-12-19, F-12-20 |
+| MVC 5 — the migration source | **21** | Every blocker except F-12-01 (MVC 3 only) and F-12-14 (MVC 4 only) |
+| MVC 4 | **17** | F-12-02, F-12-04, F-12-05, F-12-07, F-12-08, F-12-10, F-12-11, F-12-12, F-12-13, F-12-14, F-12-15, F-12-16, F-12-17, F-12-19, F-12-20, F-12-22, F-12-23 |
+| MVC 3 | **12** | F-12-01, F-12-04, F-12-05, F-12-07, F-12-10, F-12-11, F-12-12, F-12-15, F-12-16, F-12-19, F-12-20, F-12-23 |
+| Holding in **all three** | **11** | F-12-04, F-12-05, F-12-07, F-12-10, F-12-11, F-12-12, F-12-15, F-12-16, F-12-19, F-12-20, F-12-23 |
 
-The three edition columns sum to **48** incidences — 20 + 16 + 12 — against 22 distinct blockers, and the
+The three edition columns sum to **50** incidences — 21 + 17 + 12 — across 23 distinct blockers, and the
 decomposition reconciles both numbers exactly. Every blocker appears in exactly one row:
 
 | Reach | Blockers | IDs | Incidences |
 | --- | --- | --- | --- |
-| All three editions | 11 | F-12-04, F-12-05, F-12-07, F-12-10, F-12-11, F-12-12, F-12-13, F-12-15, F-12-16, F-12-19, F-12-20 | 11 × 3 = **33** |
-| MVC 5 and MVC 4 only | 4 | F-12-02, F-12-08, F-12-17, F-12-22 | 4 × 2 = **8** |
+| All three editions | 11 | F-12-04, F-12-05, F-12-07, F-12-10, F-12-11, F-12-12, F-12-15, F-12-16, F-12-19, F-12-20, F-12-23 | 11 × 3 = **33** |
+| MVC 5 and MVC 4 only | 5 | F-12-02, F-12-08, F-12-13, F-12-17, F-12-22 | 5 × 2 = **10** |
 | MVC 5 alone | 5 | F-12-03, F-12-06, F-12-09, F-12-18, F-12-21 | 5 × 1 = **5** |
 | MVC 4 alone | 1 | F-12-14 | **1** |
 | MVC 3 alone | 1 | F-12-01 | **1** |
-| **Total** | **22** | — | **48** |
+| **Total** | **23** | — | **50** |
 
-11 + 4 + 5 + 1 + 1 = 22 distinct blockers, and 33 + 8 + 5 + 1 + 1 = 48 incidences. Read the per-edition
-table off the same decomposition: MVC 5 is 11 + 4 + 5 = 20, MVC 4 is 11 + 4 + 1 = 16, and MVC 3 is
+11 + 5 + 5 + 1 + 1 = 23 distinct blockers, and 33 + 10 + 5 + 1 + 1 = 50 incidences. Read the per-edition
+table off the same decomposition: MVC 5 is 11 + 5 + 5 = 21, MVC 4 is 11 + 5 + 1 = 17, and MVC 3 is
 11 + 1 = 12.
+
+**Two corrections are folded into the figures above rather than left implicit, because both moved a
+number.** `F-12-23` was absent from every per-edition row, which understated all three editions and the
+totals; it declares *all three*, so it joins the eleven-blocker reach row and adds one incidence to each
+edition. `F-12-13` was tallied to MVC 3 against its own declaration, which excludes MVC 3 in bold; it moves
+from the all-three row to the MVC 5-and-MVC-4 row. The two changes cancel exactly in the MVC 3 column —
+one in, one out — which is why MVC 3 reads **12** both before and after, and why a total that reconciled
+against the old rows is not evidence that the rows were right.
 
 **Every one of these declarations was re-verified against source rather than carried forward.** Six
 entries previously understated their reach — F-12-05, F-12-08, F-12-10, F-12-11, F-12-17 and F-12-19 —
@@ -1992,30 +2171,48 @@ and each now cites the additional edition's own locator inside the entry, which 
 can be checked. The direction of the error is worth naming: an *understated* edition set is the dangerous
 one, because it silently narrows what the strategies believe they have to resolve.
 
-The arithmetic is reproducible from this document's own declarations, which sit at the 22 lines the
-following commands print:
+The arithmetic is reproducible from this document's own declarations, which sit at the 23 lines the
+following commands print — one per entry, and the partition is counted the same way rather than asserted:
 
 ```bash
-grep -n '^\*\*Editions:\*\*' docs/modernization/12-migration-blockers.md | wc -l    # -> 22
+grep -n '^\*\*Editions:\*\*' docs/modernization/12-migration-blockers.md | wc -l    # -> 23
 grep -c '^\*\*Editions:\*\* all three' docs/modernization/12-migration-blockers.md  # -> 11
-grep -c '^\*\*Editions:\*\* MVC 5 and MVC 4' docs/modernization/12-migration-blockers.md  # -> 3
-# The fourth MVC 5-and-MVC-4 blocker, F-12-22, declares its two editions with a
-# per-edition parenthetical rather than the bare form, so it is not matched by the
-# pattern above: `**Editions:** MVC 5 (nothing ships) and MVC 4 (two copies ...)`.
-grep -n '^\*\*Editions:\*\*' docs/modernization/12-migration-blockers.md | grep -c 'MVC 3'  # -> 5
-# Those five name MVC 3 on the declaration's own first line, and the figure is not
+grep -c '^\*\*Editions:\*\* MVC 5 and MVC 4' docs/modernization/12-migration-blockers.md  # -> 4
+# Those four are F-12-02, F-12-08, F-12-13 and F-12-17. Those four are F-12-02, F-12-08, F-12-13 and F-12-17. The fifth MVC 5-and-MVC-4
+#
+# blocker, F-12-22, declares its two editions with a per-edition parenthetical
+#
+# rather than the bare form, so the pattern above does not match it:
+# `**Editions:** MVC 5 (nothing ships) and MVC 4 (two copies ...)`.
+grep -n '^\*\*Editions:\*\*' docs/modernization/12-migration-blockers.md | grep -c 'MVC 3'  # -> 6
+# Those six name MVC 3 on the declaration's own first line, and the figure is NOT
 # an MVC 3 tally: F-12-01 (MVC 3 only, and the one incidence it contributes on its
-# own), F-12-02, F-12-08 and F-12-17 (each naming MVC 3 in order to EXCLUDE it, so
-# each contributes nothing), and F-12-11, which is one of the eleven `all three`
-# declarations and merely notes MVC 3's different registration site. MVC 3's other
-# eleven incidences are the `all three` declarations, one of which -- F-12-19 --
-# names MVC 3 only on a continuation line the single-line pattern never reaches.
-# 1 + 11 = 12, which is why the tally is read from the decomposition table above
-# and never from a grep for an edition name.
+# own), F-12-02, F-12-08, F-12-13 and F-12-17 (each naming MVC 3 in order to
+# EXCLUDE it, so each contributes nothing), and F-12-11, which is one of the eleven
+# `all three` declarations and merely notes MVC 3's different registration site.
+# MVC 3's other eleven incidences are the `all three` declarations, one of which --
+# F-12-19 -- names MVC 3 only on a continuation line the single-line pattern never
+# reaches. 1 + 11 = 12, which is why the tally is read from the decomposition table
+# above and never from a grep for an edition name.
+
+# The group partition, counted by which section each entry is physically under
+# rather than asserted from the identifier ranges (which are not ranges: F-12-01
+# holds the lowest identifier and is in group two, F-12-23 the highest and is in
+# group one). Group one is section 3; group two is sections 4 and 5:
+awk '/^## 3\. /{g=1} /^## 4\. /{g=2} /^## 6\. /{g=0} /^### F-12-/{if(g)print g}' \
+  docs/modernization/12-migration-blockers.md | sort | uniq -c
+# ->      14 1
+#          9 2
+# 14 + 9 = 23, the same 23 the declaration count above returns.
 ```
 
-Group two is where the count understates the work — eight blockers, but F-12-15 alone carries **nine
-distinct sites** across six files, and each needs an individual decision.
+Every published figure above is a line of that output: 23 entries, 14 plus 9, the five reach rows summing
+to 23 blockers and 50 incidences, and the three per-edition tallies summing to the same 50.
+
+Group two is where the count understates the work — nine blockers, but F-12-15 alone carries **nine
+distinct sites in eight files**, enumerated once in
+[that entry](#f-12-15--lazy-loading-is-on-by-default-in-ef-6-and-off-in-ef-core), and each site needs an
+individual decision.
 
 ### 7.2 The four statements that change what the strategy documents can assume
 
@@ -2052,16 +2249,32 @@ each has since been taken there. **This document still decides none of them.** W
 enumeration plus the owner's settled outcome, because an entry that reports "a choice exists" after the
 owner has made it sends a reader to design work that is already done:
 
-- **The disabled external-login surface is retained and mapped; only the `ChallengeResult` type is
-  deleted** (F-12-09). [05 §8.3](05-aspnet-core-migration-approach.md) takes the mapping branch — the
-  seven external-login actions, the `RemoveAccountList` child action of
-  [F-12-23](#f-12-23--mvc-child-actions) and the `Views/Account/` views that render them are all **kept**
-  and re-expressed against the framework's own external-authentication flow, while the `ChallengeResult`
-  type and the OWIN plumbing beneath it go, because their base type, override signature and challenge
-  mechanism have no successor. [05 §11.5](05-aspnet-core-migration-approach.md) carries the resulting
-  behaviour change as approved delta 11. The surface stays inert until a provider is configured, because
-  every external-provider registration is commented out
-  [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:23-35].
+- **The disabled external-login surface is split, not kept and not deleted wholesale** (F-12-09).
+  [05 §8.3](05-aspnet-core-migration-approach.md) owns the disposition; this document records it and
+  decides none of it. **Removed** is the external *sign-in and linking* action surface — the **five action
+  paths** `ExternalLogin` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:200],
+  `ExternalLoginCallback` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:209], `ExternalLoginConfirmation` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:265], `LinkLogin` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:237] and
+  `LinkLoginCallback` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:245]. The flow's failure display `ExternalLoginFailure` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:311] is removed **with
+  them rather than counted among them**: it initiates nothing and links nothing, and its only
+  in-application reference is `return View("ExternalLoginFailure")` inside `ExternalLoginConfirmation`
+  [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:278], which renders the view directly rather than routing to the action. The enumerated route list the
+  port is tested against is [05](05-aspnet-core-migration-approach.md)'s, and this document cites that
+  enumeration rather than restating a total of its own. Removed with them are the `ChallengeResult` type and
+  its `ExecuteResult(ControllerContext)` override
+  [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:394,411], whose base type, override signature
+  and challenge mechanism have no successor, and every commented-out provider registration
+  [src/MVC5/MvcMusicStore/App_Start/Startup.Auth.cs:23-35]. No
+  `Microsoft.AspNetCore.Authentication.*` provider package is referenced, and each removed path is
+  expected to answer **404**. **Retained** is the account-management removal surface: the
+  `RemoveAccountList` child action of [F-12-23](#f-12-23--mvc-child-actions), which becomes a view
+  component, and the `Disassociate` POST that removes an already-linked login
+  [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:114]. That half is not a preference —
+  [05 §11.5](05-aspnet-core-migration-approach.md) carries the behaviour change as `D-11`, and
+  the retained component is named in the frozen target map the strategies are held to. With no provider
+  registered, `UserManager.GetLogins` returns nothing and the list renders **empty**
+  [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:319]; that is correct behaviour for a store with
+  no external provider, not a defect. Re-enabling external sign-in is a separately approved addition whose
+  provider packages are pinned at the time it is approved.
 - **The JSON naming fix is scoped to the one response model** (F-12-16).
   [05 §8.7](05-aspnet-core-migration-approach.md) annotates the five properties at
   [src/MVC5/MvcMusicStore/ViewModels/ShoppingCartRemoveViewModel.cs:5-9] with explicit JSON property
@@ -2147,10 +2360,33 @@ sed -n '6,16p' src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Web.Release.config
 #    value 'Data Source=ReleaseSQLServer' -- the Visual Studio template example.
 #    Web.Debug.config is identical in this respect.
 
-# --- F-12-15  Which navigations are lazy-loadable, and which are not ----------
-git grep -nE 'virtual|List<Album>' -- 'src/MVC5/MvcMusicStore/Models/Album.cs' \
-    'src/MVC5/MvcMusicStore/Models/Cart.cs' 'src/MVC5/MvcMusicStore/Models/Genre.cs'
-# -> Album.cs:30,:31,:32 and Cart.cs:17 are virtual; Genre.cs:10 is NOT
+# --- F-12-15  The whole navigation set, and which members are lazy-loadable ----
+# All six catalogue entity files, not a subset: the table states the model's
+# complete navigation set, so the command that reproduces it has to see Order.cs
+# and OrderDetail.cs too.
+M=src/MVC5/MvcMusicStore/Models
+git grep -nE 'virtual [A-Za-z]|List<Album>|List<OrderDetail>' -- "$M/Album.cs" \
+    "$M/Artist.cs" "$M/Genre.cs" "$M/Cart.cs" "$M/Order.cs" "$M/OrderDetail.cs"
+# -> exactly 8 lines, one per navigation property:
+#    Album.cs:30,:31,:32   virtual   Genre, Artist, List<OrderDetail>
+#    Cart.cs:17            virtual   Album
+#    OrderDetail.cs:11,:12 virtual   Album, Order
+#    Genre.cs:10           NOT virtual   List<Album>
+#    Order.cs:66           NOT virtual   List<OrderDetail>
+#    Artist.cs             no match -- it declares no navigation at all
+# Which of the eight are actually READ is the table's last column. Three are read
+# nowhere -- OrderDetail.Album, OrderDetail.Order and Order.OrderDetails -- and
+# this pair of commands is what shows it:
+git grep -nE '\.OrderDetails' -- 'src/MVC5/MvcMusicStore'
+# -> exactly 3 lines. Two are reads of Album.OrderDetails, both inside a
+#    server-translated query: StoreController.cs:49 and HomeController.cs:30.
+#    The third is ShoppingCart.cs:147, '_db.OrderDetails.Add' -- a DbSet write,
+#    not a navigation read. So no line reads Order.OrderDetails: its declaration
+#    at Order.cs:66 has no reader. (The three declarations carry no leading dot
+#    and so do not appear: Album.cs:32, Order.cs:66, MusicStoreEntities.cs:12.)
+git grep -nE 'orderDetail\.|OrderDetail\.[A-Z]' -- 'src/MVC5/MvcMusicStore'
+# -> no match, exit 1: neither OrderDetail.Album nor OrderDetail.Order is
+#    dereferenced anywhere in source or views.
 
 # --- F-12-15  The dereference census: every navigation read in source and views
 git grep -nE '\.(Album|Genre|Artist)\.' -- 'src/MVC5/MvcMusicStore/Controllers' \
@@ -2159,19 +2395,12 @@ git grep -nE '\.(Album|Genre|Artist)\.' -- 'src/MVC5/MvcMusicStore/Controllers' 
 git grep -n 'Include(' -- 'src/MVC5/MvcMusicStore/Controllers'
 # -> StoreController.cs:30 (string form, still valid in EF Core) and
 #    StoreManagerController.cs:22 (typed form) -- their views are NOT affected
-#
-# The file tally follows from those two results and cannot be produced by a
-# single grep, which is why section 7.1 states the basis rather than a command:
-# the nine sites' QUERIES sit in five C# files -- StoreController.cs,
-# StoreManagerController.cs (site 2's query is db.Albums.Find(id) at :32, not a
-# navigation read, so a dereference grep misses the file), ShoppingCartController.cs,
-# HomeController.cs and Models/ShoppingCart.cs -- and three sites DEREFERENCE in a
-# view: Views/Store/Details.cshtml, Views/StoreManager/Details.cshtml and
-# Views/ShoppingCart/Index.cshtml. Eight distinct files carry a site.
-# Views/StoreManager/Index.cshtml dereferences Genre and Artist at :27,:30,:45,:48
-# but is EXCLUDED, because its query at StoreManagerController.cs:22 Includes both.
-# Views/Shared/_Layout.cshtml is excluded too: it renders affected components
-# (:25-26) but neither queries nor dereferences.
+
+# Neither grep produces the tally: a dereference search misses site 2's query,
+# which is db.Albums.Find(id) at StoreManagerController.cs:32 rather than a
+# navigation read. The nine sites, the eight files they sit in and the
+# verification of those eight paths are enumerated once, in the F-12-15 entry,
+# and are not restated here.
 
 # --- F-12-16  The property-access census: five fields, seven accesses, six lines
 V=src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml
@@ -2188,9 +2417,21 @@ git grep -ohE 'data\.[A-Za-z]+' -- "$V" | sort | uniq -c
 git grep -nE 'Newtonsoft|JsonConvert|JsonProperty|JsonSerializer' -- '*.cs' '*.cshtml' | wc -l   # -> 0
 git grep -n 'Newtonsoft' -- 'src/MVC5/MvcMusicStore/packages.config'    # -> :27, version 5.0.6
 
-# --- F-12-17  Path casing: three files, one capital S ------------------------
+# --- F-12-17  Path casing: two editions, two references, one capital S -------
+# The mismatched reference, censused over every tracked source, view, config and
+# project file -- both editions, and nothing else:
+git grep -n 'Content/site\.css' -- '*.cs' '*.cshtml' '*.config' '*.csproj'
+# -> src/MVC4/MvcMusicStore/App_Start/BundleConfig.cs:26
+#    src/MVC5/MvcMusicStore/App_Start/BundleConfig.cs:28
+# The tracked files those two references miss on a case-sensitive filesystem:
+git ls-files -- 'src/MVC4/MvcMusicStore/Content/Site.css' \
+                'src/MVC5/MvcMusicStore/Content/Site.css' | wc -l   # -> 2
+git ls-files | grep -cE 'Content/site\.css$'    # -> 0  (no lowercase file exists)
+# MVC 5's Content directory, for the three-file figure the entry quotes:
 git ls-files 'src/MVC5/MvcMusicStore/Content/*'
 # -> Site.css, bootstrap.css, bootstrap.min.css   (the bundle registers "site.css")
+# MVC 3 contributes nothing: it has no App_Start folder, and its only stylesheet
+# reference is correctly cased at Views/Shared/_Layout.cshtml:5.
 
 # --- F-12-21  Credential-store string probe (EVIDENCE, NOT PROOF) ------------
 # Must read UTF-16: SQL Server stores object names as nvarchar, so an ASCII-only
@@ -2212,6 +2453,21 @@ PY
 #                         AccessFailedCount, EmailConfirmed, PhoneNumber
 # The negative result is CONSISTENT WITH ASP.NET Identity 1.0 and is not proof of it.
 git grep -n 'Identity' -- 'src/MVC5/MvcMusicStore/packages.config'      # -> :8,:9,:10 all 1.0.0
+
+# --- F-12-21  Byte-size locators for the three committed credential stores ----
+# A database file has no line to cite, so its locator is its byte size (section 1.4).
+stat -c '%s %n' src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf \
+                src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf \
+                src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF \
+                src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf
+# ->  3211264 src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf
+#     3211264 src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf
+#    10485760 src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF
+#     3211264 src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf
+git ls-files -- src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205.mdf \
+                src/MVC5/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20131025034205_log.ldf \
+                src/MVC3/MvcMusicStore-Assets/Data/ASPNETDB.MDF \
+                src/MVC4/MvcMusicStore/App_Data/aspnet-MvcMusicStore-20120831200627.mdf | wc -l   # -> 4
 
 # --- F-12-22  No MVC 5 schema script; MVC 4's two copies are byte-identical ---
 git ls-files 'src/MVC5/*.sql' | wc -l                                   # -> 0
@@ -2259,11 +2515,17 @@ git grep -nE '\.Result\b|\.Wait\(\)' -- '*.cs' | wc -l                   # -> 0
 git grep -n 'async void' -- '*.cs'                # -> exactly 1: Startup.App.cs:21
 
 # --- The constraint this work was held to (section 1.3) -------------------
+# 'ea2552d' is the authoring baseline and the only commit id these documents
+# name; 'HEAD' is the checkout's tip. The figures are what these return on a
+# checkout whose tip is this engagement's final commit. Deliverable 08 section
+# 1.3 owns the statement, including where the durable provenance is recorded.
 git status --porcelain                                            # -> empty (current checkout)
-git diff --name-status ea2552d..28e3652 | wc -l                    # -> 13
-git diff --name-status ea2552d..28e3652 | grep -c '^A'             # -> 13
-git diff --name-status ea2552d..28e3652 | grep -vc '^A'            # -> 0
-git diff --name-status ea2552d..28e3652 | grep -v 'docs/modernization/' | wc -l   # -> 0
+# the one non-modification check of section 1.3: immutable baseline on the left, the
+# delivery commit the reviewer has checked out (HEAD) on the right
+git diff --name-status ea2552d..HEAD | wc -l                       # -> 13
+git diff --name-status ea2552d..HEAD | grep -c '^A'                # -> 13
+git diff --name-status ea2552d..HEAD | grep -vc '^A'               # -> 0
+git diff --name-status ea2552d..HEAD | grep -v 'docs/modernization/' | wc -l      # -> 0
 ```
 
 Two notes on reading these results. `git grep` **exits 1 when it finds nothing**, which is a success for
@@ -2300,8 +2562,36 @@ filter that could be forgotten.
 | F-12-20 `Dispose` overrides | 05 (dependency-injection transition) |
 | F-12-21 Identity schema unknowable; extraction is a gate | 05 (Identity migration), 03 (gate placement), 09 §8.2 (the sequencing collision) |
 | F-12-22 No usable schema baseline | 04 (**must not** use either script), 05 (extraction and diff), 08 §6.3 |
-| P-12-01 to P-12-04 Favourable findings | 07 (scope and effort), 05 (context, query and async transitions) |
 | F-12-23 MVC child actions — nine declarations, ten call sites | 05 (three view components, one per MVC 5 declaration — the conversion is 05's), 08 §5.2 (the per-page fan-out the two layout renders cause), 08 §8.1 (why the call sites are invisible to today's build) |
+| P-12-01 to P-12-04 Favourable findings | 07 (scope and effort), 05 (context, query and async transitions) |
+
+### 9.1 The reverse direction — the two `09` rows this document discharges
+
+The table above runs outward. [09 §8.3](09-security-assessment.md) requires the other direction to
+terminate too: its register's Consumers column names this document for two rows, and a reader arriving
+from that column has to land on a **named item here**, which means this document has to print the
+`F-09-nn` identifier rather than merely say the right thing about the right construct. Both rows are
+discharged by an entry that already exists above, and neither needed a new one:
+
+| Row in `09`'s register | What the row names | Discharged here by | Check from the other end |
+| --- | --- | --- | --- |
+| **F-09-22** — High, MVC 3 only, [09 §5.7](09-security-assessment.md) | MVC 3's exclude-list form of the class-level attribute, and the corrective order total written through a `DbContext` that is not the one that commits | [F-12-07](#f-12-07--the-synchronous-tryupdatemodel-and-the-class-level-bind-attribute), which classifies the construct in **all three** editions: the synchronous call is the compile-time removal, the attribute survives in the target but is deliberately not kept, and the replacement input model carries **neither** the include form nor MVC 3's exclude form forward | 09's Consumers cell for the row reads `05, 12` |
+| **F-09-28** — Medium, MVC 5 and MVC 4, [09 §6.4](09-security-assessment.md) | One class-level attribute on the persistence entity as the entire over-posting control at checkout, with the promo code bypassing the model altogether | [F-12-07](#f-12-07--the-synchronous-tryupdatemodel-and-the-class-level-bind-attribute), specifically its ten-versus-nine property finding and the three reasons the attribute is replaced rather than rewritten | 09's Consumers cell for the row reads `05, 12` |
+
+**Only the portability half is discharged here, and the boundary is worth stating because these two rows
+straddle it.** The security consequence of either row is [09](09-security-assessment.md)'s and the target
+design is [05](05-aspnet-core-migration-approach.md)'s ([§1.5](#15-what-this-document-does-not-own)). In
+particular F-09-22's cross-context corrective write is a correctness-and-security defect in MVC 3, not a
+construct without a successor, so it is cited above and **not** reclassified as an `F-12-nn` blocker.
+
+**Four other `F-09` identifiers appear in this document and none of them is a closure.** They are
+attributions to the owning deliverable, printed so a reader can find the analysis rather than to claim it:
+F-09-08 at [F-12-16](#f-12-16--json-property-naming-flips-to-camelcase)'s untokenized request side, and
+F-09-03, F-09-34 and F-09-05 at
+[F-12-21](#f-12-21--the-identity-schema-is-not-knowable-from-the-repository)'s schema conclusion and its
+extraction-before-removal ordering. None of those four rows names this document in its Consumers cell, and
+this document claims none of them — [09 §8.3](09-security-assessment.md) is explicit that a consumer may
+not acquire a row by citing it, and that rule cuts this way as much as the other.
 
 ---
 
