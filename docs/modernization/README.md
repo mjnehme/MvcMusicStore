@@ -236,6 +236,8 @@ Every cross-cutting decision is stated in full in exactly **one** deliverable. E
 | Hosting target and deployment model | [**06**](06-azure-hosting-recommendations.md) | cross-reference |
 | Cutover approach and its accepted losses | [**05**](05-aspnet-core-migration-approach.md) | cross-reference |
 | Observability approach | [**06**](06-azure-hosting-recommendations.md) | cross-reference |
+| The data-protection key store — where the key ring is persisted, and its rotation and isolation | [**06**](06-azure-hosting-recommendations.md#7-the-data-protection-key-ring-d3) | cross-reference |
+| The deployment migration principal, and the separation of DDL from the runtime identity | [**06**](06-azure-hosting-recommendations.md#62-who-applies-ddl-and-with-what-identity--the-separation-is-the-point) | cross-reference |
 | Per-edition build outcomes | [**10**](10-build-and-deployment-requirements.md) | cross-reference |
 | Effort model | [**07**](07-effort-risks-sequencing.md) | cross-reference |
 | Workstream decomposition | [**03**](03-modernization-roadmap.md) | cross-reference |

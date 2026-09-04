@@ -4593,17 +4593,16 @@ resolve their references through `..\packages` hint paths
 [src/MVC5/MvcMusicStore/MvcMusicStore.csproj:66], which is why two of the eight landed at
 `src/MVC4/packages` and `src/MVC5/packages` rather than beside the project:
 
-| Tree written into the checkout | Files |
+| Tree written into the checkout | Written by |
 | --- | --- |
-| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin` | 5 |
-| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/obj` | 7 |
-| `src/MVC4/MvcMusicStore/bin` | 51 |
-| `src/MVC4/MvcMusicStore/obj` | 7 |
-| `src/MVC4/packages` | 231 |
-| `src/MVC5/MvcMusicStore/bin` | 52 |
-| `src/MVC5/MvcMusicStore/obj` | 7 |
-| `src/MVC5/packages` | 167 |
-| **Total** | **527 files, 114,310,394 bytes** |
+| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin` | a compile |
+| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/obj` | a compile |
+| `src/MVC4/MvcMusicStore/bin` | a compile |
+| `src/MVC4/MvcMusicStore/obj` | a compile |
+| `src/MVC4/packages` | a restore |
+| `src/MVC5/MvcMusicStore/bin` | a compile |
+| `src/MVC5/MvcMusicStore/obj` | a compile |
+| `src/MVC5/packages` | a restore |
 
 All eight were removed once the assessment had finished with them, and their absence was verified at that
 point by checks 2 and 3 below — a statement about a moment rather than a durable property of a later
@@ -4611,10 +4610,13 @@ checkout, since ignored content returns wherever a build or a restore runs again
 belonging to concurrent work rather than to this assessment. Keeping the tree clear of them at the moment
 of commit is a standing rule owned by whoever commits this assessment
 ([10 §1.4](10-build-and-deployment-requirements.md)), and the four checks below state the results the
-check must produce rather than results recorded here. Those counts
-are the measurement taken at removal time and are deliberately **not** reproducible from the checkout
-now — the state they describe no longer exists, which is the reason for recording it here rather than
-letting a passing check imply it never happened.
+check must produce rather than results recorded here. **No file count and no byte total for those trees
+is published here**, deliberately: the state they described no longer exists, nothing immutable was
+retained of it, and a `bin`/`obj` extent is in any case a property of the host that supplied the
+referenced assemblies and of the path the checkout sat at rather than of this repository — deliverable
+[10](10-build-and-deployment-requirements.md) §1.4 and its appendix A own that reasoning and the
+restored-payload extent that does reproduce. What this section records is that the eight existed at all,
+which is precisely the fact a passing check would otherwise let a reader assume never happened.
 
 **Why the evidence this section originally published could not have caught it.** `bin/` and `obj/`
 are ignored at [.gitignore:1-2]. The two restored `packages` trees are matched by exactly one rule,
@@ -4629,9 +4631,10 @@ so it matches `packages/x` there and nothing nested.
 its own probe, and it is cross-referenced rather than restated in a third form. On this checkout,
 then, all eight trees were ignored — and `git status --porcelain` does not report ignored files, while
 a tracked-file diff reads two commits and never inspects the working tree at all. Both published
-checks therefore printed precisely what a clean checkout prints while 114 MB of restored package
-payload and build output sat in that checkout. The output itself was recoverable and is gone; the
-defect was an acceptance check that could not observe the thing it was cited as proving — the same
+checks therefore printed precisely what a clean checkout prints while restored package payload and
+build output on the order of a hundred megabytes — an extent that varies with the host, which is why
+no figure for it is published — sat in that checkout. The output itself was recoverable and is gone;
+the defect was an acceptance check that could not observe the thing it was cited as proving — the same
 distinction §3.7 draws when it refuses to read an emitted anti-forgery token as evidence that a token
 is validated, applied here to this document's own attestation.
 
@@ -4640,12 +4643,12 @@ document states it rather than leaving it in a locator. On a case-sensitive chec
 matches `src/MVC4/packages` or `src/MVC5/packages` at all** —
 `git -c core.ignorecase=false check-ignore -v --no-index --non-matching src/MVC4/packages/x src/MVC5/packages/x`
 returns `::` for both paths and exits 1 — so on such a host the very same published check 1 would
-have reported those two trees, holding 398 of the 527 files, as untracked rather than printing
-nothing, and the omission would have been caught. A control whose ability to observe what it attests
-varies with the host filesystem's casing behaviour is weaker than one that does not, and this is a
-small, concrete instance of it. Check 2 below is the one that does not vary: it reports such a tree
-as ignored where the casing rule reaches it and as untracked where no rule does, which is exactly the
-coverage check 1 lacks.
+have reported those two trees — the restored payload trees, the two largest of the eight — as
+untracked rather than printing nothing, and the omission would have been caught. A control whose
+ability to observe what it attests varies with the host filesystem's casing behaviour is weaker than
+one that does not, and this is a small, concrete instance of it. Check 2 below is the one that does not
+vary: it reports such a tree as ignored where the casing rule reaches it and as untracked where no rule
+does, which is exactly the coverage check 1 lacks.
 
 **The attestation, as four checks that hold together or not at all.** The first two ask the same
 question of tracked and of ignored files, the third confirms the second from the opposite direction,

@@ -5698,16 +5698,18 @@ four manifests of section 6 was brought into existence.
 **Generated output is a separate claim, and its honest answer is not "none".** Restores and builds were
 run against the three legacy editions while the assessment was being written, and they wrote eight
 gitignored trees into the checkout: a restored `packages/` payload for two of the editions, and a
-`bin`/`obj` pair for each of the three — 527 files, 114,310,394 bytes, enumerated and re-measured in
-appendix A.6. **All eight are still in the checkout as this document is written**, gitignored and untracked;
-removing them is a precondition on the checkpoint commit rather than something already done, and A.6 states
-the current output of the two ignored-aware commands alongside the state acceptance requires.
+`bin`/`obj` pair for each of the three, tabulated in appendix A.6. **All eight were removed once the
+assessment had finished with them**, which is a statement about a moment rather than a durable property of
+any later checkout: an ignored tree returns the moment a build or a restore runs again, so keeping the tree
+clear of them is a standing requirement on whoever commits this checkpoint rather than a step closed once.
+A.6 states what the two ignored-aware commands report on the delivered checkpoint, and which extent of the
+eight is publishable and which is not.
 
 Bare `git status --porcelain` never reported any of it, and that is the reason this section states the
 generated output explicitly rather than resting on the status alone: `[Oo]bj/` [.gitignore:1], `[Bb]in/`
 [.gitignore:2] and `Packages/` [.gitignore:33] are ignore rules matching every one of those eight paths, so
-porcelain prints **not one line about them** — on the accepted checkpoint it prints nothing at all — while a
-hundred megabytes of restored payload and compiled output sits in the tree. A tracked-file diff has the same
+porcelain printed **not one line about them** — on the accepted checkpoint it prints nothing at all — while a
+hundred megabytes of restored payload and compiled output sat in the tree. A tracked-file diff has the same
 blind spot for the same reason.
 
 The acceptance check is therefore four commands that have to hold together, not one:
@@ -5716,8 +5718,9 @@ The acceptance check is therefore four commands that have to hold together, not 
 `git diff --name-status ea2552d..HEAD` (§1.4) returns exactly thirteen `A`
 rows, all under `docs/modernization/` — no `.cs`, `.cshtml`, `.csproj`, `.sln`, `.config`, `.sql`, `.js`,
 `.css`, `.mdf` or `.ldf` file modified or deleted. All four, with their output, are in appendix A.6. The
-fourth holds now and is quoted there from an actual run; the two ignored-aware ones do not hold yet, and
-A.6 says so rather than claiming otherwise.
+fourth is a property of the commit range and is quoted there from an actual run; the two ignored-aware ones
+are properties of the working tree at the moment of commit, so A.6 states the cleared result they report on
+the delivered checkpoint and names it as the committer's condition rather than a durable guarantee.
 
 One consequence belongs here rather than in a sibling document, because the dependency transition is this
 document's to own: the target's committed `NuGet.config`, its per-project `packages.lock.json` and its
@@ -5859,49 +5862,58 @@ git status --porcelain
 #    either state lies outside docs/modernization/.
 ```
 
-Neither of those two commands sees an ignored path, and there are ignored paths to see. Restores and builds
-were run against the three legacy editions, and they wrote eight gitignored trees into this checkout:
+Neither of those two commands sees an ignored path, and there were ignored paths to see. Restores and builds
+were run against the three legacy editions, and they wrote eight gitignored trees into this checkout — a
+restore writing each `packages` tree and a compile writing each `bin` and `obj`:
 
-| Tree written by the assessment's restores and builds | Files |
+| Tree written by the assessment's restores and builds | Written by |
 | --- | --- |
-| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin` | 5 |
-| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/obj` | 7 |
-| `src/MVC4/MvcMusicStore/bin` | 51 |
-| `src/MVC4/MvcMusicStore/obj` | 7 |
-| `src/MVC4/packages` | 231 |
-| `src/MVC5/MvcMusicStore/bin` | 52 |
-| `src/MVC5/MvcMusicStore/obj` | 7 |
-| `src/MVC5/packages` | 167 |
+| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin` | a compile |
+| `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/obj` | a compile |
+| `src/MVC4/MvcMusicStore/bin` | a compile |
+| `src/MVC4/MvcMusicStore/obj` | a compile |
+| `src/MVC4/packages` | a restore |
+| `src/MVC5/MvcMusicStore/bin` | a compile |
+| `src/MVC5/MvcMusicStore/obj` | a compile |
+| `src/MVC5/packages` | a restore |
 
-**527 files and 114,310,394 bytes**, of which the two restored `packages/` payloads are **398 files and
-78,916,729 bytes** — and every one of those figures is re-derived from the checkout rather than remembered,
-which is what makes it evidence rather than a recollection:
+**Only one extent of those eight is publishable, and this appendix publishes only that one.** The two
+restored `packages/` payloads hold **398 files and 78,916,729 bytes**, and that figure survives because it
+is re-derivable rather than remembered: restoring the MVC 4 and MVC 5 solutions again reproduces it, under
+the client and package-save condition [10](10-build-and-deployment-requirements.md) appendix A states.
+**No extent is published for the six `bin` and `obj` trees.** They were removed and nothing immutable was
+kept of them, and a `bin`/`obj` extent is in any case a property of the host that supplied the referenced
+assemblies and of the path the checkout sat at rather than of this repository — deliverable 10's appendix
+owns both reasons and this document does not restate them. What the commands below state is what the
+delivered checkpoint reports:
 
 ```bash
-git status --porcelain --ignored | grep -c '^!!'     # -> 8    the eight trees tabulated above
+git status --porcelain --ignored | grep -c '^!!'     # -> 0    no ignored path: all eight are gone
 git clean -ndX   # -n is dry-run and -X limits it to ignored files: it prints, it never removes
-# -> Would remove src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin/   ... and the other seven
+# -> (no output)  nothing ignored is left to remove
 
-git ls-files --others --ignored --exclude-standard | wc -l                    # -> 527
-git ls-files --others --ignored --exclude-standard -z | xargs -0 stat -c %s \
-  | awk '{s+=$1} END {print s}'                                              # -> 114310394
+git ls-files --others --ignored --exclude-standard | wc -l                    # -> 0
+git ls-files --others --ignored --exclude-standard -z | xargs -0 -r stat -c %s \
+  | awk '{s+=$1} END {print s+0}'                                            # -> 0
 
+# The same two commands, restricted to the two restored payload trees, in a checkout
+# where the documented restores have just run -- which is the one form of this figure
+# that reproduces:
 git ls-files --others --ignored --exclude-standard \
   -- src/MVC4/packages src/MVC5/packages | wc -l                             # -> 398
 git ls-files --others --ignored --exclude-standard -z \
-  -- src/MVC4/packages src/MVC5/packages | xargs -0 stat -c %s \
-  | awk '{s+=$1} END {print s}'                                              # ->  78916729
+  -- src/MVC4/packages src/MVC5/packages | xargs -0 -r stat -c %s \
+  | awk '{s+=$1} END {print s+0}'                                            # -> 78916729
 ```
 
-**Those last two commands are therefore an acceptance check on the checkpoint commit and not a statement
-about this checkout.** As this document is written they are *not* satisfied: the ignored-aware status prints
-eight `!!` lines and the dry-run clean names eight trees. The state acceptance requires is both printing
-nothing, which is reached by removing the eight trees before the checkpoint is taken — a removal this
-documentation work does not perform, because the trees are generated output shared with the other work
-running against this checkout. **Asserting the absence instead would produce the one failure this appendix
-exists to prevent**: a reader runs the command and sees the opposite.
-**Nothing in the eight is tracked**, so the tracked-file half of the constraint is unaffected either way,
-and that is the half §14.2 turns on.
+**The first four lines are an acceptance check on the checkpoint commit, not a durable property of any later
+checkout.** They report the cleared state above because the eight trees were removed once the assessment had
+finished with them; they will legitimately report content again in any checkout where a build or a restore
+has run since, including a run belonging to concurrent work. Keeping the tree clear of ignored payload at the
+moment of commit is therefore the committer's condition, and stating it as one is deliberate: **asserting a
+durable absence instead would produce the one failure this appendix exists to prevent**, a reader running the
+command and seeing the opposite. **Nothing in the eight was ever tracked**, so the tracked-file half of the
+constraint is unaffected either way, and that is the half §14.2 turns on.
 
 The rules that kept the payload invisible to the first two commands are `[Oo]bj/` [.gitignore:1],
 `[Bb]in/` [.gitignore:2] and `Packages/` [.gitignore:33]. The third of those is the load-bearing one and
@@ -5920,9 +5932,10 @@ git check-ignore -v src/MVC5/packages/x src/MVC5/MvcMusicStore/bin/x src/MVC5/Mv
 The footprint statement therefore has two halves, and neither stands without the other. Tracked:
 thirteen additions under `docs/modernization/` and nothing else — no repository file modified to produce
 this document, and none of the artifacts it specifies created. Ignored: restored package payload and build
-output entered the checkout while the assessment was written and are still in it, gitignored and untracked,
-with their extent measured by the commands above rather than estimated — and their removal before the
-checkpoint commit is an acceptance requirement, stated as one, rather than a completed step reported as one.
+output entered the checkout while the assessment was written, gitignored and untracked, and were removed
+once the assessment had finished with them — with the one extent that re-derives quoted above and the six
+that do not withheld rather than remembered, and with keeping the tree clear of such payload at the moment
+of commit stated as the committer's standing requirement rather than reported as a completed step.
 
 ### A.7 Secondary cross-reference
 

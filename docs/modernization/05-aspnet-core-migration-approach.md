@@ -121,7 +121,7 @@ deleted in producing this document except the file you are reading** — and tha
 than "nothing was written", so the difference is stated rather than glossed.
 
 **Restores and builds were performed against this checkout during the assessment, and they wrote
-output into it.** Those runs left **eight gitignored trees** behind — 527 files, 114,310,394 bytes:
+output into it.** Those runs left **eight gitignored trees** behind:
 
 ```text
 src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin      src/MVC5/MvcMusicStore/bin
@@ -22411,9 +22411,10 @@ git ls-files 'src/MVC5/MvcMusicStore/App_Data/*'
 # --- Sections 1.4 / 14.2  The constraint this work was held to ----------------
 # Four commands, not one, and they only mean anything together. Restores and
 # builds ran against this checkout during the assessment and left eight ignored
-# trees in it, 527 files and 114,310,394 bytes as measured before removal. They
-# were removed once the assessment had finished with them, and that is a
-# statement about a moment rather than a durable property of any later checkout:
+# trees in it; deliverable 10's appendix A carries the per-tree record and the
+# standing of its figures, and no extent is stated here. They were removed once
+# the assessment had finished with them, and that is a statement about a moment
+# rather than a durable property of any later checkout:
 # ignored content legitimately reappears wherever a build or a restore runs,
 # including a run belonging to concurrent work rather than to this assessment.
 # The empty result of git status --porcelain --ignored and of git clean -ndX is

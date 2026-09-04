@@ -5720,15 +5720,18 @@ git check-ignore -v --no-index src/MVC4/packages/x src/MVC5/packages/x \
 #    one of the four commands the acceptance check consists of
 ```
 
-**The eight trees, and the honest standing of their figures.** They were
+**The eight trees, and why this document states no extent for them.** They were
 `src/MVC3/MvcMusicStore-Completed/MvcMusicStore/bin` and `obj`, `src/MVC4/MvcMusicStore/bin` and `obj`,
-`src/MVC4/packages`, `src/MVC5/MvcMusicStore/bin` and `obj`, and `src/MVC5/packages`, holding **527
-files and 114,310,394 bytes**. Both figures are **measurements taken immediately before removal, not
-counts re-derivable from this checkout**: the trees are gone, so the two ignore-aware commands above now
-return nothing and no command run today can reproduce 527 or 114,310,394. They are quoted as a record of
-what was removed, and the per-tree breakdown belongs to
-[10 Appendix A](10-build-and-deployment-requirements.md#appendix-a--reproducibility). Neither figure is an estimation input — it is not in
-[section 4.1](#41-the-estimation-basis-every-input-with-its-method) and no band derives from it.
+`src/MVC4/packages`, `src/MVC5/MvcMusicStore/bin` and `obj`, and `src/MVC5/packages`. **No file count and
+no byte total for them is published here**, and the reason is not reticence: the trees are gone, so the
+two ignore-aware commands above now return nothing; no per-file manifest, hash list or build log of them
+was retained, so there is nothing immutable a quoted figure could be checked against; and a `bin`/`obj`
+extent is in any case a property of the host that supplied the referenced assemblies and of the path the
+checkout sat at, so a replay of the same flow elsewhere legitimately reports something else. The per-tree
+record, the restored-payload extent that does reproduce, and both of those reasons belong to
+[10 Appendix A](10-build-and-deployment-requirements.md#appendix-a--reproducibility). No such figure is
+or ever was an estimation input — none is in
+[section 4.1](#41-the-estimation-basis-every-input-with-its-method) and no band derives from one.
 
 **What each half establishes, stated to match what it can actually see.** The diff establishes that
 thirteen files were added — the deliverables of this assessment, this document among them — and that

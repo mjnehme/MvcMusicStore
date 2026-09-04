@@ -76,17 +76,22 @@ and that none changes any recorded outcome:
   [F-12-14](#f-12-14--mvc-4s-committed-build-configuration) records, and MVC 5 ships no payload at any
   path.
 
-Together the eight held **527 files and 114,310,394 bytes**, which is more payload than the entire tracked
-checkout carries. **All eight were removed once the assessment had finished with them, and their absence
-was verified at that point.** Those two figures were measured before removal and are not reproducible
-afterwards by construction. What the same two commands report afterwards is the emptied state — but only
-while nothing generates new ignored payload, because they see ignored content regardless of what produced
-it, so in a checkout where a build or restore has run since they will legitimately be non-empty:
+**All eight were removed once the assessment had finished with them, and their absence was verified at that
+point.** **No file count and no byte total for them is stated here**, and the reason is not brevity: no
+per-file manifest, hash list or build log of the removed trees was retained, so nothing immutable exists for
+a figure to be checked against, and a `bin`/`obj` extent is in any case a property of the host that supplied
+the referenced assemblies and of the path the checkout sat at rather than of this repository, so a replay of
+the same restore and build flow elsewhere legitimately reports something else. Deliverable
+[10](10-build-and-deployment-requirements.md) §1.4 and its appendix A own that reasoning and the
+restored-payload extent that does reproduce. What the same two commands report on the delivered
+checkpoint is the emptied state — but only while nothing generates new ignored payload, because they
+see ignored content regardless of what produced it, so in a checkout where a build or restore has run
+since they will legitimately be non-empty:
 
 ```bash
-git ls-files --others --ignored --exclude-standard | wc -l          # before removal -> 527; 0 when cleared
+git ls-files --others --ignored --exclude-standard | wc -l          # -> 0   on the delivered checkpoint
 git ls-files --others --ignored --exclude-standard -z \
-  | xargs -0 -r stat -c %s | awk '{s+=$1} END {print s+0}'          # before -> 114310394; 0 when cleared
+  | xargs -0 -r stat -c %s | awk '{s+=$1} END {print s+0}'          # -> 0   on the delivered checkpoint
 ```
 
 **Bare `git status --porcelain` could not have detected any of that, which is why the acceptance check is
@@ -2600,7 +2605,7 @@ not acquire a row by citing it, and that rule cuts this way as much as the other
 strategy documents [04](04-dotnet8-migration-strategy.md), [05](05-aspnet-core-migration-approach.md) and
 [06](06-azure-hosting-recommendations.md). Index and requirement map: [README](README.md). No user rules
 were provided for this project. Every claim above carries an inline file location, and every count is
-reproducible by the command stated beside it apart from the two figures §1.3 marks as measured before the
-removal they describe. No tracked file outside `docs/modernization/` was created, modified or deleted in
+reproducible by the command stated beside it — §1.3 publishes no extent for the generated trees it
+records, and states why. No tracked file outside `docs/modernization/` was created, modified or deleted in
 its production — and the restore and build output that its production did write, together with the
 verification of its removal, is recorded at [§1.3](#13-the-no-modification-constraint).*
