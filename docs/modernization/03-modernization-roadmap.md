@@ -983,7 +983,7 @@ Grepping the repository for a mis-cased album-art path returns nothing, however 
 
 > **Compiling and testing on the target framework is W7's exit gate, not this one.** That is where the `System.Web` dependency is actually removed, so that is the first point at which "it builds and the suite is green" is a meaningful claim.
 
-**Depends on.** W2 through gate 2a, and and W4 through gate 4a — [§4.2.1](#edge-inventory) rows 2 and 6, read as predecessors. **Approval reaches this workstream through both of them rather than by an edge of its own**: W1 feeds gate 2a and gate 4a directly, and there is no `W1 → W6` row in that inventory, which is the form every transitive predecessor takes here. Approval reaches this workstream through both of them, so §4.2.1 declares no `W1 → W6` edge: no gate here checks approval separately.
+**Depends on.** W2 through gate 2a, and W4 through gate 4a — [§4.2.1](#edge-inventory) rows 2 and 6, read as predecessors. **Approval reaches this workstream through both of them rather than by an edge of its own**: W1 feeds gate 2a and gate 4a directly, and there is no `W1 → W6` row in that inventory, which is the form every transitive predecessor takes here. Approval reaches this workstream through both of them, so §4.2.1 declares no `W1 → W6` edge: no gate here checks approval separately.
 
 **Feeds.** Two.
 
