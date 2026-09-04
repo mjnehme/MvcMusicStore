@@ -88,9 +88,9 @@ which is exactly what a reviewer wants and is why the second endpoint is written
 **Neither command is immutable provenance, and this document does not pretend to carry any.** A pinned
 second endpoint would read as stronger evidence and would in fact be weaker: **no document can contain the
 hash of the commit that adds it** — the hash is not knowable until after the content is fixed — so a
-specific commit identifier written here could only be one nobody can verify. An earlier form of this section
-did exactly that, naming a second endpoint as though it were pinned; the identifier is removed rather than
-corrected, because there is no correct value for it to hold. **Immutable provenance lives outside the
+specific commit identifier written here could only be one nobody can verify, and there is no correct value
+one could hold, so **no pinned second endpoint is named anywhere in this document**. **Immutable
+provenance lives outside the
 documents**: in the commit that carries this set, in its message, and in the review record that references
 it — all three addressable by a reader who has the repository, and none of them restatable from inside a
 file the commit contains. What this document owes under the reproducing-command contract of §1.5 is a
@@ -815,10 +815,10 @@ Exact versions, no ranges:
 | nuget.org | `xunit` | `2.9.2` | Test framework. **The package is flagged deprecated on nuget.org** — reason *Legacy*, suggested alternative `xunit.v3` — and §7.3 carries the approval gate that decision needs |
 | nuget.org | `xunit.runner.visualstudio` | `2.8.2` | Test adapter. **Not deprecated**; listed [NuGet Gallery, *xunit.runner.visualstudio*, <https://www.nuget.org/packages/xunit.runner.visualstudio> — verified 2026-08-28] |
 | nuget.org | `Microsoft.NET.Test.Sdk` | `17.11.1` | Test host and `dotnet test` integration. **Not deprecated**; listed [NuGet Gallery, *Microsoft.NET.Test.Sdk*, <https://www.nuget.org/packages/Microsoft.NET.Test.Sdk> — verified 2026-08-28] |
-| nuget.org | `AngleSharp` | `1.7.2` | **HTML5/CSS-selector DOM parsing in the test project; not referenced by the application.** Declared in `src/MvcMusicStore.Tests`, the one test project, which owns every assertion that parses a response body (§12.3). Why a parser is a pin rather than a helper method is §7.5's; the registry facts are `1.7.2` listed, **not deprecated**, licensed **MIT**, publishing `net8.0` and `netstandard2.0` among its target frameworks [NuGet Gallery, *AngleSharp*, <https://www.nuget.org/packages/AngleSharp> — verified 2026-08-29] |
-| nuget.org | `Microsoft.Data.SqlClient` | `5.1.9` | **Direct SQL access for the fixtures' state observer and for the legacy stores' attach and detach lifecycle; the application reaches SQL only through the EF Core provider.** Declared in `src/MvcMusicStore.Tests`, which owns the observer and the legacy fixture (§12.3). The **version is not the registry head, and that is a decision rather than an oversight**: `5.1.9` is the version `Microsoft.EntityFrameworkCore.SqlServer` `8.0.30` itself resolves, so the fixtures hold the same driver the application ships — §7.6 states the choice, the alternative and why the alternative is refused. Registry facts: `5.1.9` listed, **not deprecated**, no reported vulnerability, licensed **MIT**, published 13 January 2026 [NuGet Gallery, *Microsoft.Data.SqlClient*, <https://www.nuget.org/packages/Microsoft.Data.SqlClient> — verified 2026-08-29] |
+| nuget.org | `AngleSharp` | `1.7.2` | **HTML5/CSS-selector DOM parsing in the test projects; not referenced by the application.** Declared in `src/MvcMusicStore.Contracts.Tests` and only there, because that project owns every assertion that parses a response body and its compile and runtime assets cross the project reference to `src/MvcMusicStore.Tests` (§12.2, §12.3). Why a parser is a pin rather than a helper method is §7.5's; the registry facts are `1.7.2` listed, **not deprecated**, licensed **MIT**, publishing `net8.0` and `netstandard2.0` among its target frameworks [NuGet Gallery, *AngleSharp*, <https://www.nuget.org/packages/AngleSharp> — verified 2026-08-29] |
+| nuget.org | `Microsoft.Data.SqlClient` | `5.1.9` | **Direct SQL access for the fixtures' state observer and for the legacy stores' attach and detach lifecycle; the application reaches SQL only through the EF Core provider.** Declared in `src/MvcMusicStore.Contracts.Tests` and only there, which owns the observer and the legacy fixture, and whose reference carries it to `src/MvcMusicStore.Tests` (§12.2, §12.3). The **version is not the registry head, and that is a decision rather than an oversight**: `5.1.9` is the version `Microsoft.EntityFrameworkCore.SqlServer` `8.0.30` itself resolves, so the fixtures hold the same driver the application ships — §7.6 states the choice, the alternative and why the alternative is refused. Registry facts: `5.1.9` listed, **not deprecated**, no reported vulnerability, licensed **MIT**, published 13 January 2026 [NuGet Gallery, *Microsoft.Data.SqlClient*, <https://www.nuget.org/packages/Microsoft.Data.SqlClient> — verified 2026-08-29] |
 | nuget.org | `Microsoft.Extensions.Logging.ApplicationInsights` | `2.23.0` | **The single logging provider `tools/provision-admin` configures, so that its audit record has a destination** — [06 §9.5](06-azure-hosting-recommendations.md) owns the sink, the credential path and the retention, and [05 §10.2](05-aspnet-core-migration-approach.md) owns the record's shape. Declared in `tools/provision-admin/ProvisionAdmin.csproj` **and nowhere else**: the web application is instrumented by the platform without a package ([06 §9.1](06-azure-hosting-recommendations.md)), and this pin must not be read as reversing that decision. Listed, **not deprecated**, MIT, publishing `netstandard2.0`, which a `net8.0` project consumes [NuGet Gallery, *Microsoft.Extensions.Logging.ApplicationInsights*, <https://www.nuget.org/packages/Microsoft.Extensions.Logging.ApplicationInsights> — verified 2026-08-29] |
-| nuget.org | `Microsoft.Playwright` | `1.62.0` | **The headless-browser harness for the one browser-executed flow of the suite — the cart page's script-issued removal request — driving Chromium.** Declared in `src/MvcMusicStore.Tests` beside the other assertion-side pins (§12.3). **One engine is functional evidence and not a browser matrix:** the supported-browser matrix is established by the manual appearance review alone, per [05 §12.5](05-aspnet-core-migration-approach.md) and the plan's §0.11.2, and §7.7 records that boundary with the pin. Registry facts: `1.62.0` is the current **stable** release, listed, **not deprecated**, no reported vulnerability, licensed **MIT**, published 11 August 2026, publishing a `netstandard2.0` asset which a `net8.0` project consumes [NuGet Gallery, *Microsoft.Playwright*, <https://www.nuget.org/packages/Microsoft.Playwright> — verified 2026-08-29] |
+| nuget.org | `Microsoft.Playwright` | `1.62.0` | **The headless-browser harness for the one browser-executed flow of the suite — the cart page's script-issued removal request — driving Chromium.** Declared in **both** test projects rather than in one, because it delivers the driver through build assets, which do not cross a project reference (§12.2, §12.3, §7.7). **One engine is functional evidence and not a browser matrix:** the supported-browser matrix is established by the manual appearance review alone, per [05 §12.5](05-aspnet-core-migration-approach.md) and the plan's §0.11.2, and §7.7 records that boundary with the pin. Registry facts: `1.62.0` is the current **stable** release, listed, **not deprecated**, no reported vulnerability, licensed **MIT**, published 11 August 2026, publishing a `netstandard2.0` asset which a `net8.0` project consumes [NuGet Gallery, *Microsoft.Playwright*, <https://www.nuget.org/packages/Microsoft.Playwright> — verified 2026-08-29] |
 
 The six test-tooling pins are **not** on the `8.0.30` band and are not expected to be: they version
 independently of the runtime, which is why they are listed with their own exact versions rather than
@@ -889,9 +889,9 @@ decision**, so this document states the fact and hands the choice over.
 runs correctly today. What it will not receive is feature work. The real risk is procedural rather than
 technical: **an organization whose dependency policy or CI gate treats any NuGet-deprecated package as
 prohibited will fail the build on this pin** — not because the tests fail, but because the gate does. That
-failure would arrive at the moment the test project is authored — `src/MvcMusicStore.Tests`, the one
-project that declares this pin (§12.3) — because that is the first point at which the pin is restored at
-all.
+failure would arrive at the moment the first test project is authored — this pin is declared by **each** of
+the two, because a test-execution package's build and analyzer assets do not cross a project reference
+(§12.2, §12.3) — because that is the first point at which the pin is restored at all.
 
 **The gate.** Before the test project is authored, the approver takes one of exactly two decisions:
 
@@ -1013,11 +1013,12 @@ date — every newer entry on the registry is a prerelease, and a prerelease is 
 take [NuGet Gallery, *AngleSharp*, <https://www.nuget.org/packages/AngleSharp> — verified 2026-08-29].
 
 **Where it is referenced, and where it is deliberately not.** It is declared by
-`src/MvcMusicStore.Tests`, the one test project (§12.3), because that project owns every assertion that
-parses a response body. It is a **library** package, so nothing about its asset kinds forces a second
-declaration anywhere: compile and runtime assets are all it contributes, unlike the build and analyzer
-assets of the three test-execution pins, which is why those three are declared directly by the test project
-rather than acquired across a reference (§12.3). **The web
+`src/MvcMusicStore.Contracts.Tests` and **only** there (§12.2, §12.3), because that project owns every
+assertion that parses a response body. It is a **library** package, so nothing about its asset kinds forces
+a second declaration anywhere: compile and runtime assets are all it contributes, and those *do* cross the
+project reference from `src/MvcMusicStore.Tests` — unlike the build and analyzer
+assets of the three test-execution pins, which is why those three are declared directly by each runnable
+test project rather than acquired across a reference (§12.3). **The web
 application does not reference it**, and nothing in the application's own package set changes on account of
 this pin: the parser exists to *read* the application's output, so a production reference would be a
 dependency added for no runtime purpose.
@@ -1030,11 +1031,11 @@ and the gate the pin is held to — not an amendment for anyone to make.
 
 | Aspect | Statement |
 | --- | --- |
-| **The pin** | `AngleSharp` `1.7.2`, referenced by the one test project only — the row added to §7.2 above |
+| **The pin** | `AngleSharp` `1.7.2`, referenced by `src/MvcMusicStore.Contracts.Tests` only — the row added to §7.2 above |
 | **The omission** | The plan's §0.5.2 successor-package set fixes the test stack as `Microsoft.AspNetCore.Mvc.Testing`, `xunit`, `xunit.runner.visualstudio` and `Microsoft.NET.Test.Sdk`. It carries **no HTML parser**, while §0.3.1 requires the suite to assert on *"selected rendered content"* and on the *"presence and value of named elements"*, and §0.11.2 makes that suite an acceptance criterion |
 | **Why the omission cannot stand** | Those four packages supply a host, a framework, a runner and an adapter. **None of them parses HTML**, so an assertion about a rendered element written with only that set is a text scan — and the table above is why a text scan cannot make the assertion the plan requires. The gap is not a convenience; it is the difference between an assertion and the appearance of one |
 | **Cause** | The plan's pin set was assembled from the test *infrastructure* the suite needs. The parser is a consequence of what the suite *asserts*, which §0.11.2 states in prose rather than as a dependency |
-| **The gate it is held to** | The approval gate of §1.4, like every other decision in this document, plus §7.1's re-verification of the number at approval time. Nothing is implemented before that approval, and the pin is scoped to the one test project so that approving it changes nothing the application deploys |
+| **The gate it is held to** | The approval gate of §1.4, like every other decision in this document, plus §7.1's re-verification of the number at approval time. Nothing is implemented before that approval, and the pin is scoped to `src/MvcMusicStore.Contracts.Tests` so that approving it changes nothing the application deploys |
 | **Disposition** | **Recorded, and the pin is added rather than deferred.** Deferring it would leave the suite's rendered-element rows unimplementable while the pin table looked compliant. The version is re-verified at approval under §7.1 consequence 1, exactly like every other pin here |
 
 ### 7.6 `Microsoft.Data.SqlClient` `5.1.9` — the fixtures' SQL client, and why the pin is not the registry head
@@ -1054,10 +1055,10 @@ already reaches the web application transitively, carried by
 `Microsoft.EntityFrameworkCore.SqlServer` — which is the §7.2 row that supplies managed-identity
 authentication. **The application reaches SQL only through the EF Core provider**, so a direct reference
 in the web project would add a dependency nothing in the application calls. The declaration therefore sits
-in `src/MvcMusicStore.Tests`, the one test project (§12.3), which owns the observer and the legacy
-fixture — the same arrangement as the parser pin of §7.5, and for the same reason: a library pin
-contributes compile and runtime assets only, so one declaration in the project that calls it is the whole
-of what it needs (§12.3).
+in `src/MvcMusicStore.Contracts.Tests` and **only** there (§12.2, §12.3), which owns the observer and the
+legacy fixture — the same arrangement as the parser pin of §7.5, and for the same reason: a library pin
+contributes compile and runtime assets only, and those cross a project reference, so one declaration in the
+project that calls it is the whole of what it needs (§12.3).
 
 **Why `5.1.9` rather than the current head, stated with the alternative it was chosen over.** This is the
 one pin in §7.2 whose number is *derived* rather than selected, and the derivation is checkable:
@@ -1133,8 +1134,9 @@ neither is a judgement about how serious a deprecation is:
   reason forbids outright.
 
 **What the pin does and does not expose, because "test-only" is the tempting answer and it is the wrong
-one.** The *declaration* is test-only: `src/MvcMusicStore.Tests` is the one project that names this
-package (§12.3) and the application names it nowhere. The *closure* is not test-only, and the parity
+one.** The *declaration* is test-only: `src/MvcMusicStore.Contracts.Tests` is the one project that names
+this package (§12.2, §12.3) and the application names it nowhere. The *closure* is not test-only, and the
+parity
 property is precisely why — `Microsoft.EntityFrameworkCore.SqlServer` `8.0.30` declares
 `Microsoft.Data.SqlClient` `5.1.9` in its own `net8.0` group [NuGet Gallery,
 *Microsoft.EntityFrameworkCore.SqlServer*,
@@ -1182,7 +1184,7 @@ and what follows records the divergence and the gate rather than asking anyone t
 
 | Aspect | Statement |
 | --- | --- |
-| **The pin** | `Microsoft.Data.SqlClient` `5.1.9`, referenced by the one test project only — the row added to §7.2 above |
+| **The pin** | `Microsoft.Data.SqlClient` `5.1.9`, referenced by `src/MvcMusicStore.Contracts.Tests` only — the row added to §7.2 above |
 | **The omission** | The plan's §0.5.2 successor-package set carries no SQL client for the test projects, while §0.3.1 requires a legacy reset that *"restores both committed `.mdf`/`.ldf` pairs, not one, and reattaches them before each run"* and requires the target fixture to provision a disposable engine, apply both migration sets and load a dataset *"with asserted row counts and key invariants"* |
 | **Why the omission cannot stand** | Attach, detach, drop and a row-count read are statements executed against an engine. `Microsoft.AspNetCore.Mvc.Testing` supplies a host, `xunit` a framework, `AngleSharp` a parser: **none of them opens a connection.** Without a client the reset and the invariant assertions are prose, and the fixture the plan makes an acceptance criterion in §0.11.2 cannot be built |
 | **Cause** | The plan's pin set was assembled for the *application*, plus the four test-infrastructure packages. The client is transitive for the application, so it needed no row there — and the fixtures' own need for it is stated in §0.3.1 as behaviour rather than as a dependency |
@@ -1237,7 +1239,7 @@ listed, **not deprecated**, no reported vulnerability, licensed **MIT**, publish
 
 | Aspect | Statement |
 | --- | --- |
-| **The pin** | `Microsoft.Playwright` `1.62.0`, referenced by the one test project only — the row added to §7.2 above |
+| **The pin** | `Microsoft.Playwright` `1.62.0`, referenced by **both** test projects and by the application in neither form — the row added to §7.2 above. It is declared twice rather than once for the reason the paragraph above and §12.2's two project rows give: it delivers the driver and the generated `playwright.ps1` through **build assets**, which do not cross a project reference, so the project whose output runs the flow has to declare it itself |
 | **The omission** | The plan's §0.5.2 set names no browser harness, and its §0.11.2 offers a manual review for **rendered appearance** only. The one flow above is neither appearance nor a request a client can hand-build faithfully: it is the application's own script deciding what to send |
 | **Why the omission cannot stand** | Substituting a reviewer clicking the remove link would reclassify a **behavioural** gap as a visual one, which is the one substitution §0.11.2's manual allowance does not authorize. Without the harness the flow is covered statically — the token is rendered, the header name appears in the script — and every runtime failure mode ([05 §12.11](05-aspnet-core-migration-approach.md) enumerates them) passes that check while the control does nothing in a browser |
 | **Cause** | The plan's coverage prose treats the suite as HTTP-level throughout, which it is for every surface but this one. The exception is a property of the application — one scripted flow — rather than of the test strategy |
@@ -1272,8 +1274,9 @@ Recording the concrete type matters for a reason beyond documentation: [05
 into the baseline metadata so a substitution fails the hand-off instead of silently re-aliasing accounts.
 
 **Where it is declared, and where it deliberately is not.** It is declared by
-`src/MvcMusicStore.Tests`, the one test project (§12.3), which owns the diagnostic record and the pseudonym
-scheme. Like the parser and the SQL client it is a **library** pin — compile and runtime assets only — so
+`src/MvcMusicStore.Contracts.Tests` and **only** there (§12.2, §12.3), which owns the diagnostic record and
+the pseudonym scheme. Like the parser and the SQL client it is a **library** pin — compile and runtime
+assets only, and those cross the project reference to `src/MvcMusicStore.Tests` — so
 one declaration in the project that resolves the abstraction is the whole of what it needs, unlike the
 test-execution pins of §7.2. **The web application declares no reference to it and needs none**: it reaches
 exactly the same API transitively through `Microsoft.AspNetCore.Identity.EntityFrameworkCore` `8.0.30`,
@@ -1306,7 +1309,7 @@ band or below it, so the pin introduces no package outside the graph the band al
 
 | Aspect | Statement |
 | --- | --- |
-| **The pin** | `Microsoft.Extensions.Identity.Core` `8.0.30`, referenced by the one test project only — the row added to §7.2 above |
+| **The pin** | `Microsoft.Extensions.Identity.Core` `8.0.30`, referenced by `src/MvcMusicStore.Contracts.Tests` only — the row added to §7.2 above |
 | **The omission** | The plan's §0.5.2 successor set names `Microsoft.AspNetCore.Identity.EntityFrameworkCore` for the **application** and no Identity package for the test projects, and its §0.11.2 requires the suite's diagnostics without specifying how a per-account identifier is canonicalized. The abstraction the design settled on is therefore invoked by a project whose declared package set does not contain it |
 | **Why the omission cannot stand** | An invoked type with no declaring package is a project that does not compile — the one failure class this document exists to enumerate rather than discover during implementation. The alternative that needs no pin is worse and is the one 05 rejected with evidence: reimplementing the normalization merges or splits accounts relative to the application's own rule, and the resulting per-account mismatch is attributable to neither runtime |
 | **Cause** | The plan's pin set was derived from the **application's** runtime needs, and the suite's needs were derived from its *test-tooling* needs. A pin that is an application-framework package used **by the tests** falls between the two derivations, which is the same gap that produced records 3, 4 and 5 |
@@ -2058,7 +2061,6 @@ facts: that the file exists, where it sits, what build item it is, and what it d
 | `src/MvcMusicStore/wwwroot/js/shopping-cart.js` | CREATE | `src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:7-35` — the view's inline `<script>` block, whose `$.post` at [src/MVC5/MvcMusicStore/Views/ShoppingCart/Index.cshtml:17] is the cart-removal call | **A script that is markup today becomes a served file, and it is a row rather than a member of the `wwwroot/**` row above because its source is a Razor view rather than an asset file.** Two independent requirements land on it: [06 §10.2](06-azure-hosting-recommendations.md) makes the inline block a policy violation under `script-src 'self'` with no `unsafe-inline` and no nonce, and [05 §7.4](05-aspnet-core-migration-approach.md) makes the removal request carry the anti-forgery token in a `RequestVerificationToken` **header**, so this file is the client half of that contract. Structurally: one file under the web root, served by the shared framework's static-file middleware with no bundler and no build step (§10.1), referenced by a `<script src>` in the same document so the token in the page remains reachable. Its contents — the selector, the read-at-post-time rule and the header literal — are [05 §7.4](05-aspnet-core-migration-approach.md)'s |
 | CI pipeline definition | CREATE | **net-new** | **Deliberately not named as a file.** Its path and format depend on a provider choice this assessment does not make; [03](03-modernization-roadmap.md) carries provider selection as an explicit roadmap gate. What this document contributes to it: the build image must satisfy the `8.0.400` band (§3.2), restore runs in locked mode (§6.4), and `dotnet tool restore` precedes any migration step (§6.3) |
 | `Dockerfile` | CREATE | **net-new** | **Conditional.** It exists only under the container-native hosting option, which is [06](06-azure-hosting-recommendations.md)'s to select. If code deployment is chosen, this file does not exist at all |
-
 | `src/MVC3/**`, `src/MVC4/**`, `src/MVC5/**` — the three legacy projects, their four solutions and their committed databases | **REFERENCE** | themselves | **Retained read-only** as historical references and as the behavioural baseline the port is validated against; none is modified and none is deleted (§12.3). They continue to exist alongside the single new root solution, so §5.6's consolidation is of the *target* rather than a deletion of the past. **This is the only non-CREATE row on the map**, and it is a row rather than prose because a reader checking the map for a target that has no source needs to find the retained legacy tree accounted for here too |
 | `src/MvcMusicStore/ApplicationServices.cs` | CREATE | **net-new** — the legacy application has no equivalent: its composition is spread across `Global.asax.cs` and the OWIN startup files [src/MVC5/MvcMusicStore/Global.asax.cs:13-21], [src/MVC5/MvcMusicStore/Startup.cs:4-14], and nothing there is callable from outside the web process | **The application's one registration seam**, and the file exists so that the seam has a name a second project can call. It declares `public static class ApplicationServices` with one method — `public static IServiceCollection AddMvcMusicStoreServices(this IServiceCollection services, IConfiguration configuration)` — which registers **both `DbContext` types** (`MusicStoreEntities` and `ApplicationDbContext`, each on the SQL Server provider at its configured connection string), the **Identity core, store and manager services** over `ApplicationUser` including the role manager, the password hasher and the Identity options, and the **options objects the tools read**, bound from the `IConfiguration` passed in. **`Program.cs` calls this method itself**, which is the property that matters: there is exactly **one** registration path, so a tool cannot compose a different application than the one that serves requests. What deliberately stays in `Program.cs` and is **not** in the seam: the HTTP-pipeline concerns — MVC and Razor, the cookie authentication schemes, session, anti-forgery, data-protection key persistence, health checks and the middleware order — because a console host has no pipeline to attach them to and a tool that acquired them would be configuring behaviour it never exercises. The **values** applied inside the seam are not this document's: the authentication, password and lockout policy is [05 §6.1](05-aspnet-core-migration-approach.md)'s, the two contexts and their separate migration sets and history tables are [05 §4.5](05-aspnet-core-migration-approach.md)'s, and everything `Program.cs` composes around this call is [05 §2](05-aspnet-core-migration-approach.md)'s. This row owns the file, the type, the method signature, what is registered there versus in `Program.cs`, and the single-path rule; §12.4 owns why the tools depend on it. Added to this map under the plan-correction record of §12.1 |
 | `src/MvcMusicStore.Contracts.Tests/MvcMusicStore.Contracts.Tests.csproj` | CREATE | **net-new** — the repository contains no test project of any kind (appendix A.4) | SDK-style, `net8.0`, with its own committed lockfile, declaring **seven** pins of §7.2 directly — the six test-tooling pins `xunit` `2.9.2`, `xunit.runner.visualstudio` `2.8.2`, `Microsoft.NET.Test.Sdk` `17.11.1`, `AngleSharp` `1.7.2`, `Microsoft.Data.SqlClient` `5.1.9` and `Microsoft.Playwright` `1.62.0`, plus the band pin `Microsoft.Extensions.Identity.Core` `8.0.30`, which is here because this project owns the diagnostic pseudonym scheme that **invokes** `ILookupNormalizer` (§7.2, §7.5, §7.6, §7.7, §7.8). **Three of the seven are declared in the in-process project as well, and four are not, and the split is not a style choice:** the three **test-execution** pins — `xunit`, `xunit.runner.visualstudio` and `Microsoft.NET.Test.Sdk` — deliver their function through build and analyzer assets, which **do not cross a project reference**, so each runnable test project declares them itself (§12.3); `Microsoft.Playwright` is in the same group for the reason §7.7 states. The three **library** pins — the response-body parser, the SQL client and the Identity abstractions — are declared **here and only here**, because this project owns the assertions that parse a body, the state observer and legacy attach/detach lifecycle that need a SQL connection, and the pseudonym canonicalization, and their compile and runtime assets *do* reach the in-process project through its reference to this one (§7.5, §7.6, §7.8). **It carries no `ProjectReference` to `src/MvcMusicStore/MvcMusicStore.csproj` and no reference to any other target project** — it reaches whatever host it is pointed at **purely over HTTP**, at a base address it reads from configuration. That absence is the load-bearing property of this row and the reason there are two test projects rather than one: it is what makes this project **buildable and runnable before the ported web application exists**, which is the condition [03](03-modernization-roadmap.md)'s W4 has to meet. It owns the **shared contract assertions** and the **legacy-baseline fixture**, and it is the project W4 restores, builds and runs to characterize the legacy baseline. It also owns the **deployed-only fixture and its concrete class**, for the reason those two rows below state — the only classes here that the baseline run does **not** execute, because a category filter selects them and a deployed host, not this project's reference set, is what they need. **The assertions are declared as one `abstract` class per contract surface**, each holding that surface's `[Fact]` and `[Theory]` methods and taking every dependency it needs — the base address, the client, the state observer — from an **injected, runtime-neutral context** rather than from anything that names a runtime. **The legacy-bound concrete classes are declared here, in this assembly**: one `sealed` class per surface, deriving from that surface's base and supplying the legacy context, and carrying nothing else. That is the arrangement §12.3 argues, and the reason the concretes are declared per assembly rather than inherited across the reference is a property of test discovery rather than of the compiler — stated there once. This row owns that the project exists, where it sits, what it references and the shape of the classes it declares; the assertions' architecture and coverage are [05 §12.2](05-aspnet-core-migration-approach.md) and [05 §12.4](05-aspnet-core-migration-approach.md)'s, the context abstraction and the legacy fixture's design are [05 §12.6](05-aspnet-core-migration-approach.md)'s, and the runnable commands are [05 §12.10](05-aspnet-core-migration-approach.md)'s (see the note following this table). Its place in the sequence is [03](03-modernization-roadmap.md)'s |
@@ -2081,6 +2083,7 @@ facts: that the file exists, where it sits, what build item it is, and what it d
 | `src/MvcMusicStore.Tests/xunit.runner.json` | CREATE | **net-new** | The same file for the in-process project, with the same exact value `"parallelizeTestCollections": false` and the same preserve-newest content-item copy behaviour. **One per test project, because the setting is assembly-level:** a single copy in one project does not govern the other project's assembly, and the target-side fixtures are the half that provisions databases and applies migration sets. Requirement source: [05 §12.7](05-aspnet-core-migration-approach.md) |
 | `src/MvcMusicStore/Resources/ApplicationMessages.resx` | CREATE | **net-new** — no edition has a resource file of any kind, verified repository-wide: `git ls-files '*.resx'` returns `0`, so every user-facing string in all three legacy applications is a literal in a view or a `ModelState` message | The application's **one committed resource file**, and the only reason it is mapped here is that a named entry in it is a **test oracle**: [05 §12.4](05-aspnet-core-migration-approach.md) row 37 asserts the rendered cart-migration notice is byte-equal to the value of the entry **`CartMigrationNotice`**, read from the resource rather than transcribed into the test. `.resx` is an **`EmbeddedResource`** under the SDK's default item behaviour — not copied to output — so the reading side must hold a reference to this assembly; it does, because row 37 is **target-only** and its concrete sits in `src/MvcMusicStore.Tests`, which references the web project. That is a structural consequence worth stating: the reference-free contracts project could not read this oracle, which is one more reason the case is target-side. **The entry's value is a product decision and is [05](05-aspnet-core-migration-approach.md)'s**, together with the four predicates that row holds it to; this row owns the file's existence, its path, its build action and the fact that the string has exactly one home. Added to this map under the plan-correction record of §12.1 |
 | `tools/provision-admin/ProvisionAdmin.csproj`, with its `Program.cs` | CREATE | `src/MVC5/MvcMusicStore/App_Start/Startup.App.cs` — the startup provisioning it replaces | SDK-style `net8.0` console project with its own committed lockfile and the **same `UserSecretsId` as the web project** (§5.7), **not deployed with the web application**, and the **only operator console project in this map**. It carries **ten verbs, not ten projects** — `admin`, `seed`, `extract-schema`, `diff-schema`, `load-catalog`, `load-identity`, `reconcile`, `seal-manifest`, `accept-run` and `close-run` — so there is one project file, one `Program.cs`, one publish output, one checksum and one promotion path for every operator action the target needs (§12.3, §12.4). It carries a **`ProjectReference` to `src/MvcMusicStore/MvcMusicStore.csproj`**, so it builds the same Identity registrations the web application validates rather than a second copy of them (§12.3) — a build-time edge, which is not a deployment. Each verb's own contract — its switches, its guards, its assertions, its secret channel and its idempotence — is [05](05-aspnet-core-migration-approach.md) §5.1.2, §5.4 and §10.2's; which stage runs it, under which principal and against what asserted target is [06](06-azure-hosting-recommendations.md) §6.3.2's |
+| `deploy/sql/SecurityAuditLog.sql` | CREATE | **net-new** — the repository has three `.sql` files and none of them is a deployment script: `git ls-files '*.sql'` returns only the edition schema scripts `src/MVC3/MvcMusicStore-Assets/Data/MvcMusicStore-Create.sql`, `src/MVC4/MvcMusicStore-Create.sql` and `src/MVC4/MvcMusicStore/MvcMusicStore-Create.sql` | **A standalone deployment script, and the row §12.1's count of four consuming-deliverable artifacts refers to.** [06 §9.5](06-azure-hosting-recommendations.md) requires a durable audit table and states its DDL in full; what nothing stated until this row is *where that DDL lives*, which is the only reason it is mapped here. It is **not** an EF Core migration and adds none: [06 §6.3](06-azure-hosting-recommendations.md) applies it as its own step of the provisioning order, under the deployment identity and inside that section's DDL window, so neither context's migration set and neither history table acquires it and §12.5's placement of both migration sets is unchanged. Structurally: a `.sql` file under a repository-root `deploy/sql/` folder, **compiled into nothing and packaged with no project** — it is neither a `Compile` nor a `Content` item of any of the four projects of §5.6, so it adds no project, no item group and no edge to §12.4's graph, and it reaches the release runner as a repository file. Its content, its `OBJECT_ID` guard, its append-only grants and the step that applies it are [06 §9.5](06-azure-hosting-recommendations.md)'s and [06 §6.3](06-azure-hosting-recommendations.md)'s; this row owns its existence, its path and its build treatment |
 
 **The row count, checkable, and every target appearing exactly once.** The table above is **one table of 69
 rows**, with **69 distinct target cells** — no path, glob or artifact is named by two rows — of which **68
@@ -2200,16 +2203,15 @@ with exactly one reader: nothing outside those handlers constructs one, returns 
 signature, and a file of its own sitting in `Diagnostics/` would read as a shared contract that other code
 is invited to depend on. Nested and private, they cannot acquire a second consumer without the declaration
 moving first, which is the property worth having. **The latitude is a permission and not a rule, and the
-report collector is the case that shows the difference**: an earlier form of this sub-section pointed at
-`Security/CspReportEndpoint.cs` as the establishing row and nested the two CSP report shapes inside it, and
-[05 §7.5](05-aspnet-core-migration-approach.md) has since decided the opposite, in its own words rejecting
-nesting them privately "because the two shapes are a wire contract and a wire contract belongs beside the
+report collector is the case that shows the difference**: its two CSP report shapes are **not** nested
+privately, because [05 §7.5](05-aspnet-core-migration-approach.md) decides otherwise, in its own words
+rejecting nesting them "because the two shapes are a wire contract and a wire contract belongs beside the
 other one" — the other one being the checkout input model — so they are deserialization targets in
-`Binding/CspReportModels.cs`, and the row recording that replacement is in §12.2's removal table. The
-latitude was never an instruction to nest: the owning deliverable decides whether a shape is private to one
-reader, and where it says otherwise this map places the file it named rather than the file this rule would
-have predicted. `Diagnostics/InternalDiagnosticsEndpoints.cs` is
-therefore now **the only** row that uses the latitude, and it adds no file.
+`Binding/CspReportModels.cs`. The
+latitude is therefore not an instruction to nest: the owning deliverable decides whether a shape is private
+to one reader, and where it says otherwise this map places the file it named rather than the file this rule
+would have predicted. `Diagnostics/InternalDiagnosticsEndpoints.cs` is
+therefore **the only** row that uses the latitude, and it adds no file.
 
 **Five co-locations, sanctioned explicitly rather than left as gaps.** Each is a case where a reader
 might expect a file and the correct answer is a file already on the map:
@@ -2259,9 +2261,9 @@ might expect a file and the correct answer is a file already on the map:
 behaviour**: its two identities and their separate grants, its cursor blob in a second container, how it
 selects a batch, the deterministic batch name, the SHA-256 content hash it writes, the four-step
 conditional-create acknowledgement protocol that makes a re-run idempotent, what it may and may not log,
-and four failure tests. An earlier form of this sub-section held its **artifact** open, because a process
-specified as behaviour alone could have landed either inside this repository or outside it, and the two
-outcomes differ in whether this repository gains a project at all. **That decision has since been taken by
+and four failure tests. Behaviour alone does not settle the **artifact**: a process specified that way
+could land either inside this repository or outside it, and the two
+outcomes differ in whether this repository gains a project at all. **That decision has been taken by
 its owner**, and this sub-section records it rather than reopening it: 06 decides the form — a `net8.0`
 console application packaged as a container image and run as a scheduled job under the monitoring identity
 — and the **location: outside this repository's application tree**, alongside the audit storage account and
@@ -2288,9 +2290,9 @@ reaches SQL and blob storage over the network exactly as the exporter contract d
 would gain a node and not an edge. Nothing else on this map is held up by that decision, which is what
 makes it a location decision rather than a design one.
 
-**The key-ring monitor is not a second such process, and the heading above says "the one" advisedly.** An
-earlier form of this sub-section listed a **key-ring monitoring job** beside the exporter as another
-out-of-tree process, and that is no longer true of its owner's design:
+**The key-ring monitor is not a second such process, and the heading above says "the one" advisedly.** A
+**key-ring monitoring job** is not an out-of-tree process beside the exporter, because its owner's design
+no longer contains one:
 [06 §7.4.1](06-azure-hosting-recommendations.md) deletes the recurring job outright — *"the query survives
 and the monitor around it does not"* — because its producer would have been a second answer to a question
 [06 §7.4](06-azure-hosting-recommendations.md) already answers through the heartbeat. What replaces it
@@ -2302,11 +2304,11 @@ an operator runs on in-network compute rather than an application whose files a 
 exporter is the **only** required process this map carries no file for, and the monitor is not an exception
 to the enumeration but an ordinary member of it.
 
-**One target this sub-section used to carry and no longer does.** An earlier form of it held open a **pinned
-browser harness** for [06 §10.2](06-azure-hosting-recommendations.md)'s report-endpoint delivery checks, on
-the grounds that CSP enforcement, CSP3 precedence between the two report transports and the absence of
+**No artifact is mapped for [06 §10.2](06-azure-hosting-recommendations.md)'s report-endpoint delivery
+checks, and a pinned browser harness for them is refused rather than pending.** The case for one was
+real — CSP enforcement, CSP3 precedence between the two report transports and the absence of
 double delivery are behaviours of a browser's policy engine that no `WebApplicationFactory` request can
-produce. That reasoning still holds, but the decision it waited on **has since been taken, against the
+produce — and that reasoning still holds, but the decision it waited on **has been taken, against the
 harness**: 06 weighs a pinned browser-automation stack, rejects it on proportionality, and selects a
 blocking, manually executed deployed-browser network-panel gate with a signed-off artifact per release. A
 gate that produces no file has no row on the map, so the row is removed, §12.2's count rationale records the
@@ -2338,11 +2340,14 @@ be conflated: MVC 4 and MVC 3 are read for **comparison** — the duplication me
 unit-of-work models, the per-edition dependency and security posture — and nothing in this assessment
 executes them or compares the port against them.
 
-**The suite is one project, and the two baselines are bound by inheritance rather than by a project
-split.** The plan's map carries **one** test project (§12.1, §12.2), so the arrangement that lets one copy
-of an assertion run against both the legacy application and the ported one has to work **inside a single
-assembly** — and inheritance does. That has to be stated rather than assumed, because two readings of a
-`ProjectReference` are wrong in ways that produce a suite which passes by running nothing.
+**The suite is two projects, and the one copy of each assertion is bound to both baselines by inheritance
+across the reference between them.** §12.2 maps `src/MvcMusicStore.Contracts.Tests` and
+`src/MvcMusicStore.Tests`, and §12.1's record 2 states why the split is what makes the plan's own ordering
+executable: the contracts project references nothing, so it builds and runs against the **legacy**
+application before the ported web application exists. The arrangement that lets one copy of an assertion
+run against both applications therefore has to work **across two assemblies** — and inheritance does, with
+each assembly declaring its own concretes. That has to be stated rather than assumed, because two readings
+of a `ProjectReference` are wrong in ways that produce a suite which passes by running nothing.
 
 > **A `ProjectReference` does not make the referencing project a test project — and this is the trap that
 > produces no run at all rather than a short one.** `Microsoft.NET.Test.Sdk` and
@@ -2354,42 +2359,51 @@ assembly** — and inheritance does. That has to be stated rather than assumed, 
 > compile and runtime assets cross a project reference. A project that acquired those three only by
 > referencing a project that declares them would **compile**, and then be neither built as a test project
 > nor discovered nor executed: the adapter is absent from its output and the test targets are never
-> imported. **Therefore `src/MvcMusicStore.Tests` declares `xunit`, `xunit.runner.visualstudio` and
-> `Microsoft.NET.Test.Sdk` directly**, in its own project file, and §12.2's test-project row does.
+> imported. **Therefore each of the two test projects declares `xunit`, `xunit.runner.visualstudio` and
+> `Microsoft.NET.Test.Sdk` directly**, in its own project file, and §12.2's two project rows do — the
+> redeclaration in `src/MvcMusicStore.Tests` is required rather than redundant, because it acquires nothing
+> of those three across its reference to the contracts project.
 > Library pins behave the other way round: `AngleSharp`, `Microsoft.Data.SqlClient` and
 > `Microsoft.Extensions.Identity.Core` deliver compile and runtime assets, so §7.5, §7.6 and §7.8 declare
-> each in that one project. `Microsoft.Playwright` sits with the build-asset group rather than the library
-> group, for the reason §7.7 states.
+> each in `src/MvcMusicStore.Contracts.Tests` and only there, and the reference carries them to the other
+> project. `Microsoft.Playwright` sits with the build-asset group rather than the library
+> group, so it too is declared in both, for the reason §7.7 states.
 >
-> **And a `ProjectReference` does not make the referenced assembly's tests run either**, which is why
-> nothing is gained by spreading assertions across the two projects the test project references. The test
-> host is pointed at **one** assembly and discovers tests by reflecting over **the types that assembly
+> **And a `ProjectReference` does not make the referenced assembly's tests run either — this is the reading
+> that decides where the concretes are declared.** The test host is pointed at **one** assembly at a time
+> and discovers tests by reflecting over **the types that assembly
 > declares**; a project reference makes the referenced assembly's *types* available to the compiler and
-> puts its output beside this one's, and no filter or runner setting enrols its tests in this run. The web
-> project and the operator command declare no tests and are not test projects, so the one test assembly is
-> the whole of what `dotnet test` discovers.
+> puts its output beside this one's, and no filter or runner setting enrols its tests in this run. So
+> running `src/MvcMusicStore.Tests` does **not** run anything declared in
+> `src/MvcMusicStore.Contracts.Tests`, and running the contracts project does not run the target-bound
+> cases: each assembly is discovered and executed on its own, which is why every concrete class is declared
+> in the assembly whose run is meant to execute it rather than inherited across the reference. The web
+> project and the operator command declare no tests and are not test projects, so the two test assemblies
+> are the whole of what `dotnet test` discovers.
 
 The property that *is* load-bearing is different, and it is the one the topology is built on: **a test
 method inherited by a class declared in the test assembly is discovered on that derived class**, because
 discovery enumerates each declared type's methods including the inherited ones. So the shape is fixed, and
-every element of it lives in the one mapped test project:
+it spans the two test projects §12.2 maps — the element table below states which element is declared in
+which, and §12.2's own rows are the authority for every path in it:
 
 | Element | Where it is declared | What it carries |
 | --- | --- | --- |
-| One `public abstract` class **per contract surface** | `src/MvcMusicStore.Tests/Contracts/**` | Every `[Fact]` and `[Theory]` for that surface, and nothing runtime-specific. Its dependencies arrive through an **injected, runtime-neutral context**. Being abstract, it is skipped by discovery and contributes no run of its own |
-| One `public sealed` **legacy-bound** concrete per surface | `src/MvcMusicStore.Tests/Legacy/**` | A derivation, the legacy context and its `[Collection]` attribute. No assertion logic. These are the classes the pre-port baseline run discovers and executes |
-| One `public sealed` **target-bound** concrete per surface, plus the **target-only** classes that have no legacy counterpart | `src/MvcMusicStore.Tests/Core/**` | A derivation, the target context — the in-process host's client and the target-side observer — and its `[Collection]` attribute. No assertion logic. These are the classes the post-port run discovers and executes |
-| One `public` **collection-definition class per surface group** | `src/MvcMusicStore.Tests/Collections/*.cs` | `[CollectionDefinition]` with the group's name, `ICollectionFixture<TFixture>` naming **the fixture type that group's classes bind**, and a `const string` holding the name. **No test methods.** The groups are [05 §12.7](05-aspnet-core-migration-approach.md)'s nine, plus the deployed group of the row below. One assembly means **one definition per group** and no per-assembly duplication — and because the assembly declares three fixture types, the definitions do not all name the same one |
-| The **`public` collection-fixture type** each definition binds | `src/MvcMusicStore.Tests/LegacyBaselineFixture.cs` and `src/MvcMusicStore.Tests/CoreApplicationFixture.cs` | One instance per collection, so the nine groups get nine databases rather than one shared engine state. What each fixture *does* — provisioning, the two-database legacy reset, `ResetAsync()` and the per-test `IAsyncLifetime` binding — is [05 §12.7](05-aspnet-core-migration-approach.md)'s and is not restated here |
-| The **`public sealed` deployed-only pair** — a third fixture type and one concrete — `DeployedEndpointFixture` and `DeployedEndpointTests` | Both at the root of `src/MvcMusicStore.Tests/`, with their `[CollectionDefinition]` beside the others | The one runtime-neutral context in the topology that **hosts nothing**: no in-process host, no engine, no database, no observer and no reset — a **consumed base address** and a client whose **redirect following is disabled**. The concrete holds its cases directly rather than deriving from a base, because there is no legacy counterpart to share one with. It exists because the one `Category=Deployed` case runs against a **deployed** host, which is a context no row above can produce; its execution stage, its authoring workstream and its assertions are named in §12.2's test-project row and in [05 §12.6](05-aspnet-core-migration-approach.md) |
+| One `public abstract` class **per contract surface** | `src/MvcMusicStore.Contracts.Tests/Contracts/**` | Every `[Fact]` and `[Theory]` for that surface, and nothing runtime-specific. Its dependencies arrive through an **injected, runtime-neutral context**. Being abstract, it is skipped by discovery and contributes no run of its own |
+| One `public sealed` **legacy-bound** concrete per surface | `src/MvcMusicStore.Contracts.Tests/Legacy/**` | A derivation, the legacy context and its `[Collection]` attribute. No assertion logic. These are the classes the pre-port baseline run discovers and executes — in the same assembly that declares the bases, which is what lets that run happen before the web project exists |
+| One `public sealed` **target-bound** concrete per surface, plus the **target-only** classes that have no legacy counterpart | `src/MvcMusicStore.Tests/Core/**` | A derivation of a base declared in the *other* assembly, the target context — the in-process host's client and the target-side observer — and its `[Collection]` attribute. No assertion logic. These are the classes the post-port run discovers and executes |
+| One `public` **collection-definition class per surface group, in each assembly that declares a class in that group** | `src/MvcMusicStore.Contracts.Tests/Collections/*.cs` **and** `src/MvcMusicStore.Tests/Collections/*.cs` | `[CollectionDefinition]` with the group's name, `ICollectionFixture<TFixture>` naming **the fixture type that group's classes bind**, and a `const string` holding the name. **No test methods.** The groups are [05 §12.7](05-aspnet-core-migration-approach.md)'s nine, plus the deployed group of the row below. The definitions are **per assembly, not per suite** — a `[Collection]` name resolves within the assembly being run, so each of the two projects carries the set for the groups its own classes are in (§12.2's two `Collections/*.cs` rows) — and a definition names **one** fixture type, so within the contracts project, which declares two of the three fixture types, the definitions do not all name the same one |
+| The **`public` collection-fixture type** each definition binds | `src/MvcMusicStore.Contracts.Tests/LegacyBaselineFixture.cs` and `src/MvcMusicStore.Tests/CoreApplicationFixture.cs` — each in the assembly whose definitions bind it | One instance per collection, so the nine groups get nine databases rather than one shared engine state. What each fixture *does* — provisioning, the two-database legacy reset, `ResetAsync()` and the per-test `IAsyncLifetime` binding — is [05 §12.7](05-aspnet-core-migration-approach.md)'s and is not restated here |
+| The **`public sealed` deployed-only pair** — a third fixture type and one concrete — `DeployedEndpointFixture` and `DeployedEndpointTests` | Both at the root of `src/MvcMusicStore.Contracts.Tests/`, with their `[CollectionDefinition]` beside that project's others | The one runtime-neutral context in the topology that **hosts nothing**: no in-process host, no engine, no database, no observer and no reset — a **consumed base address** and a client whose **redirect following is disabled**. The concrete holds its cases directly rather than deriving from a base, because there is no legacy counterpart to share one with. It exists because the one `Category=Deployed` case runs against a **deployed** host, which is a context no row above can produce; its execution stage, its authoring workstream and its assertions are named in §12.2's test-project row and in [05 §12.6](05-aspnet-core-migration-approach.md) |
 
-**Every type in that table is `public`, and that is a requirement rather than a house style.** Two
-distinct mechanisms fail on a non-public one, **both silently**, which is why the accessibility is fixed
-here rather than left to whoever types the first class — and why the single-assembly topology makes fixing
-it here more important rather than less. In the two-assembly arrangement this section does **not** take,
-one of these mistakes would have failed loudly at build time, because a concrete cannot derive from a base
-another assembly declares `internal`. With one assembly that compile error is gone, so **nothing in the
-build catches either mistake**:
+**Every type in that table is `public`, and that is a requirement rather than a house style.** The
+two-assembly topology puts **one** class of mistake in front of the compiler and leaves the rest silent, so
+the accessibility is fixed here rather than left to whoever types the first class. The one the build
+catches is the derivation across the reference: a concrete in `src/MvcMusicStore.Tests` cannot derive from
+a base, or bind a collection fixture, that `src/MvcMusicStore.Contracts.Tests` declares `internal` — which
+is §12.4's second visibility change, and it fails loudly at build time. Everything else fails **silently**,
+and nothing in the build catches either mistake — including on a type used only within the assembly that
+declares it, where no cross-assembly derivation exists to raise the error:
 
 - **The runner discovers test classes only when they are public.** A concrete declared `internal`
   compiles, is never enumerated, and reports nothing — a green run of zero cases, arriving through
@@ -2420,12 +2434,16 @@ property that duplicating the assertions would destroy. The count is therefore *
 concretes per surface*, and a reviewer can check it by looking for assertion text outside a base class —
 there should be none.
 
-**What one project costs, stated rather than discovered.** Because the legacy-bound concretes are compiled
-into the same assembly as the target-bound ones, **no part of the suite compiles before the project graph
-of §12.4 exists** — including the classes that only ever talk to the *legacy* application over HTTP. §12.4
-derives that consequence from the graph and names the deliverable that sequences around it; it is recorded
-here as the price of the single-project topology so that a reader does not read the legacy half as
-independently buildable.
+**What the split costs, stated rather than discovered.** It buys the property §12.1's record 2 and §12.4
+turn on — the legacy-bound half compiles and runs before the ported web application exists, because the
+concretes that talk only to the *legacy* application over HTTP are in the assembly that references nothing
+— and it is paid for in three places, each of them a §12.2 row rather than a hidden cost: the three
+test-execution pins and `Microsoft.Playwright` are declared **twice**, once per runnable project, because
+build and analyzer assets do not cross a project reference; each project carries its **own**
+`Collections/*.cs` set, because a `[Collection]` name resolves within the assembly being run; and each
+carries its **own** `xunit.runner.json`, because collection parallelism is an assembly-level setting. Only
+`src/MvcMusicStore.Tests` is held to the project graph of §12.4, which is where that consequence is derived
+and where the deliverable that sequences around it is named.
 
 Which classes each stage runs, and how they are selected, is not this document's to specify: the trait
 categories and the two commands are [05 §12.10](05-aspnet-core-migration-approach.md)'s, and
@@ -2596,9 +2614,9 @@ break.** [05 §10.2](05-aspnet-core-migration-approach.md) property 4 fixes the 
 per invocation invariantly, this pre-host path included** — three operation records carrying
 `outcome = not-attempted`, then the run record carrying `outcome = rejected` and its `rejectedCheck`, in
 that fixed order with the run record last — and §12.6's refusal table above owes them on every `admin`
-refusal. An earlier form of this sketch returned `Cli.Rejected` from both checks and invoked nothing, which
-made the document require four records on a path its own code could not produce one on. **The two calls
-above close that**, and what they call is fixed by the owning deliverable rather than invented here:
+refusal. **The two calls above are what produce those four records on a path where no host, no container
+and no configured logger exists yet**, and what they call is fixed by the owning deliverable rather than
+invented here:
 
 - **What writes them, with no host, no container and no configured logger.** Property 4 already names the
   mechanism and the reason — a **dedicated static serialiser over a dedicated record type**, one
@@ -2748,10 +2766,11 @@ last**, and only over the argument array the dispatcher below has already closed
 
 `Host.CreateEmptyApplicationBuilder` — equivalently `new HostApplicationBuilder(new
 HostApplicationBuilderSettings { DisableDefaults = true })` — starts with **no configuration source and no
-logging provider**, and every one of both is then added deliberately. An earlier form of this section named
-`Host.CreateApplicationBuilder(args)` and described its sources as "environment variables and command-line
-arguments". **That description is wrong, and the difference matters for this process specifically.** The
-defaulted builder also adds `appsettings.json` and `appsettings.{Environment}.json` **resolved against the
+logging provider**, and every one of both is then added deliberately. The intuitive alternative is
+`Host.CreateApplicationBuilder(args)`, whose sources are commonly described as "environment variables and
+command-line arguments". **That description is wrong, and the difference matters for this process
+specifically**, which is why the defaulted builder is refused here. It
+also adds `appsettings.json` and `appsettings.{Environment}.json` **resolved against the
 process's current working directory**, user secrets when the environment is Development, `DOTNET_`-prefixed
 environment variables, and the raw command line; and it registers the console, debug, event-source and —
 on Windows — event-log logging providers. For a process whose one sensitive input is a **plaintext
@@ -3524,7 +3543,7 @@ builder.ConfigureContainer(new DefaultServiceProviderFactory(
   `UserManager<>`'s type argument, and the `ApplicationServices.AddMvcMusicStoreServices` method above. It
   names `MusicStoreEntities` and `Data/SeedData` **not at all** — seeding is the web application's own
   command (§12.6) and this tool has exactly one capability. That pair is the whole reason for the tool's
-  own `ProjectReference` — `tools/provision-admin` → the web application, the second of §12.4's two edges
+  own `ProjectReference` — `tools/provision-admin` → the web application, the third of §12.4's three edges
   and the only one this project declares. Each
   must be the web project's and not a local re-declaration: a re-declared context maps to a different
   schema than the migrations produce, and a re-declared registration hashes a password under options the
@@ -3765,10 +3784,9 @@ for this document to specify in them and nothing in them for it to test.
 that.** It ships **no artifact** — §12.2's map has no row for it and §12.1 lists its absence explicitly —
 and because it is a sequence of invocations of the three instruments above rather than a program,
 it has **no verb, no switch, no argument grammar, no configuration allow-list, no refusal class and no
-exit-code register of its own**. The consequence is worth stating in the negative, because an earlier draft
-of this corpus coined verbs for it: **`extract-schema`, `diff-schema`, `load-domain`, `migrate-identity`,
-`reconcile` and `seal-manifest` are verbs of nothing.** No project declares them, no dispatcher admits
-them, no exit code is allocated to them and no test can invoke them. What the procedure *does*, step by
+exit-code register of its own** — every verb its steps are invoked through belongs to
+`tools/provision-admin` and is admitted by that tool's dispatcher (§12.4), and the procedure coins none
+beside them. What the procedure *does*, step by
 step and under which principal, is §12.9 and §13.2; what it is *run with* is the three rows above.
 
 **So the complete answer to "what can be invoked" is five entries: `provision-admin`, `seed-catalog`,
@@ -4160,8 +4178,8 @@ file or a deployment template. Turning each such resource into a repository arti
 invention the closed-map rule exists to prevent, and it would put infrastructure-as-code in a map whose
 own scope statement (§12.1) is project format, dependencies, tooling manifests and solution structure.
 
-**The interim credential estate is the case worth enumerating rather than gesturing at, because an earlier
-revision of this limb enumerated resources 06 has since deleted.** Under
+**The interim credential estate is the case worth enumerating rather than gesturing at, because the
+resources it needs are 06's to name and 06 has changed which of them exist.** Under
 [06 §5.3](06-azure-hosting-recommendations.md)'s selected Path A, the interim exception is discharged by
 **a scheduled step in the interim operations runbook performed by a human under a PIM activation**
 ([06 §5.3](06-azure-hosting-recommendations.md) A3, its runbook-step row), and every resource that step
@@ -4185,10 +4203,9 @@ resource carried from memory is how this limb went stale once:
 **And the estate contains no function app, no plan, no storage account and no lease blob at all.**
 [06 §5.3](06-azure-hosting-recommendations.md) A3 withdrew the Event Grid-triggered function design in
 full, and deleted the function app and its plan, its managed identity, its storage account and the lease
-blob it used as a mutual-exclusion primitive, along with the standing database principal it held. That
-withdrawal is recorded here because the previous form of this limb cited those resources as the reason the
-map needs no function project — a correct conclusion resting on a resource set that no longer exists. The
-conclusion is unchanged and now rests on the design as it stands, in that design's own words: every entry
+blob it used as a mutual-exclusion primitive, along with the standing database principal it held. **So the
+map needs no function project, and the reason is not that those resources make one unnecessary but that
+they do not exist** — the conclusion rests on the design as it stands, in that design's own words: every entry
 in the replacement is "an Azure resource or an Azure role definition provisioned by the platform owner —
 **none is a repository artifact**" ([06 §5.3](06-azure-hosting-recommendations.md) A3, the preamble to its
 replacement table), so there is nothing for this map to gain from the interim path in any of its revisions.
@@ -4234,7 +4251,7 @@ tool-manifest entry to give it a path would be exactly the invention the closed-
 **Limb three: the plan's freeze binds *projects and top-level artifacts*, so a file inside an approved
 project is in scope while a new project, a new top-level artifact or a file serving a withdrawn design is
 not.** This limb states the granularity at which the artifact set is frozen, because a reader of a
-141-row map cannot otherwise tell an approved file from an invented one, and inferring the rule from the
+69-row map cannot otherwise tell an approved file from an invented one, and inferring the rule from the
 rows is exactly backwards — the rows are supposed to follow from it.
 
 **Where the granularity comes from.** The plan fixes the target structure in §0.3.1 and maps it file by
@@ -4269,9 +4286,8 @@ one would produce the unowned target §12.1 forbids. Out of scope, and each refu
   this map's scope (§12.1) is project format, dependencies, tooling manifests and solution structure.
 - **A file whose only purpose is to serve a design element another deliverable has withdrawn.** Refused
   here. It passes the path test — its path sits inside boundary 5 — and it still has no owner, because the
-  design that required it is gone. That is the case this limb adds, and §12.2 had one: the `Diagnostics/`
-  endpoint file for three authenticated diagnostic operations, deleted when those operations were
-  withdrawn. A row survives only while an owning deliverable still requires the file it names.
+  design that required it is gone. That is the case this limb adds, and it is the one the path test cannot
+  catch on its own: a row survives only while an owning deliverable still requires the file it names.
 
 **And mechanical completeness is not approval — the map is complete *and* bounded, and the two properties
 are checked separately.** §12.2's three published commands establish completeness and uniqueness: every
@@ -5486,9 +5502,9 @@ Six properties make that a contract rather than three commands, and each is sour
   registry serves every environment, since promotion is by digest and a second registry would mean a second
   copy of the bytes with nothing establishing that the two agree; and there is exactly **one** repository,
   since a second would be a second site image. **The names are not this section's, and they are no sibling
-  document's either** — which is a correction to an earlier formulation of this bullet that deferred the
-  registry's resource name to a naming scheme in [06](06-azure-hosting-recommendations.md) and claimed the
-  repository path as its own. A registry is a **platform prerequisite of the conditional container-native
+  document's either — neither the registry's resource name nor the repository path is deferred to a naming
+  scheme in [06](06-azure-hosting-recommendations.md) or claimed here.** A registry is a **platform
+  prerequisite of the conditional container-native
   option** rather than a designed artifact: it is outside the map §12.7 closes, it appears in no
   deliverable's artifact list, and [06](06-azure-hosting-recommendations.md) §12.1.2 states in terms that
   that document "deliberately specifies **no registry estate**: no dedicated image beyond the conditional
@@ -5882,8 +5898,8 @@ about this checkout.** As this document is written they are *not* satisfied: the
 eight `!!` lines and the dry-run clean names eight trees. The state acceptance requires is both printing
 nothing, which is reached by removing the eight trees before the checkpoint is taken — a removal this
 documentation work does not perform, because the trees are generated output shared with the other work
-running against this checkout. Asserting the absence instead, as an earlier form of this appendix did,
-produces the one failure this appendix exists to prevent: a reader runs the command and sees the opposite.
+running against this checkout. **Asserting the absence instead would produce the one failure this appendix
+exists to prevent**: a reader runs the command and sees the opposite.
 **Nothing in the eight is tracked**, so the tracked-file half of the constraint is unaffected either way,
 and that is the half §14.2 turns on.
 

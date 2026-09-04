@@ -131,9 +131,13 @@ assessment *did* write into the checkout, not only what it did not.** What it wr
 **unqualified historical restore and build operations**: runs made against this checkout that left
 **eight gitignored payload and output trees** behind — a `bin` and an `obj` under each of the three
 editions' projects, plus a restored `packages` tree under `src/MVC4` and another under `src/MVC5`. All
-eight have been removed and their absence verified. None was ever tracked and none is in the checkpoint
+eight were removed once the assessment had finished with them, and their absence was verified at that
+point — a statement about a moment rather than a durable property of a later checkout, since ignored
+content returns wherever a build or a restore runs again, including a run belonging to concurrent work
+rather than to this assessment. None was ever tracked and none is in the checkpoint
 commit; the per-tree record belongs to [10 Appendix A](10-build-and-deployment-requirements.md#appendix-a--reproducibility) and
-the standing rule that follows from it to [10 §1.4](10-build-and-deployment-requirements.md). **The trees are a hygiene record rather than build evidence**, and
+the standing rule that keeps the tree clear at the moment of commit to [10 §1.4](10-build-and-deployment-requirements.md), whose owner is
+whoever commits this assessment. **The trees are a hygiene record rather than build evidence**, and
 **exactly one of the runs behind them is build evidence** — the MVC 5 restore and rebuild that [10 §3.2](10-build-and-deployment-requirements.md) records as the post-freeze Windows observation and holds to supplementary observation, which cannot move the carried status, so
 [10](10-build-and-deployment-requirements.md) owns the evidence and the status this document estimates
 against, and under it the **migration source remains blocked pending a Windows verification run** — which
@@ -179,10 +183,10 @@ invented for one, so the pin sits on the left and the expected result is stated 
 Every other revision reference in this document is to `ea2552d` alone and is a point rather than a
 range. Deliverables [04 §1.4](04-dotnet8-migration-strategy.md#14-the-no-modification-constraint-and-the-boundary-that-makes-this-document-possible)
 and [10 Appendix A](10-build-and-deployment-requirements.md#appendix-a--reproducibility) define the same
-two endpoints, and this document uses no others. Working-tree status alone is **not** the check twice over: at the
-committed checkpoint `git status --porcelain` is empty, so it evidences a clean tree rather than what
-this work changed, and by itself it could not have seen the eight trees at all. All four, with their
-observed output, are in [A.6](#a6-the-constraint-this-work-was-held-to).
+two endpoints, and this document uses no others. Working-tree status alone is **not** the check twice over: `git status --porcelain` is
+required to be empty at the committed checkpoint, so it evidences a clean tree rather than what
+this work changed, and by itself it could not have seen the eight trees at all. All four, with the
+output each **must produce** rather than output recorded here, are in [A.6](#a6-the-constraint-this-work-was-held-to).
 
 **The distinction that makes this document possible is mutation versus specification.** Estimating a
 change is not making one. A deliverable would fail its acceptance criteria just as surely by declining
@@ -294,17 +298,14 @@ above — the section of the owning deliverable that publishes the list.
 ### 4.1 The estimation basis: every input, with its method
 
 **Every workstream band in [section 5](#5-effort-by-workstream) derives from a row below, and the scope of
-that claim is stated precisely because an earlier form of it was broader than the document could keep.**
-It read *"every figure in section 5 derives from a row below, or — where the quantity
-is an enumerated contract obligation this table does not number as an estimation input — from the list
-published by the deliverable section cited beside it, in the second of the two forms
-[§3.3](#33-a-third-kind-of-count-named-so-it-is-not-mistaken-for-either) defines. No other quantity is used."* — which was
-false of the **gate sub-rows**, whose cells enumerate their own items (operations, members, lifecycle
+that claim is stated precisely because it does not hold uniformly of the gate sub-rows.**
+Their cells enumerate their own items (operations, members, lifecycle
 steps, override files, timeout layers, pinned values) and are sized from that enumeration rather than from
-a register row. Those sub-rows had each carried an `(input NN)` parenthetical pointing at a register row
-whose subject was something else entirely, which is the failure a broad claim invites: a pointer added to
-satisfy the rule rather than because it resolved. Every one of them now names its real basis — the count in
-its own cell — and the claim is narrowed to what holds:
+a register row — the second of the two forms
+[§3.3](#33-a-third-kind-of-count-named-so-it-is-not-mistaken-for-either) defines — so each names its real
+basis, the count in its own cell, and none carries an `(input NN)` parenthetical pointing at a register row
+whose subject is something else entirely. A pointer added to satisfy the rule rather than because it
+resolves is the failure a broader claim invites. The claim therefore holds in this form:
 
 - **Every workstream-level band, every roll-up and every total** in section 5 derives from a row below,
   and cites the row it derives from.
@@ -328,7 +329,7 @@ its own cell — and the claim is narrowed to what holds:
 | 11 | Other Razor helper sites | **10** anti-forgery emissions, **5** partials, **4** `@Url.Content` | Site count | [Appendix A.3](#a3-helper-view-and-site-counts) |
 | 12 | Blockers to resolve | **23** — **14** compile-time, and **9** that compiling does not find, of which **8** are silent and **1** is loud. The loud one is F-12-01, SQL Server Compact: the provider is a `providerName` string in configuration with no project `<Reference>`, so nothing binds to it at build and it stops at first data access instead | Entry count of work items | [12 §2.3, §4](12-migration-blockers.md) |
 | 13 | Package outcomes to apply | **28** pins in the migration source | Pin count | [04 §8](04-dotnet8-migration-strategy.md) |
-| 14 | Required **parity** test coverage | **104** rows carrying **326** cases. **32** rows run against **two** fixtures and **7** are mixed, so **152** cases execute twice and **174** execute against the target alone: **478** fixture executions, being **152** `Category=Baseline`, **325** `Category=Target` and **1** `Category=Deployed`. The class split behind those figures is **32** rows / **136** cases both-fixture, **7** / **29** mixed and **65** / **161** target-only, and `136 + 29 + 161 = 326`, `152 + 174 = 326`, `152 × 2 + 174 = 478`. This is the count of the cross-baseline suite and **not** of the whole test workload — see the inclusion rule below, input 23 and input 32. **This row is the only place these figures enter this document**: every other passage that needs one cites input 14 rather than repeating it, because a figure repeated in eight places moves in some of them. **They are re-read from the owner's table rather than carried as constants here**, because the row count has now moved **six** times — 103, then 108, then 116, then 115 (a withdrawal rather than an addition), then 75 when the owner restructured that table into a case-level matrix, then 102, and now **104**: `awk '/^### 12\.4 /,/^### 12\.5 /' docs/modernization/05-aspnet-core-migration-approach.md \| grep -cE '^\| [0-9]+ \|'` → 104, contiguous 1–104 (the same extraction through `sort -n \| uniq \| wc -l` also yields 104, so there is no duplicate and no gap) | Row count and case count, command-verified | [05 §12.4](05-aspnet-core-migration-approach.md) |
+| 14 | Required **parity** test coverage | **104** rows carrying **326** cases. **32** rows run against **two** fixtures and **7** are mixed, so **152** cases execute twice and **174** execute against the target alone: **478** fixture executions, being **152** `Category=Baseline`, **325** `Category=Target` and **1** `Category=Deployed`. The class split behind those figures is **32** rows / **136** cases both-fixture, **7** / **29** mixed and **65** / **161** target-only, and `136 + 29 + 161 = 326`, `152 + 174 = 326`, `152 × 2 + 174 = 478`. This is the count of the cross-baseline suite and **not** of the whole test workload — see the inclusion rule below, input 23 and input 32. **This row is the only place these figures enter this document**: every other passage that needs one cites input 14 rather than repeating it, because a figure repeated in eight places moves in some of them. **They are re-read from the owner's table rather than carried as constants here**, because the row count moves as that matrix grows — [03 §4.3](03-modernization-roadmap.md#coverage-row-total) is the one place every superseded value of it is recorded, so a reader who meets one elsewhere can recognize it as stale: `awk '/^### 12\.4 /,/^### 12\.5 /' docs/modernization/05-aspnet-core-migration-approach.md \| grep -cE '^\| [0-9]+ \|'` → 104, contiguous 1–104 (the same extraction through `sort -n \| uniq \| wc -l` also yields 104, so there is no duplicate and no gap) | Row count and case count, command-verified | [05 §12.4](05-aspnet-core-migration-approach.md) |
 | 15 | Tests existing today | **0** | Absence, command-verified | [08 §7.3](08-technical-debt-register.md), [A.2](#a2-the-absences-that-size-the-net-new-work) |
 | 16 | Distinct captures for visual comparison | **28** capture states over **18** of the 29 Razor artifacts, **two** of which — `Home/About.cshtml` and `Home/Contact.cshtml` — can produce **no baseline at all**, times **2** viewports and **4** browser families, for **170** comparison pairs | Semantic classification of all 29 artifacts, plus a reachability census of the actions that render them, plus the two declared review dimensions — **not** a filename count | [A.4](#a4-the-visual-review-capture-set-input-16), [§7.1](#71-the-manual-visual-review) |
 | 17 | Approved deltas requiring sign-off | **Every row of the register in [05 §11.5](05-aspnet-core-migration-approach.md) that carries an approval owner** — its **two** retired identifiers, `D-22` and `D-43`, carry none and need no decision — the register stating its own count, which this document does not restate, across **5** approver constituencies (security, product, engineering, the data owner and operations), with a substantial minority of those rows naming more than one and that subcount likewise the register's to state. **Its two dimensions are partitioned across two rows**: the 5 constituencies size [W1](#w1--approval-of-this-assessment); the individual delta decisions size [§7.2](#72-the-approved-delta-sign-offs), which is the one place a priced decision count appears. Neither row counts the other's dimension | Entry count | [05 §11.5](05-aspnet-core-migration-approach.md) |
@@ -344,7 +345,7 @@ its own cell — and the claim is narrowed to what holds:
 | 27 | Application configuration files, and the runtime state they declare | **15** application `.config` files, of which **0** declare `<sessionState>` and **0** declare `<machineKey>` — so session storage and key material are both framework defaults | File count and census | [01 §6.6](01-architecture-overview.md) |
 | 28 | Stores and entities the production load must reconcile | **2** stores — the catalog store and the Identity store, coupled only by convention with no foreign key between them — over **6** catalog entities | Store and entity count | [01 §6.1, §6.3, §6.5](01-architecture-overview.md) |
 | 29 | Tracked documents describing the workflow the target replaces | **3** — the root README and the two per-edition READMEs | File count, command-verified | [A.3](#a3-helper-view-and-site-counts) |
-| 30 | Behaviour the provisioning tool must implement, outside its added tests | **5** required properties; **4** independently converged operations on a provisioning run — `create-user`, `create-role`, `add-membership` and `run`, the closed discriminator [05 §10.2](05-aspnet-core-migration-approach.md) property 4 fixes together with four records per invocation. **The count is unchanged and the naming is the owner's**: an earlier form of this row named them "role, user, credential, membership", which [03 §5 W12](03-modernization-roadmap.md) condition 1 **withdraws** because a credential operation of its own would be a fifth operation under a four-record contract; the credential verdict it was protecting stays independently observable as the `create-user` record's own outcome. And `PROV-6001`'s closed outcome vocabulary of **18** values, being **12** non-failure and **6** failure, **of which 15 are exercisable and 3 are reserved** — [09 §6.8.1](09-security-assessment.md) closes the set at eighteen and reserves three that presuppose a removal or a resolve-without-create no operation of this tool performs. **The partition is derived from that section's per-operation mapping rather than asserted**, and it has to say how the shared value is counted: `create-user` **4**, `create-role` **2**, `add-membership` **4** and `run` **1**, plus the `NotAttempted` all three operation records share and which is therefore counted once — `4 + 2 + 4 + 1 + 1 = 12`. Restricted to the values an invocation can actually reach it is `4 + 2 + 2 + 1 + 1 = 10`, which with the **5** exercisable failure outcomes is the fifteen. **A third dimension is withdrawn rather than deleted**: an earlier form of this row also counted a revoke mode's two operations across three branches, which [05 §10.2](05-aspnet-core-migration-approach.md) does not specify — the prose below this table records the withdrawal and its band consequence | Property, operation and outcome count | [05 §10.2](05-aspnet-core-migration-approach.md) (properties and operations), [09 §6.8.1](09-security-assessment.md) (the outcome vocabulary, which that section owns) |
+| 30 | Behaviour the provisioning tool must implement, outside its added tests | **5** required properties; **4** independently converged operations on a provisioning run — `create-user`, `create-role`, `add-membership` and `run`, the closed discriminator [05 §10.2](05-aspnet-core-migration-approach.md) property 4 fixes together with four records per invocation. **The count is unchanged and the naming is the owner's**: the naming "role, user, credential, membership" is **withdrawn** by [03 §5 W12](03-modernization-roadmap.md) condition 1, because a credential operation of its own would be a fifth operation under a four-record contract; the credential verdict that naming was protecting stays independently observable as the `create-user` record's own outcome. And `PROV-6001`'s closed outcome vocabulary of **18** values, being **12** non-failure and **6** failure, **of which 15 are exercisable and 3 are reserved** — [09 §6.8.1](09-security-assessment.md) closes the set at eighteen and reserves three that presuppose a removal or a resolve-without-create no operation of this tool performs. **The partition is derived from that section's per-operation mapping rather than asserted**, and it has to say how the shared value is counted: `create-user` **4**, `create-role` **2**, `add-membership` **4** and `run` **1**, plus the `NotAttempted` all three operation records share and which is therefore counted once — `4 + 2 + 4 + 1 + 1 = 12`. Restricted to the values an invocation can actually reach it is `4 + 2 + 2 + 1 + 1 = 10`, which with the **5** exercisable failure outcomes is the fifteen. **A third dimension is withdrawn rather than deleted**: a revoke mode's two operations across three branches, which [05 §10.2](05-aspnet-core-migration-approach.md) does not specify — the prose below this table records the withdrawal and its band consequence | Property, operation and outcome count | [05 §10.2](05-aspnet-core-migration-approach.md) (properties and operations), [09 §6.8.1](09-security-assessment.md) (the outcome vocabulary, which that section owns) |
 | 31 | Path literals the **repository-wide** casing audit must examine | Inputs 7, 8 and 11 are **migration-source only**, and the audit is not. Repository-wide, all three editions: **173** browser-served static files (**171** in the four asset groups plus the two web-application-root `favicon.ico` files); **83** Razor views; **11** bundle definitions across the two `BundleConfig.cs` files, carrying **36** `~/`-rooted literals between them; **31** `@Url.Content` occurrences — 4 in MVC 5, 4 in MVC 4 and **23** in MVC 3, which is where the concentration is; and **21** `@Scripts.Render`/`@Styles.Render` sites, of which 11 are MVC 5's. MVC 3 has no `App_Start` folder and therefore no bundle definitions at all. **The two totals this input yields are 258 containers — `173 + 83 + 2`, the two `BundleConfig.cs` files being neither views nor served assets — holding 88 literal sites, `36 + 31 + 21`**; [A.3](#a3-helper-view-and-site-counts) reproduces every figure and both per-edition partitions | Site and file count, command-verified | [A.3](#a3-helper-view-and-site-counts), [01 §2.3, §2.5](01-architecture-overview.md), [06 §3.4](06-azure-hosting-recommendations.md) |
 | 32 | Approval-owned additions requiring a recorded decision | **16**, ids `A1`–`A16` — net-new user-perceptible behaviour with **no** MVC 5 counterpart, each carrying an approval owner. Disjoint from input 17 by construction: a delta changes an outcome the source already produces, an addition introduces one it never produced. Both registers' decisions are sized in [§7.2](#72-the-approved-delta-sign-offs) and neither is folded into the other | Entry count | [05 §11.7](05-aspnet-core-migration-approach.md) |
 | 33 | Required tests of the **published console bytes**, outside input 14's matrix | **10** — the lettered rows O1–O10 of [05 §12.4.1](05-aspnet-core-migration-approach.md): parser closure, startup validation before anything else, the environment assertion, every verb doing its work, partial-run idempotence, the batch and resume bounds, **four** audit records per invocation in the pinned operation order on all four paths, the secret appearing nowhere in any capture, the literal exit-code allocation, and a normal builder's inability to select the test-only connection mode. They are **lettered rather than numbered**, sit outside that table's **104** numbered rows and are excluded from its **326**-case total, so input 14 does not count them and neither does input 23, whose seventeen are [04 §12.4](04-dotnet8-migration-strategy.md)'s and [06 §10.2](06-azure-hosting-recommendations.md)'s. **Two of the ten are already asserted by input 23's five operator-host tests** — O1's parser closure by the admitted-command-line assertion and O8's redaction by the credential-in-no-captured-output assertion — so **8** are new work and are the term this input contributes to the model | Row count | [05 §12.4.1](05-aspnet-core-migration-approach.md) |
@@ -370,8 +371,8 @@ re-introduce exactly the overestimate the next note describes.
 - **Input 19 is not migration effort.** It is a repository-hygiene decision, **enumerated but
   intentionally unestimated** in
   [section 7.4](#74-repository-hygiene--enumerated-but-intentionally-unestimated), and gating nothing.
-  An earlier form of this row pointed at section 7.3, which is the accessibility review and carries a
-  band; the hygiene items are section 7.4's and carry none.
+  The hygiene items are section 7.4's and carry no band; section 7.3 is the accessibility review, which
+  does carry one.
 - **Inputs 14 and 23 are two different things, and the rule separating them is this document's to state,
   because this document is where the test workload is costed.**
   [05 §12.4](05-aspnet-core-migration-approach.md)'s numbered index is **not a parity suite**: **65 of
@@ -405,21 +406,21 @@ re-introduce exactly the overestimate the next note describes.
   count by doing so. **The consequence for this model is that the test workload is input 14's parity rows
   plus seventeen further tests plus the eight new console rows of input 32 — `104 + 17 + 8 = 129`
   executable scenarios, not 104** — and the eight, like the seventeen, are
-  real work that an earlier reading of input 14 left uncosted. **The parity term of that sum is input 14's
-  and is re-read from [05 §12.4](05-aspnet-core-migration-approach.md) at each reconciliation rather than
-  carried as a constant**, because it has moved six times and has now taken **seven** values — 103, 108,
-  116, 115, 75, 102 and 104: `103 + 17 = 120`, `108 + 17 = 125`,
-  `116 + 17 = 133`, `115 + 17 = 132`, `75 + 17 = 92` and `102 + 17 = 119` are all superseded forms of this sentence, and the **17** is the term that has not
+  real work that reading input 14 as the whole test workload leaves uncosted. **The parity term of that sum
+  is input 14's and is re-read from [05 §12.4](05-aspnet-core-migration-approach.md) at each reconciliation
+  rather than carried as a constant**, because it moves as that matrix grows; every superseded value of the
+  parity term, and of the two-term sum it forms with the seventeen, is recorded once, in
+  [03 §4.3](03-modernization-roadmap.md#coverage-row-total). The **17** is the term that has not
   changed — five operator-host tests plus twelve CSP tests. **The third term is new rather than moved**:
   input 32's console rows sat outside every count until this reconciliation, and **8** of its ten enter the
-  sum because the other two are already inside the seventeen. **The most recent move is why the separation
-  these two inputs express has to be enforced in both directions.** The row
-  [05 §12.4](05-aspnet-core-migration-approach.md) briefly carried as 116 was a *pointer* row, whose content
-  was "the eleven HTTP-observable tests of [06 §10.2](06-azure-hosting-recommendations.md)" — the same
-  eleven that already sit inside input 23's seventeen. Counting it as a parity row therefore counted those
-  eleven twice, in the parity term and in the non-parity term of one sum, and contradicted this very rule: a
-  test with no MVC 5 baseline is not a row of that table. 05 withdrew the row, keeping its cross-reference as
-  prose, so the eleven are counted **once**, in input 23, and the **17** does not move. The twelve CSP tests
+  sum because the other two are already inside the seventeen. **The separation these two inputs express has
+  to be enforced in both directions, and a pointer row is how it fails.** A row of
+  [05 §12.4](05-aspnet-core-migration-approach.md) whose content is
+  "the eleven HTTP-observable tests of [06 §10.2](06-azure-hosting-recommendations.md)" names the same
+  eleven that already sit inside input 23's seventeen. Counting such a row as a parity row counts those
+  eleven twice, in the parity term and in the non-parity term of one sum, and contradicts this very rule: a
+  test with no MVC 5 baseline is not a row of that table. 05 carries that cross-reference as
+  prose instead, so the eleven are counted **once**, in input 23, and the **17** does not move. The twelve CSP tests
   split **eleven / one** across two workstreams rather than sitting together, which is why they appear as two
   rows here: the eleven are HTTP tests over code W7 writes, and the twelfth is a browser observation of a
   deployed policy, which no test host can make.
@@ -444,7 +445,7 @@ re-introduce exactly the overestimate the next note describes.
     Its zero observability artifacts size the **net-new observability half** of W10's basis, which is why
     W10's basis cites [08 §7.1](08-technical-debt-register.md); the row itself is closed by input 26. An
     input can size a component of a row without being the input that closes it, and conflating the two is
-    what produced the earlier claim that seven inputs closed eight rows.
+    what makes seven inputs look as though they closed eight rows.
   - **One row named an input that sized only part of it** — **W12**. It cited input 23, but input 23
     counts the **10 operator rows** that drive the provisioning executable, not the executable. The
     tool's own base effort — its properties, its operations and its outcome vocabulary — had no count,
@@ -481,8 +482,7 @@ re-introduce exactly the overestimate the next note describes.
   [A.3](#a3-helper-view-and-site-counts). **It changes W5's basis and what its band is for without moving
   the band**, because [03 §5 W5](03-modernization-roadmap.md) narrowed that row's exit in the same round by
   removing a deployment from it; W5's basis derives the offset, and the band in
-  [§5.1](#51-summary-table) is re-derived from this census rather than carried across from an earlier
-  reading.
+  [§5.1](#51-summary-table) is re-derived from this census rather than carried across.
 
   **Six of the seven change no band; one does, and it is named rather than absorbed.** Inputs 24 to 29
   each document the basis of a figure that was already judged, so they leave the total, the concurrency
@@ -499,12 +499,12 @@ re-introduce exactly the overestimate the next note describes.
   published-console rows of [05 §12.4.1](05-aspnet-core-migration-approach.md) that are new work — so the
   row stands at
   **5 / 9.5 / 16** in [§5.1](#51-summary-table), through the intermediate 3.5 / 7.5 / 12.5, and
-  [§6.1.1](#611-the-walk-from-the-previously-published-total) records the whole of that move as one line
+  [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) records the whole of that move as one line
   of the walk.
 
-  **One dimension of input 30 has since been withdrawn, and it is recorded here rather than deleted,
+  **One dimension of input 30 is withdrawn, and it is recorded here rather than deleted,
   because a removal from an input is as consequential to a reader checking a band as an addition to it.**
-  That row also counted **a revoke mode of the provisioning command — two operations across three
+  The withdrawn dimension is **a revoke mode of the provisioning command — two operations across three
   branches** — attributed to a *property 3a* of
   [05 §10.2](05-aspnet-core-migration-approach.md). **That property does not exist and that mode does not
   exist.** The section defines no property 3a; its verb table is closed with no revoke verb among the
@@ -512,9 +512,8 @@ re-introduce exactly the overestimate the next note describes.
   and its property 3 states the command **never deletes or demotes** anything. The dimension therefore
   sized a capability no deliverable specifies, and it is withdrawn from this input.
   **It moves no band, and that is established from the record rather than asserted**:
-  [W12](#w12--administrator-provisioning-tool) priced the mode explicitly as an addition *inside* an
-  unchanged band, none of that row's five published components carries a revoke term, and
-  [§6.1.1](#611-the-walk-from-the-previously-published-total)'s W12 row names four movers, none of them
+  none of [W12](#w12--administrator-provisioning-tool)'s five published components carries a revoke term, and
+  [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base)'s W12 row names four movers, none of them
   this one. **What the withdrawal leaves open is a gap rather than an estimate**, and it belongs to
   [09 §6.8.1.1](09-security-assessment.md), which owns the privilege-withdrawal event class, keeps its
   identifier reserved with no producer, and records that no workstream of
@@ -682,8 +681,8 @@ What this document adds to each is a band, a confidence and the inputs the band 
 > - **W11 is a prerequisite of W10's DDL-applying gate**, so it sits earlier in the sequence than its number suggests.
 > - **W16 — personal-data governance — is a workstream in its own right**, in two stages, and both are sized here.
 >
-> **One further dependency correction changes a row's position without changing its size — and it runs in
-> the opposite direction to the one an earlier reading of this block asserted.** The suite W4 authors is a
+> **One further dependency changes a row's position without changing its size, and its direction is the one
+> a reader is most likely to take backwards.** The suite W4 authors is a
 > **project inside** [04 §12](04-dotnet8-migration-strategy.md)'s target project graph, and the governance
 > that project is restored under — `global.json` and the root `NuGet.config` — is **gate 4a's own
 > output**, created there because 4a's locked-mode restore was impossible without it. So
@@ -691,7 +690,7 @@ What this document adds to each is a band, a confidence and the inputs the band 
 > row 19), and the conversion **extends** those two files rather than creating them.
 > **The edge runs only that way: there is no edge from W6 to either half of W4**, and 03 §6.3 names
 > `W6 → W4·4a` and `W6 → W4·4b` as exactly the two edges that would close a cycle, states that neither
-> exists, and gives the reason this block previously had backwards — **the contracts project W4 creates
+> exists, and gives the reason — **the contracts project W4 creates
 > references no application, so nothing in W4 waits on the converted project graph.** Both bands are
 > unchanged, because the edge fixes which of the two opens first rather than what either contains. What
 > the edge settles is the sequence, and [§8.2](#82-concurrency-permitted-by-the-graph) and
@@ -699,14 +698,14 @@ What this document adds to each is a band, a confidence and the inputs the band 
 > against that inventory: they place **W6 off the critical path**, at its **4.5** expected IED, in §8.3's
 > off-path itemization.
 >
-> **Two further rows moved because an input was corrected rather than because the graph changed.**
-> [05 §12.4](05-aspnet-core-migration-approach.md)'s required coverage was read at that round as **input
-> 14's 75 rows**, not the 27 an earlier reading of input 14 recorded, so **W4** was rebanded — and that
-> matrix has grown since, so input 14 now stands at **104 rows, 326 cases and 478 fixture executions**,
-> the count [§6.1.1](#611-the-walk-from-the-previously-published-total) carries as W4's latest movement;
+> **Two further rows take their band from an input's present value rather than from the graph.**
+> [05 §12.4](05-aspnet-core-migration-approach.md)'s required coverage is **input 14's**, and that
+> matrix has grown, so input 14 stands at **104 rows, 326 cases and 478 fixture executions**, on which
+> **W4** is rebanded —
+> the count [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) carries as W4's latest movement;
 > and
-> [05 §11.5](05-aspnet-core-migration-approach.md)'s register was read in full, rather than as the 18 an
-> earlier reading of input 17 recorded or the 14 before that, so the
+> [05 §11.5](05-aspnet-core-migration-approach.md)'s register is read **in full and at its present size**,
+> on which the
 > **sign-off** row of [§7.2](#72-the-approved-delta-sign-offs) is rebanded again. Both are counts owned by
 > 05 and cited here; each row states the increment and its derivation.
 >
@@ -760,8 +759,8 @@ footnote.**
   non-code task in [03](03-modernization-roadmap.md)'s terms, sized only here, and each sits on a
   workstream's **exit gate** rather than inside its band —
   [section 7](#7-work-that-is-not-code) states where each attaches in the sequence. The approved-delta
-  sign-offs are the one a previous revision of this table got wrong: it carried them parenthesised as
-  effort *inside* W1 at 2 / 4 / 8. [§7.2](#72-the-approved-delta-sign-offs) owns that band, states that
+  sign-offs are the one most easily misplaced — carried parenthesised as effort *inside* W1 at
+  2 / 4 / 8, which is not where they sit. [§7.2](#72-the-approved-delta-sign-offs) owns that band, states that
   it is **not** inside W1's, and partitions input 17 between the two — W1's 3.5 / 7 / 13.5 buys the six
   constituency briefings, the **four** escalated risk decisions that are not deltas, and the gate record,
   priced by [W1](#w1--approval-of-this-assessment) as `11 acts × 0.3 / 0.6 / 1.2` rounded up; this
@@ -808,7 +807,7 @@ derives — this table carries what they publish rather than a figure of its own
 total was **133.5 / 239.5 / 424**, and that figure was the sum of **sixteen** rows: W1 to W15, at
 131 / 235 / 416.5, plus the manual visual review at the 2.5 / 4.5 / 7.5 it then carried. Three rows this
 table already listed **never reached it** — a total that omits a row it displays is the defect
-[§6.1.1](#611-the-walk-from-the-previously-published-total) records in full — so the base is corrected
+[§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) records in full — so the base is corrected
 before anything is re-banded.
 
 - **Part one, the membership correction: `+13.5 / +26.5 / +46`.** **W16** at 3 / 6 / 12, whose own record
@@ -1061,12 +1060,12 @@ any earlier composition that happened to number eleven.
 > | **The convening** — 6 constituencies, being input 17's five plus legal | **W1's band**, this row | Its **eleven approval acts**: briefing each of the six owners on thirteen deliverables, taking the **four** escalated risk decisions of [§9.4](#94-the-six-risks-that-are-approval-decisions-not-mitigations) that are **not** themselves deltas — R1, R13, R15 and R18 — and writing the gate record |
 > | **The individual delta decisions**, and the **15 approval-owned additions** of [05 §11.7](05-aspnet-core-migration-approach.md) beside them — the per-decision marginal cost | **[§7.2](#72-the-approved-delta-sign-offs)'s own row**, 8 / 16 / 26 | Obtaining and recording a decision on **each row of both registers** — that row states the priced count once — including consent from **every** constituency a delta names wherever [05 §11.5](05-aspnet-core-migration-approach.md)'s **Approval owner** cell names more than one — that register owns how many of its rows those are, and this document does not restate the subcount any more than it restates the total — and therefore including §9.4's **R7** and **R9**, which are themselves rows of the delta register |
 >
-> An earlier version of this basis listed the delta decisions among W1's own drivers while §7.2 asserted
-> they were not double-counted into W1. Both statements could not be true of one band, and the ambiguity was
-> the defect rather than the arithmetic: W1's band never moved when the delta count did — it was 3 / 6 / 12
-> at every count input 17 has carried, the first reading's 14 included — so the decisions were only ever
-> *sized* in §7.2, and what moved W1's
-> band when it last moved was its own census gaining R18's decision. The basis above now says so
+> **Listing the delta decisions among W1's own drivers while §7.2 asserts they are not double-counted into
+> W1 cannot be true of one band, and the ambiguity would be the defect rather than the arithmetic**: W1's
+> band does not move when the delta count moves — it held 3 / 6 / 12
+> at every count input 17 has carried — so the decisions are
+> *sized* in §7.2 alone, and what moved W1's
+> band when it last moved was its own census gaining R18's decision. The basis above says so
 > in its own terms, and the two rows sum without overlap: **7 + 16 = 23** expected IED for the whole
 > approval activity, which is what [§8.2](#82-concurrency-permitted-by-the-graph)'s **set 0** — the root
 > set, which holds W1 and the sign-offs together and nothing else — and
@@ -1507,7 +1506,7 @@ is validated against, so the repository tracks five solution files afterwards ra
 and **W6 consumes gate 4a**. So this row **inherits** those two files rather than authoring them — while
 still authoring the root solution, the tool manifest and the converted project's lockfile, and still
 **proving** the inherited pair against a project that did not exist when 4a committed them. **Gate 4a
-proves nothing about restore**, and that is a correction to an earlier reading of this row: at 4a the
+proves nothing about restore**, and the reason is structural: at 4a the
 repository contains no project, so there is nothing to restore — 4a commits the two files, checks the
 host SDK against the pinned band and stops [03 §5](03-modernization-roadmap.md). The **repository's first
 locked-mode restore is therefore this workstream's**, performed on the converted project against the
@@ -1524,7 +1523,7 @@ inside this band either.** What W4's later gate consumes from here is the **proj
 project is created in** and the completed governance set that project's lockfile is generated under — a
 compilation and governance dependency, not a test run — so authoring, restoring, building and running
 that project is gate 4b's effort and is priced in W4's band rather than in this one
-[03 §4.2.3](03-modernization-roadmap.md#423-six-properties-of-the-graph-worth-reading-before-the-workstreams). What replaces those two conditions is a named piece of work this
+[03 §4.2.2](03-modernization-roadmap.md#graph-properties). What replaces those two conditions is a named piece of work this
 band must carry: the **compile diagnostics enumerated as the expected state**, every one mapped to a
 no-successor construct. **14** of the **23** blockers fail at compile time, of which **13 apply to the
 migration source**; the fourteenth,
@@ -1687,8 +1686,8 @@ and 8.5 + 15 + 18 + 4 + 15 + 4 + 7 + 5 + 6.5 = **83** high. Adding the four suit
   hypothetical. **+1.5 / +2.5 / +4** on a sub-row that was 3.5 / 6.5 / 12. Its
   **invocation** from the release path is W11's manifest half and its **principal** is
   [06 §6.2](06-azure-hosting-recommendations.md)'s; neither is charged again here.
-- **The error-handling port sub-row is application code the earlier derivations under-specified, and its
-  third component is the reason it moves.** The
+- **The error-handling port sub-row is application code, and its third component is the reason it
+  moves.** The
   **security-header middleware** is application-owned rather than platform-supplied, sits at a stated
   pipeline position, must produce its set on the **five** response kinds [06 §10.2](06-azure-hosting-recommendations.md) enumerates — among them a static file, a redirect in both its kinds, a status-code page and a
   re-executed error response, and reads a content-security mode key that **has no default**, so the host
@@ -1849,7 +1848,7 @@ checkpoint and reconciliation contracts [05 §5.6](05-aspnet-core-migration-appr
 incremental content is the manifest's own binding and the write-once destination's provisioning. That is
 **absorbed rather than added: the band does not move**, and this row's band is the one stated below,
 carried unchanged by [§5.1](#51-summary-table) and recorded by
-[§6.1.1](#611-the-walk-from-the-previously-published-total) among the ten rows that did not move —
+[§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) among the ten rows that did not move —
 so 06's strengthened manifest contract causes **no band change anywhere in this model**. The high case
 already carries the case where the destination and its immutability policy do not exist to be pointed at
 ([W10](#w10--hosting-provisioning-and-platform-configuration)
@@ -2036,8 +2035,8 @@ input 30's **5 required properties** rather than the code: a secret
 channel that keeps the credential out of process listings and shell history, hashing through the
 framework's own user manager rather than direct SQL, **convergence checked per operation over all four
 operations** — `create-user`, `create-role`, `add-membership` and `run`, the closed set of
-[05 §10.2](05-aspnet-core-migration-approach.md) property 4 rather than the withdrawn *"role, user,
-credential and membership"* naming [§4.1](#41-the-estimation-basis-every-input-with-its-method) records
+[05 §10.2](05-aspnet-core-migration-approach.md) property 4, whose naming
+[§4.1](#41-the-estimation-basis-every-input-with-its-method) records
 at the input — so a prior partial run is repaired rather than
 skipped, an audit record with no secret in it, and exclusion from the deployed web
 application. Input 30's remaining dimension is what makes the band Medium rather than Low:
@@ -2052,16 +2051,19 @@ a branch no invocation can enter. So what this band carries is **producing and a
 and reserving three** — the reservation being a defined record shape a future producer inherits, which is
 a line of the outcome enum and not a test.
 
-**Input 30 carried a second such dimension and no longer does** — a revoke
-mode's two operations across three branches, withdrawn where the input is stated
-([§4.1](#41-the-estimation-basis-every-input-with-its-method)) because
-[05 §10.2](05-aspnet-core-migration-approach.md) specifies no such mode. The withdrawal costs this row
-nothing, for the reason the note below the component derivation gives.
+**No revoke mode is priced here, and none is specified.**
+[05 §10.2](05-aspnet-core-migration-approach.md) defines no property 3a and its verb set contains no
+revoke verb, so the revoke mode's two operations across three branches that
+[§4.1](#41-the-estimation-basis-every-input-with-its-method) withdraws at the input describe a capability
+no deliverable specifies. It costs this row nothing: the five components derived below are the tool and its
+wiring, the rejection contract, exit condition 7's census with the fourth gated invocation, input 23 and
+input 32, and **not one of the five is a revoke term**. [09 §6.8.1.1](09-security-assessment.md) owns the
+privilege-withdrawal gap it leaves open, with **no workstream carrying it**.
 
-> **What the corrected outcome count does and does not add, because most of it was already inside this
-> band.** An earlier version of input 30 put the vocabulary at eight values — three credential outcomes
-> and five failure outcomes — which undercounted [09 §6.8.1](09-security-assessment.md)'s closed set by
-> **ten**. The correction is a completeness fix to the *input row*, and it is mostly **not** new work: the
+> **What the full outcome count does and does not add, because most of it was already inside this
+> band.** Counting the vocabulary at eight values — three credential outcomes
+> and five failure outcomes — undercounts [09 §6.8.1](09-security-assessment.md)'s closed set by
+> **ten**, and closing that gap is a completeness fix to the *input row* rather than mostly new work: the
 > **twelve** non-failure values partition across the four operation records as `4 + 2 + 4 + 1` plus the
 > `NotAttempted` the three operation records share and which is counted once — `4 + 2 + 4 + 1 + 1 = 12`,
 > the derivation [§4.1](#41-the-estimation-basis-every-input-with-its-method) prints at the input — and
@@ -2085,7 +2087,7 @@ nothing, for the reason the note below the component derivation gives.
 > contract; high by **1**, because its characteristic failure is discovering mid-implementation that a
 > sentinel collides with a legitimate value and the closed field set must be reopened. **Low does not
 > move** — it assumes the contract lands as the thin pre-host validation layer
-> [04 §12.4](04-dotnet8-migration-strategy.md) specifies. The non-failure values the eight-value form left
+> [04 §12.4](04-dotnet8-migration-strategy.md) specifies. The non-failure values an eight-value reading leaves
 > unenumerated — the **twelve** less its three credential outcomes — contribute **nothing** to the
 > increase, for the reason above: pricing them here would
 > double-count the four operations that produce them.
@@ -2110,9 +2112,9 @@ policy and [09 §6.8.1](09-security-assessment.md) the outcome vocabulary: the o
 account resolves but holds **no** password at all and one is set, **`AlreadyPresent_NotRotated`** where
 it exists with one and the run did not request a rotation, and **`Rotated`** where the run passed
 `--rotate-credential`. **The first two are two values and not one.** That section partitions the
-`create-user` record's outcome four ways, and an earlier form of this paragraph collapsed the absent
-account and the passwordless one into a single `Created` — the one reading under which a suite cannot
-tell an account the run created from an account it repaired, which is exactly the distinction the
+`create-user` record's outcome four ways, and collapsing the absent
+account and the passwordless one into a single `Created` is the one reading under which a suite cannot
+tell an account the run created from an account it repaired — exactly the distinction the
 recoverability assertion below turns on. **Ordinary pipeline releases do not pass that flag**; the two
 occasions that do are
 the published-credential repair and a post-incident rotation, and
@@ -2163,25 +2165,6 @@ row runs one command against them — but the row cannot start beside W8, which 
 [§8.3](#83-the-critical-path-and-what-to-do-first-if-the-goal-is-to-narrow-the-estimate) counts its
 expected IED on the chain — 9.5 of them, once the tests, the deployed census, the fourth gated
 invocation and input 32's published-console rows below are included.
-
-**A third such addition was carried above and is withdrawn, which is why that paragraph now names two.**
-It was *"the revoke mode of property 3a"*, described as a mode of the same provisioning verb over the same
-two managers, with the same actor attribution — the invocation-scoped `MUSICSTORE_AUDIT_ACTOR`
-environment variable, not a switch — and the same record and exit-code contract.
-[05 §10.2](05-aspnet-core-migration-approach.md) defines no property 3a and its verb set contains no
-revoke verb, so the addition described a capability no deliverable specifies —
-[§4.1](#41-the-estimation-basis-every-input-with-its-method) records the withdrawal at the input, and
-[09 §6.8.1.1](09-security-assessment.md) owns the privilege-withdrawal gap it leaves open, with **no
-workstream carrying it**. **The withdrawal removes no IED from this row**, for the same reason the two
-surviving additions add none: it was recorded as an addition *inside* an unchanged band and never became a
-term of one. The component derivation below is the check — the five components are the tool and its
-wiring, the rejection contract, exit condition 7's census with the fourth gated invocation, input 23 and
-input 32, and **not one of the five is a revoke term** — so this row is **5 / 9.5 / 16** before the
-withdrawal and **5 / 9.5 / 16** after it, and no figure that quotes it moves: not
-[§5.1](#51-summary-table)'s row, not [§6.1](#61-the-totals)'s total, not
-[§6.1.1](#611-the-walk-from-the-previously-published-total)'s walk line, not
-[§8.2](#82-concurrency-permitted-by-the-graph)'s set 10 and not
-[§8.3](#83-the-critical-path-and-what-to-do-first-if-the-goal-is-to-narrow-the-estimate)'s chain.
 
 **And one obligation inside the band is a pipeline edit rather than code.**
 [03 §5 W12](03-modernization-roadmap.md) condition 6 requires the invocation to be **wired into the release
@@ -2466,8 +2449,8 @@ decision rather than an engineering risk.
 | **Total** | **171.5** | **311.5** | **545.5** IED |
 | *For reference, excluded:* the conditional pre-admission affinity retirement | 1 | 2 | 4 IED |
 
-**The approved-delta sign-offs are a line of their own here, and a previous revision of this section said
-the opposite.** It said they were 2 / 4 / 8 *inside* W1's band and therefore already counted.
+**The approved-delta sign-offs are a line of their own here, and they are not 2 / 4 / 8 *inside* W1's
+band and already counted.**
 [§7.2](#72-the-approved-delta-sign-offs) owns that band, derives it as **8 / 16 / 26**, and states
 plainly that it is **not** inside W1's — W1's 3.5 / 7 / 13.5 is
 [eleven approval acts and nothing else](#w1--approval-of-this-assessment). The two partition input 17
@@ -2486,7 +2469,7 @@ low-confidence share is now falling slightly, because the rows that grew most th
 more tightly than they once were without being any better calibrated, and because this round's growth
 landed mostly in Medium rows.
 
-#### 6.1.1 The walk from the previously published total
+#### 6.1.1 The walk that produces the totals: nine rows and the corrected base
 
 **Nine rows account for the movement that produced the figures above — six whose bands were re-derived
 and three that were already in [§5.1](#51-summary-table)'s table and had never reached its total.** Two of
@@ -2548,9 +2531,9 @@ drift, which is the failure this section exists to catch rather than to reproduc
 **The port of existing code is under a fifth of the expected effort. Everything else — net-new
 capability, data work, and governance and verification — is over four fifths.**
 
-**This table partitions the model by activity, not by workstream, and that distinction is the correction
-that produced the figures below.** An earlier version of this section assigned each workstream wholly to
-one character. That put **all** of W7 in *porting* although five of its thirteen sub-rows have no source
+**This table partitions the model by activity, not by workstream, and that distinction is what produces
+the figures below.** Assigning each workstream wholly to
+one character would put **all** of W7 in *porting* although five of its thirteen sub-rows have no source
 counterpart at all, **all** of W11 in *net-new* although its first part is an approval and nothing else,
 **all** of W13 in *governance* although the row is the production data extraction, load and
 reconciliation, and **all** of W16 in *governance* although its second stage is an implementation with a
@@ -2768,7 +2751,7 @@ workstream's **exit gate**: the visual review and the accessibility review on **
 sign-offs on **W1's**. So each is on the
 critical path even though it has no workstream number. They are carried here because omitting them would
 understate the total and mis-place the gates — which is exactly what a previous revision did with two of
-them, as [§6.1.1](#611-the-walk-from-the-previously-published-total) records. The fourth item,
+them, as [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) records. The fourth item,
 [§7.4](#74-repository-hygiene--enumerated-but-intentionally-unestimated)'s repository hygiene, is
 enumerated there **without a band of any kind** and is **deliberately outside the total**, because it
 gates nothing.
@@ -2854,8 +2837,8 @@ consumed rather than decided here:
   [W10](#w10--hosting-provisioning-and-platform-configuration)'s gate 10b at `1 / 2 / 3` alongside
   `G-CSP-BROWSER`, and it **adds no image and no comparison** to the 67 — a functional walk exercises a
   request and a DOM rewrite, and this row compares rendering. Two manual browser tasks over the same four
-  families are two tasks, and the earlier form of this bullet — which made the walk a conditional
-  re-estimation of this row's reviewer scope — is superseded by 06 §10.4 requiring it outright.
+  families are two tasks: 06 §10.4 requires the walk outright, so it is neither a conditional
+  re-estimation of this row's reviewer scope nor a task this row absorbs.
 - **Safari is the constraint on the capture half.** It has no Windows or Linux build, so that family needs a
   **macOS host or a device-lab session**; the access is a costed component below rather than an assumption.
   Without it one of the four families goes unexercised in both directions.
@@ -2879,12 +2862,12 @@ and no band in this document assumes any of it. A later decision to automate is 
 this model, not a reinterpretation of it.
 
 **Basis, and it is a census of capture *states* across *two* dimensions rather than a count of files.**
-An earlier form of this row was sized from **22 non-partial view files of the 29** — a
-leading-underscore filename test — times two viewports, "in the mid-tens of screenshots", with **no
-browser term at all**. Both halves of that were wrong, and they were wrong in opposite directions, so
-the corrected band is not a simple uplift.
+A filename count is the basis a reader is most likely to reach for, and it is wrong in both dimensions:
+sizing this row from **22 non-partial view files of the 29** — a
+leading-underscore filename test — times two viewports, with **no
+browser term at all**, misses in opposite directions, so the band below is not a simple uplift of it.
 
-**What the file test got wrong.** [A.4](#a4-the-visual-review-capture-set-input-16) carries the
+**What the file test gets wrong.** [A.4](#a4-the-visual-review-capture-set-input-16) carries the
 classification and the commands. The underscore convention misclassifies three files in both
 directions — `Store/GenreMenu.cshtml` and `ShoppingCart/CartSummary.cshtml` carry no underscore and are
 component outputs rather than pages, and `Account/_RemoveAccountPartial.cshtml` carries one and is a
@@ -3098,9 +3081,9 @@ technical trade at all —
 alone.
 
 **The multi-owner figure is a projection of the register and is derived by subject, not by delta number.**
-An earlier form of this row published **sixteen**, and delta numbers are the wrong key to check that
-against: [05 §11.5](05-aspnet-core-migration-approach.md)'s rows have been renumbered as the register was
-consolidated, so a figure keyed to positions in an older numbering cannot be re-derived. Read by
+Delta numbers are the wrong key to check it against, and a figure of **sixteen** keyed to them cannot be
+re-derived: [05 §11.5](05-aspnet-core-migration-approach.md)'s rows have been renumbered as the register
+was consolidated, so any figure keyed to positions in an older numbering is unreproducible. Read by
 **subject** — each row's own approval-owner text — the register partitions into **13 single-owner** rows
 and **14 multi-owner** rows: `13 + 14 = 27`, and because every multi-owner row names exactly two
 constituencies, the owner **participations** are `13 × 1 + 14 × 2 = 41`.
@@ -3222,7 +3205,7 @@ and a number.
 **This band moved from 5.5 / 11 / 18.5 to 8 / 16 / 26, and a count moved it rather than a rate.** The
 priced count is the two registers' own, and it rose because
 [05 §11.5](05-aspnet-core-migration-approach.md)'s register was read **at its present size** rather than at
-the smaller reading an earlier revision of this row had of it — that register states its own row count and
+the smaller reading it once had — that register states its own row count and
 this document does not transcribe it — while
 [05 §11.7](05-aspnet-core-migration-approach.md)'s **15** additions are unchanged. **The rate is
 unchanged** at 0.125 / 0.25 / 0.375 per decision, and the whole of the movement is twenty further rows
@@ -3340,11 +3323,11 @@ about conformance to a standard — 05 §8.9 is explicit that this document set 
 **gating nothing**.
 The three items below are **enumerated** here for completeness and **deliberately left unestimated**, and
 they are excluded from [section 6.1](#61-the-totals)'s total, because no workstream's entry gate depends
-on them. Calling them *sized* — as an earlier form of this heading and this paragraph did — asserted a
+on them. Calling them *sized* would assert a
 band this section expressly declines to give, and what is unestimated is the **remediation decision** in
 each case rather than the finding's severity, which is 08's to state.
 
-**Severity is not uniform across the three, and an earlier form of this paragraph said it was.** For the
+**Severity is not uniform across the three.** For the
 second and third rows — F-08-25 and F-08-23 — [08 §10](08-technical-debt-register.md) does record
 **Low severity with no migration impact**, and [03 §7.5](03-modernization-roadmap.md) records that they
 **gate nothing and may be deferred indefinitely**. The first row is not one of them: it is **F-08-11**,
@@ -3423,8 +3406,8 @@ this document does not.
 nodes and fifty-six unconditional edges**, the sixteen workstreams with W2, W4 and W10 appearing as
 their internal gates and W16 as its two stages. The one conditional node is excluded here for the same
 reason [§6.3](#63-what-is-deliberately-not-in-the-total) excludes its band. This section applies effort
-to that graph and changes nothing about it. Where an
-earlier reading of this section asserted an edge 03 does not carry, 03 governs: **`W9 → W8` does not
+to that graph and changes nothing about it. Where this section and 03 disagree about an edge, 03
+governs: **`W9 → W8` does not
 exist** — 03 withdrew it explicitly, keeping the load ordering inside W13 where the production load
 happens — and **W10 has two gates rather than three**, because the data load is W13's rather than W10's.
 
@@ -3514,19 +3497,20 @@ on-path versus off-path split, which is where it actually has an effect.
 - **The round before that changed the plan's shape as well as its weight.** Two members arrived that were
   absent from the partition altogether — **W16's two stages** and the **manual accessibility review** —
   and one arrived that had been treated as effort inside another row, the **approved-delta sign-offs**
-  ([§6.1.1](#611-the-walk-from-the-previously-published-total) records that defect). **The weight moved
+  ([§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) records that defect). **The weight moved
   by exactly +50 expected IED, and it decomposed by member rather than by set index**, since the indices
   below set 1 all shifted: the three arriving rows contributed `16.5 + 6 + 4.5 = 27`, and five members that
   were already here re-banded by `8 + 3.5 + 1 + 0.5 + 10 = 23` — the manual visual review from 4.5 to 12.5
   across its two parts, W12 from 6 to 9.5, W1 from 6 to 7 as its own act census gained a decision, and
   then gate 4b from 61 to 61.5 and W7 from 109.5 to 119.5 as the coverage matrix reached 102 rows.
   `27 + 23 = 50`, and `258 + 50` = **308**. Every other member carried the figure it carried before.
-- **Three structural corrections came from 03's inventory rather than from any band, and each moved a
-  member between sets.** **W11 is one node, not two** — an earlier reading split it and placed its
-  provider half in the widest set, but 03 draws a single node with four entries, so the whole of its 19.5
-  waits for W7 and W10a and sits alone in set 6. **W10 has two gates, not three**, so the data-load gate
-  this section used to carry is gone, its work being W13's. And **W8 and W9 are concurrent**, because the
-  `W9 → W8` edge is withdrawn: they now share set 9 rather than occupying two.
+- **Three structural properties come from 03's inventory rather than from any band, and each places a
+  member in a different set from the one its name suggests.** **W11 is one node, not two** — 03 draws a
+  single node with four entries, so the whole of its 19.5
+  waits for W7 and W10a and sits alone in set 6, rather than splitting a provider half into the widest
+  set. **W10 has two gates, not three**, so there is no data-load gate here; that work is W13's. And
+  **W8 and W9 are concurrent**, because the
+  `W9 → W8` edge is withdrawn: they share set 9 rather than occupying two.
 - **W2's exit has two states, and they open different members of later sets.** W6 consumes gate **2a**,
   because a recorded failure is still a known starting condition to convert from; W4's gate **4b**
   consumes **2b**, because it drives the legacy application over HTTP and a build that produces no
@@ -3538,9 +3522,9 @@ on-path versus off-path split, which is where it actually has an effect.
   concurrency set. 2a opens in set 1 on W1 alone and 2b in set 2 on 2a alone, which is why the row is
   apportioned above rather than carried whole.
 - **W4 does gate W6 — at gate 4a, not at gate 4b — and the distinction is the whole of why they are still
-  concurrent with the heaviest gate rather than behind it.** **An earlier reading of this document asserted
-  that the graph carried no `W4 → W6` edge at all, and that is withdrawn: `4a → W6` exists.** What
-  survives is the conclusion, on a different justification — **W6 consumes the build-governance
+  concurrent with the heaviest gate rather than behind it.** **The graph carries `4a → W6`; what it does
+  not carry is an edge from gate 4b, or any edge back into either half of W4.** The concurrency therefore
+  rests on what the edge delivers — **W6 consumes the build-governance
   bootstrap and not the baseline**, so it does not wait on a legacy application that runs, on a captured
   baseline or on a green suite. W6's own exit
   gate deliberately requires neither a build of the legacy application nor a test run of it — the
@@ -3620,9 +3604,8 @@ reader checking the path will land on exactly these.**
   stage reaches 4b as well, but **transitively through W3**: 03 §4.2.1 states that `W16·1 → W4·4b` is not
   declared because `W16·1 → W3 → W4·4b` already imposes the ordering, so it is not a fourth predecessor
   and it is not a fourth route to weigh.
-- **W8, not W9 — and the earlier reading of this section had the reason wrong twice over.** It said W8 was
-  taken "because W8's band is the wider of the two", and then, after a re-derivation, that W9's was. Neither
-  holds now: **the two bands are identical at 8 expected IED**. The step is decided entirely by what
+- **W8, not W9 — and not because either band is the wider of the two.** Band width cannot decide it:
+  **the two bands are identical at 8 expected IED**. The step is decided entirely by what
   *follows* it. [03 §6.1](03-modernization-roadmap.md) rows 50 and 51 give W8 two successors, `W8 → W12`
   and `W8 → W13`, while row 52 gives W9 only
   `W9 → W13` — so the chain through W8 continues `W8 → W12 → W13` and weighs `8 + 9.5 + 4 = 21.5`
@@ -3637,8 +3620,8 @@ partial**, so the graph itself says which half binds and this section needs no c
 The chain charges **W10's schema-application gate** and leaves **its provisioning gate off**, because
 10b's binding predecessor is W11 rather than 10a; and it charges **W4's gate 4b** while leaving
 **gate 4a** off, for the reason stated above. W11, by contrast, is a **single node** in 03's inventory
-with four entries, so the whole of its band is on the path — an earlier reading of this section split it
-and charged only a manifest part, and that split does not exist in the graph.
+with four entries, so the whole of its band is on the path — no split into a provider part and a manifest
+part exists in the graph, and charging only a manifest part would understate the chain.
 
 Three gate conditions sit **on** the chain without being workstreams of their own, and all three are
 counted below: the approved-delta sign-offs ([§7.2](#72-the-approved-delta-sign-offs)), which W1's exit
@@ -3730,9 +3713,9 @@ which invented work, and three of which came from
 - **W10 lost a gate.** The data-load gate this chain used to pass through is gone — 03 puts the production
   load in W13 — so the chain passes through **10b** and nothing else of W10, and 10a's provisioning is
   off-path.
-- **W16's policy stage joined the chain, and the mechanism stage stayed on it.** An earlier reading had
-  stage 1 off the path on the ground that W4's binding predecessor outweighed it. That is still true of
-  gate 4b, but stage 1 is on the path by a different route: it is the binding predecessor of **W3**, which
+- **W16's policy stage joined the chain, and the mechanism stage stayed on it.** Stage 1 is not on the
+  path through gate 4b — W4's binding predecessor there outweighs it — but it is on the path by a
+  different route: it is the binding predecessor of **W3**, which
   is the binding predecessor of gate 4b. **2.5** expected IED moved onto the path, and it is the cheapest
   node on it.
 - **The accessibility review joined the chain as a third gate condition.** It closes W7's exit gate
@@ -3740,7 +3723,7 @@ which invented work, and three of which came from
   is on the path; and the **sign-offs** joined it as the condition on W1's gate when
   [§7.2](#72-the-approved-delta-sign-offs) established that they are required by that gate rather than
   contained in W1's band. The band they carry there is the one the table above prints — **8 / 16 / 26** —
-  and [§6.1.1](#611-the-walk-from-the-previously-published-total) records the movement that
+  and [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) records the movement that
   brought it, rather than this bullet restating a figure of its own.
 
 **If the objective is to narrow the estimate rather than to shorten it, the first substantive action is
@@ -3862,8 +3845,8 @@ parts that are both checkable from the document:
    [03 §4.2.1](03-modernization-roadmap.md) applies to its edge inventory, and for the same reason.
 
 Consumers and gates enter through part 1 rather than through a separate rule, because an entry that
-depends on a consumer says so in the field that depends on it — and where that was not previously true,
-the fix was to the *field*, not to the index. Where a consumer relationship is a graph fact rather than a
+depends on a consumer says so in the field that depends on it — and where a field does not say so, the
+*field* is what is corrected, not the index. Where a consumer relationship is a graph fact rather than a
 textual one, the field cites the edge: R2's field names **W4 and W6 as W2's two direct successors** in
 03 §4.2.1's inventory, which is a lookup rather than an opinion.
 
@@ -3890,10 +3873,10 @@ divergences the paragraph above records.
    The register contains exactly one: **R18's W4** — *"W4 is unaffected — the flow is target-only, so the
    legacy half executes no browser"*.
 
-**A correction to an earlier revision, recorded rather than quietly applied.** That revision declared
-[R16](#r16--no-security-relevant-action-is-recorded-anywhere)'s **W16** an exclusion-only mention and
-therefore absent from R16's index cell — while R16's index cell named it, so the rule and the row
-contradicted each other. **The row was right.** R16's field does two things with W16: it scopes W10's
+**W16 is not an exclusion-only mention of
+[R16](#r16--no-security-relevant-action-is-recorded-anywhere), and the distinction decides whether it
+appears in R16's index cell.** Treating it as one would put the rule and the row in contradiction, because
+R16's index cell names it. **The row is right.** R16's field does two things with W16: it scopes W10's
 canary proof *away* from the personal-data access-audit records, **and** it affirmatively assigns those
 records to **W16 stage 2**, per [03 §5 W16](03-modernization-roadmap.md). An affirmative assignment is a
 role, so W16 is a member of R16 under kind 1, it belongs in the field and in the index, and it is in both.
@@ -4709,9 +4692,9 @@ identity by `Username` [src/MVC5/MvcMusicStore/Models/Order.cs:18] — with **no
 deletion or anonymization path, no encryption at rest and no access audit** in any edition.
 
 **Why the exposure changes rather than transfers — argued without assuming a topology, because the
-repository cannot establish one.** An earlier form of this paragraph said the data sits today "on a
-developer or on-premises host, **with no external reachability**". That is not a repository fact and this
-document should not have asserted it: reachability is a property of a **deployment nobody has observed**,
+repository cannot establish one.** That the data sits today "on a
+developer or on-premises host, **with no external reachability**" is not a repository fact and is not
+asserted here: reachability is a property of a **deployment nobody has observed**,
 and the repository contains no publish profile, no pipeline definition, no container manifest and no
 infrastructure template from which one could be inferred —
 
@@ -4846,7 +4829,7 @@ adjusted.
 | --- | --- |
 | **Likelihood** | **Medium**, and the two halves must be stated separately. That a credential **exists** is *certain* for the life of the interim step, because it is what Path A is; that the exception **outlives its intended end** is Medium, and it is that second thing this entry tracks. Medium rather than Low because the expiry is anchored on an event that can slip, and rather than High because [06 §5.5](06-azure-hosting-recommendations.md)'s five controls are mandatory before the step begins — the exception record must name the gate that ends it, and its rotation control carries an expiry alert — while [06 §5.3](06-azure-hosting-recommendations.md) requires the exception to be re-reviewed at each rotation rather than at approval only |
 | **Impact** | **High.** The login reaches the application's data, which includes the credential store and order data containing personal information — the nine PII fields of the checkout form [09 §3.11](09-security-assessment.md). It is High rather than Critical because the grant is data-plane only — no `db_owner`, no DDL rights, no server-level role — so a leaked credential is a data exposure rather than a schema or platform compromise |
-| **Mitigation** | **All five of [06 §5.5](06-azure-hosting-recommendations.md)'s controls**, which that document owns and specifies and this entry names rather than restates, in force before the step begins and not after: a **least-privileged data-only login**; the secret held in the platform key store and **resolved by reference** so it is never in source, in the repository or in the deployment payload; **rotation performed by a named operator under an active PIM activation and deliberately not automated**, on 06's enforced interval and by the outage-safe sequence of [06 §5.5.1](06-azure-hosting-recommendations.md), with an expiry alert — an earlier form of this cell required automated rotation, and 06 withdraws the automated rotator by name because the only component that could perform it would have to hold `ALTER ANY USER` in both interim databases; the **connection string rewritten rather than repointed**; and the exception **recorded and time-boxed by an event, not by a date** — the record names the gate that ends it, and [06 §5.3](06-azure-hosting-recommendations.md) states the two events that close it. 06 §5.5 states the interim step is acceptable *only* with all five in place, so an approval that omits any one of them has not time-boxed anything |
+| **Mitigation** | **All five of [06 §5.5](06-azure-hosting-recommendations.md)'s controls**, which that document owns and specifies and this entry names rather than restates, in force before the step begins and not after: a **least-privileged data-only login**; the secret held in the platform key store and **resolved by reference** so it is never in source, in the repository or in the deployment payload; **rotation performed by a named operator under an active PIM activation and deliberately not automated**, on 06's enforced interval and by the outage-safe sequence of [06 §5.5.1](06-azure-hosting-recommendations.md), with an expiry alert — 06 withdraws the automated rotator by name, because the only component that could perform it would have to hold `ALTER ANY USER` in both interim databases; the **connection string rewritten rather than repointed**; and the exception **recorded and time-boxed by an event, not by a date** — the record names the gate that ends it, and [06 §5.3](06-azure-hosting-recommendations.md) states the two events that close it. 06 §5.5 states the interim step is acceptable *only* with all five in place, so an approval that omits any one of them has not time-boxed anything |
 | **Contingency** | On suspected exposure: rotate immediately, revoke the login, and audit the data-plane access it held. On the gate named in the exception record slipping, or on that record reaching a scheduled review with no movement on the gate: the exception is **re-approved explicitly or the interim hosting is withdrawn** — it does not lapse into being permanent by default. If the organization cannot accept a stored credential at all, 06 §5.5's Path B is the documented alternative and the interim step then carries a code approval by necessity, which is a different decision and a different estimate |
 | **Trigger** | **A rotation completed with no re-review of the exception recorded** — [06 §5.3](06-azure-hosting-recommendations.md) requires the exception to be re-reviewed at each rotation rather than at approval only, so a rotation that leaves the record untouched is the earliest observable sign that the box has gone missing, and it is the trigger to watch because it fires while everything still looks healthy. 06's own definitive signal is later and unambiguous: the gate named in the exception record completing while the credential still exists. Secondarily: that record still open at a scheduled review with W7 not exited; 06 §5.5's expiry alert firing; the login's grants widening beyond data-plane access; or the credential appearing in a local configuration file, a log or a deployment payload |
 | **Owner** | **Security**, as [06 §5.5](06-azure-hosting-recommendations.md) places the decision — the security owner approves the exception, sets the event that ends it, and re-reviews it at each rotation. A named operator executes the rotation under an active PIM activation; the operator does not own the exception, and no automated principal performs it |
@@ -4854,12 +4837,12 @@ adjusted.
 
 #### R18 — The browser-executed half of the scripted cart flow: one pinned engine, and an open decision on the other two
 
-**This entry is open, and that is stated first because a previous revision of this document recorded it as
-settled.** That revision read [05 §12.11](05-aspnet-core-migration-approach.md)'s pinning of a Chromium
-harness as closing the entry, withdrew it from
-[section 9.4](#94-the-six-risks-that-are-approval-decisions-not-mitigations) and left that table at five
-rows. **That reading was wrong and is withdrawn here.** Pinning the harness settled the *scope* question —
-whether any browser executes this flow at all — and settled it affirmatively: 05 §12.11 pins a
+**This entry is open, and it is easy to read as settled.** Reading
+[05 §12.11](05-aspnet-core-migration-approach.md)'s pinning of a Chromium
+harness as closing it — and dropping it from
+[section 9.4](#94-the-six-risks-that-are-approval-decisions-not-mitigations) — mistakes one question for
+another. Pinning the harness settles the *scope* question —
+whether any browser executes this flow at all — and settles it affirmatively: 05 §12.11 pins a
 browser-automation harness driving **Chromium** for exactly one flow,
 [04 §7.7](04-dotnet8-migration-strategy.md) pins the package as one of the six independent test-tooling
 pins and adds the browser-install step to the target-test runbook, and this model prices both — the flow
@@ -4868,13 +4851,13 @@ in [W7](#w7--the-aspnet-core-port)'s browser sub-row and the install step in
 did **not** settle is the question this entry actually carries: **which engines receive a functional
 assertion.** Chromium receives one. **Gecko and WebKit receive none**, and no automated case reaches them.
 
-**So the entry returns to [section 9.4](#94-the-six-risks-that-are-approval-decisions-not-mitigations) as
-its sixth row, because [03 §5](03-modernization-roadmap.md)'s W1 now carries this residual as a mandatory
-approval decision** with three admissible outcomes, enumerated below. Two consequences follow. First, the
-**previous statement that no band contains any part of this harness stays withdrawn** — two bands do carry
-it, and [section 6.3](#63-what-is-deliberately-not-in-the-total) records that withdrawal where the
-exclusion used to sit. The Chromium flow is in scope, is estimated and is **not** reduced by this entry
-reopening: **3.5 expected IED as [W7](#w7--the-aspnet-core-port)'s own sub-row and 0.5 expected as the
+**The entry is therefore [section 9.4](#94-the-six-risks-that-are-approval-decisions-not-mitigations)'s
+sixth row, because [03 §5](03-modernization-roadmap.md)'s W1 carries this residual as a mandatory
+approval decision** with three admissible outcomes, enumerated below. Two consequences follow. First,
+**two bands do contain part of this harness** — [section 6.3](#63-what-is-deliberately-not-in-the-total)
+records it in place of the exclusion that would otherwise sit there. The Chromium flow is in scope, is
+estimated and is **not** reduced by this entry
+being open: **3.5 expected IED as [W7](#w7--the-aspnet-core-port)'s own sub-row and 0.5 expected as the
 install step inside [W11](#w11--ci-provider-selection-then-pipeline-authoring)'s manifest half.** Second,
 what has **no** band is any *extension* beyond Chromium, which is what outcome two below would create.
 **The decision is open; the work already in scope is not.**
@@ -5004,9 +4987,9 @@ possible error**, because it would imply the work can proceed correctly without 
 somebody else can take.
 
 **[R18](#r18--the-browser-executed-half-of-the-scripted-cart-flow-one-pinned-engine-and-an-open-decision-on-the-other-two)
-is the sixth row of the six, and a previous revision of this document wrongly removed it.** That revision reasoned
-that [05 §12.11](05-aspnet-core-migration-approach.md) pinning a Chromium harness left no decision to
-take. It settled the **scope** question — the harness is in scope, and its effort is inside
+is the sixth row of the six, and the pinned harness is not a ground for removing it.** Reasoning that
+[05 §12.11](05-aspnet-core-migration-approach.md)'s pinned Chromium harness leaves no decision to
+take settles the **scope** question — the harness is in scope, and its effort is inside
 [W7](#w7--the-aspnet-core-port)'s and [W11](#w11--ci-provider-selection-then-pipeline-authoring)'s bands —
 but not the **coverage** question, which is that functional automation reaches **one engine** and **Gecko
 and WebKit have no automated functional assertion at all**. [03 §5](03-modernization-roadmap.md)'s W1
@@ -5084,7 +5067,7 @@ arriving does not add a row, and neither does a decision being restored to the o
    manual visual review (6.5 / 12.5 / 22.5), the manual accessibility review (2.5 / 4.5 / 8) and the
    approved-delta sign-offs (8 / 16 / 26). The sign-offs are **not** inside W1's band —
    [§7.2](#72-the-approved-delta-sign-offs) owns that band and
-   [§6.1.1](#611-the-walk-from-the-previously-published-total) records the round in which a previous
+   [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) records the round in which a previous
    revision counted them zero times by calling them a component of W1. Each of the nineteen rows that
    enters the total is counted exactly once. An IED is work content, not elapsed time. **Two of those rows
    have now been re-derived a sixth time** — W4 and W7, as [05 §12.4](05-aspnet-core-migration-approach.md)
@@ -5112,7 +5095,7 @@ arriving does not add a row, and neither does a decision being restored to the o
    the total and `+24.5 / +45.5 / +75.5` for the six re-derived bands, of which `+10.5 / +16.5 / +26.5` is
    the coverage matrix's two extensions landing on W4, W7 and W12;
    [section 5.1](#51-summary-table) prints the movement,
-   [section 6.1.1](#611-the-walk-from-the-previously-published-total) walks it row by row, and
+   [section 6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base) walks it row by row, and
    [section 5.2](#52-basis-of-estimate-per-workstream) shows each derivation.
 2. **The port of existing code is 16.2 percent of that.** The other 83.8 percent is net-new
    capability, data work gated on an unextracted schema, and governance and verification — none of it
@@ -5198,14 +5181,15 @@ git diff --name-status ea2552d..HEAD      # 13 lines, all "A", all under docs/mo
 
 Thirteen additions, **no `M` line and no `D` line** — so no pre-existing file was modified or deleted and
 nothing was added outside `docs/modernization/`, which is the claim, rather than the false one that nothing
-was added at all. **The diff's lower endpoint is pinned and its upper endpoint is the reader's own tip.** An
-earlier form of this block pinned the upper endpoint to a specific commit id as well; that id is the id of
-the commit that adds this document, so it could not exist when the text was written and resolves to nothing
-in this repository. `ea2552d..HEAD` is what a reader can actually run, at the cost of a result that expires
+was added at all. **The diff's lower endpoint is pinned and its upper endpoint is the reader's own tip.** Pinning the upper
+endpoint to a specific commit id as well would name the id of
+the commit that adds this document — an id that cannot exist when the text is written and resolves to
+nothing in this repository. `ea2552d..HEAD` is what a reader can actually run, at the cost of a result that expires
 the moment a fourteenth file lands under `docs/modernization/` — so it is a current-checkout observation
 with a pinned lower endpoint, and the both-endpoints-pinned form belongs to the release record kept outside
-these documents ([04 §13.4](04-dotnet8-migration-strategy.md)). The three status commands are
-authoring-time checks: at the committed checkpoint each is empty, which is why
+these documents ([04 §13.4](04-dotnet8-migration-strategy.md)). The three status commands read the working
+tree rather than the commit range: each is **required to report nothing** at the committed checkpoint, which
+is a condition on whoever commits this assessment rather than an observation recorded here, and which is why
 [§2](#2-the-no-modification-constraint) requires all four together rather than any one of them.
 
 **The heading is a shorthand, and the sentence under it is the claim.** "Changes nothing" means *modifies
@@ -5229,7 +5213,7 @@ Self-check against AAP §0.11.2 row 07 and the deliverable's own authoring contr
 | Asset counts **state their inclusion rule** | Input 7 and [A.3](#a3-helper-view-and-site-counts) — the migration source's **four asset groups**, distinguished from the all-edition and browser-served counts |
 | Estimated against **03's workstreams**; no alternative decomposition | [§5](#5-effort-by-workstream) opening paragraph; W1–W16 verbatim, including W16 |
 | **Net-new work sized honestly**, and **partitioned by activity rather than by workstream** | [§6.2](#62-the-finding-that-matters-most-in-this-document) quantifies it at **83.8%** of expected effort — `182.5 + 24 + 54.5 = 261` of 311.5, against the **50.5** that is porting. The three rows whose split crosses a category boundary — W7, W11 and W16 — are split along the sub-bands they publish, and both partition identities are checked there column by column |
-| **Every arithmetic identity in the model holds**, column by column, including the two derived claims | Checked by extracting the figures and summing them, not by reading them. **Row sum:** [§5.1](#51-summary-table)'s nineteen counted rows sum to `171.5 / 311.5 / 545.5`, equal to its own Total row and to [§6.1](#61-the-totals)'s, and its sixteen workstream rows sum to `154.5 / 278.5 / 489`. **Walk:** [§6.1.1](#611-the-walk-from-the-previously-published-total)'s nine deltas sum to `+38 / +72 / +121.5`, split `+13.5 / +26.5 / +46` for the three rows that entered the total and `+24.5 / +45.5 / +75.5` for the six re-derived bands; each row's From-to-To difference equals its stated delta, every To equals its owner's published band, and the corrected base `147 / 266 / 470` plus the six re-derivations reaches the same destination from the other end. **Activity partition:** [§6.2](#62-the-finding-that-matters-most-in-this-document)'s four categories sum to the same three totals, and each of the three splits sums to its row's published band; its four one-decimal shares sum to exactly `100.0%`, and the round in which they summed to `100.1%` is recorded there as the rounding artifact it was rather than having been hidden by nudging a quotient. **Concurrency:** [§8.2](#82-concurrency-permitted-by-the-graph)'s thirteen set figures sum to `311.5`; each split row's parts sum to the band [§5.1](#51-summary-table) carries for it; and **no set contains two members joined by an edge of 03's inventory**, which is the property that makes a set a concurrency claim rather than a bucket. **Path:** [§8.3](#83-the-critical-path-and-what-to-do-first-if-the-goal-is-to-narrow-the-estimate)'s twelve-node base plus its three gate rows equals the gate-inclusive figure in all three columns — `138.5 / 247.5 / 431` plus `14.5 / 27.5 / 45.5` — on-path plus off-path equals the total in all three, and the off-path row equals the sum of its eight itemized parts. **The two derived claims:** the high-to-low ratio `545.5 / 171.5 = 3.1808`, which [§6.1](#61-the-totals) prints as `3.18` and reads at one decimal as about 3.2, and the off-path share `36.5 / 311.5 = 11.72%` |
+| **Every arithmetic identity in the model holds**, column by column, including the two derived claims | Checked by extracting the figures and summing them, not by reading them. **Row sum:** [§5.1](#51-summary-table)'s nineteen counted rows sum to `171.5 / 311.5 / 545.5`, equal to its own Total row and to [§6.1](#61-the-totals)'s, and its sixteen workstream rows sum to `154.5 / 278.5 / 489`. **Walk:** [§6.1.1](#611-the-walk-that-produces-the-totals-nine-rows-and-the-corrected-base)'s nine deltas sum to `+38 / +72 / +121.5`, split `+13.5 / +26.5 / +46` for the three rows that entered the total and `+24.5 / +45.5 / +75.5` for the six re-derived bands; each row's From-to-To difference equals its stated delta, every To equals its owner's published band, and the corrected base `147 / 266 / 470` plus the six re-derivations reaches the same destination from the other end. **Activity partition:** [§6.2](#62-the-finding-that-matters-most-in-this-document)'s four categories sum to the same three totals, and each of the three splits sums to its row's published band; its four one-decimal shares sum to exactly `100.0%`, and the round in which they summed to `100.1%` is recorded there as the rounding artifact it was rather than having been hidden by nudging a quotient. **Concurrency:** [§8.2](#82-concurrency-permitted-by-the-graph)'s thirteen set figures sum to `311.5`; each split row's parts sum to the band [§5.1](#51-summary-table) carries for it; and **no set contains two members joined by an edge of 03's inventory**, which is the property that makes a set a concurrency claim rather than a bucket. **Path:** [§8.3](#83-the-critical-path-and-what-to-do-first-if-the-goal-is-to-narrow-the-estimate)'s twelve-node base plus its three gate rows equals the gate-inclusive figure in all three columns — `138.5 / 247.5 / 431` plus `14.5 / 27.5 / 45.5` — on-path plus off-path equals the total in all three, and the off-path row equals the sum of its eight itemized parts. **The two derived claims:** the high-to-low ratio `545.5 / 171.5 = 3.1808`, which [§6.1](#61-the-totals) prints as `3.18` and reads at one decimal as about 3.2, and the off-path share `36.5 / 311.5 = 11.72%` |
 | Sequence **dependency-ordered**, parallelism noted, **no calendar** | [§8](#8-sequencing) — thirteen concurrency sets and the critical path, explicitly properties of [03 §4.2.1](03-modernization-roadmap.md)'s twenty-node graph, with the staged rows W4, W10 and W16 split across sets and W11 carried whole because 03 draws it as one node |
 | **Every gate on the critical path is one that can actually be met** | [§8.3](#83-the-critical-path-and-what-to-do-first-if-the-goal-is-to-narrow-the-estimate) — the chain is a longest path by weight over 03's twenty-node graph, maximized independently at each band, and the three gate conditions on it are counted as conditions of the gates they close rather than as work after them |
 | **R1 first**, framed as an **approval decision** | [R1](#r1--the-target-framework-support-window), and [§9.4](#94-the-six-risks-that-are-approval-decisions-not-mitigations) |
@@ -5707,9 +5691,10 @@ git diff --name-status ea2552d..HEAD \
 # -> 0                     and there is nothing else: no M, no D, no other path
 
 git status --porcelain
-# -> (empty output) on the committed checkout — the tree is clean, which is why porcelain
-#    cannot be the evidence for what this work added; it is non-empty only while
-#    uncommitted edits are in flight
+# -> (empty output) required at the committed checkout, not observed here -- a clean tree
+#    is why porcelain cannot be the evidence for what this work added; it is non-empty
+#    while uncommitted edits are in flight, and while any ignored tree is present it is
+#    empty anyway, which is what the next two commands exist to catch
 
 git status --porcelain --ignored
 # -> (empty output) — and specifically no "!!" row: no ignored payload or output tree

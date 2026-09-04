@@ -92,22 +92,21 @@ positions, the setting keys and the exact locators are retained** — a reader w
 confirms either in one command, and a reader without it gains nothing from a copy in a committed
 document.
 
-**The
-
 **And withholding a value is not a remediation of it.** Committed authenticating material is treated
 as **compromised** in both cases, because both are valid, both are in git history, and no edit to this
 document changes either fact. So the remediation is **rotation at the deployment** — stated as a
 closure criterion by §3.5 for the administrator credential and by §5.1 for the recovery literals —
 while this document's own obligation stops at not adding a further copy. A reader who finds a
 withheld value here should read it as "this document declines to be one more place the secret
-exists", never as "the secret has been dealt with". rule binds every part of this document without exception, and the finding register of §8 is
+exists", never as "the secret has been dealt with".
+
+**The withholding rule binds every part of this document without exception, and the finding register of §8 is
 named here because it is the part most likely to escape one.** A register row is a summary, and a
 summary is where a withheld value is most tempting to inline "so that the row reads concretely" — so
 the rule is stated for the register explicitly: **a row states what the value is, which argument
-position or setting key carries it, and where to read it; never the value itself.** An earlier form of
-F-09-17's row printed both recovery literals while §5.1 below redacted them, which is exactly the
-failure this sentence exists to prevent — a document that republishes a credential it has already
-committed to withholding has not withheld it, and a register is the most-read part of an assessment.
+position or setting key carries it, and where to read it; never the value itself.** A document that
+republishes a credential it has already committed to withholding has not withheld it, and a register
+is the most-read part of an assessment.
 **One asymmetry remains, and it is deliberate rather than an exception:** the administrator *user
 name* — the value of `DefaultAdminUsername`, `Administrator`
 [src/MVC5/MvcMusicStore/Web.config:16], [src/MVC4/MvcMusicStore/Web.config:25] — and the *fact* that a
@@ -348,9 +347,10 @@ is the generation that predates lockout.
 **Editions: MVC 5** (MVC 4 shares MVC 5's five and adds a sixth — §4.2; MVC 3 differs materially —
 §5.2).
 
-**The count is per edition, and the three editions do not agree on it.** An earlier form of this
-section published "five enforcement points" as a property of the application, which was MVC 5's figure
-read across all three; MVC 4 has **six** and MVC 3 has **six** with a materially different composition.
+**The count is per edition, and the three editions do not agree on it.** A single figure of "five
+enforcement points" is MVC 5's and holds for MVC 5 alone — the correction §9.2 records against
+Technical Specification §6.4, which publishes that figure as a property of the application;
+MVC 4 has **six** and MVC 3 has **six** with a materially different composition.
 The per-edition figures and the rule that produces them are stated here once, and §4.2 and §5.2 then
 carry the two other editions' own enumerations rather than a delta from this one.
 
@@ -821,9 +821,9 @@ and three requirements make the confinement checkable rather than aspirational.
   probed account's single expected increment, and **unchanged** for every other account — after which the
   store is **destroyed, not reset**. The distinction is the whole difference between an assertion and a
   side effect: the first states what happened, the second is a further write that can itself fail.
-- **There is no restore step, and its absence is the correction rather than an omission.** An earlier form
-  of this paragraph licensed the live-store run provided `AccessFailedCount` and the lockout state were
-  recorded before the attempt and **restored** afterwards. That is not a safe bound on a live store, for
+- **There is no restore step, and its absence is deliberate rather than an omission.** Licensing the
+  live-store run provided `AccessFailedCount` and the lockout state were recorded before the attempt and
+  **restored** afterwards is not a safe bound on a live store, for
   two independent reasons. The restore is a **race**: a genuine failed attempt landing between the probe
   and the reset is erased by it, so the tidy-up destroys precisely the evidence lockout exists to
   accumulate. And it **writes to the only member of the only role that guards the administration surface**
@@ -1166,8 +1166,8 @@ data-scoping checks, the order-ownership check on the confirmation page
 [src/MVC4/MvcMusicStore/Controllers/CheckoutController.cs:71-73] and the cart-scoped removal
 [src/MVC4/MvcMusicStore/Models/ShoppingCart.cs:64-66].
 
-**The sixth has no MVC 5 counterpart and was omitted from an earlier form of this assessment, which
-published MVC 5's five as the figure for both editions.** It is a resource-level ownership check inside
+**The sixth has no MVC 5 counterpart, which is why MVC 5's five is not MVC 4's figure.** It is a
+resource-level ownership check inside
 the `Disassociate` action, and it is the **only** authorization decision in the entire repository that
 guards an *account-management* operation rather than a checkout or a cart:
 
@@ -2435,15 +2435,15 @@ this sentence is this document's acceptance of it rather than a parallel rule; a
 to a record shape is bounded by [06 §9.6.6](06-azure-hosting-recommendations.md), so an addition takes an
 amendment to that register rather than a sentence here.
 
-**A field count is a paraphrase, and this document no longer writes one for a shape it does not own.**
+**A field count is a paraphrase, and this document writes none for a shape it does not own.**
 The concrete instance is [06 §9.6.2](06-azure-hosting-recommendations.md)'s **R2**, the sanitized
-exception record: an earlier form of this document asserted it in two places as a record "of exactly four
-fields", which was true of R2 when those sentences were written and stopped being true when 06 amended
-the shape at the owning deliverable — R2's sole producer was found to emit request-attribution fields the
-closed list did not contain, so the list was widened there. Nothing in this document's own reasoning
-depended on the number. What it depends on is that the list is **closed**, and that a message, an inner
-message, a `ToString()` and a serialized exception object are outside it whatever its length. Both
-sentences therefore name the shape and cite 06 §9.6.2, and neither states how many fields it has. **The
+exception record, whose field list 06 has already widened at the owning deliverable — R2's sole producer
+was found to emit request-attribution fields the closed list did not contain, so the list grew there, and
+any count of it written on this side would have gone stale with it. Nothing in this document's own
+reasoning depends on the number. What it depends on is that the list is **closed**, and that a message, an
+inner message, a `ToString()` and a serialized exception object are outside it whatever its length. Both
+sentences that reach for R2 therefore name the shape and cite 06 §9.6.2, and neither states how many
+fields it has. **The
 rule generalizes: where this document needs a record shape it names the shape; where it needs a single
 field it names that field and cites the owner; it does not count another deliverable's fields** — a count
 is the one form of restatement that still looks correct after the owner amends it, and so gives a reader
@@ -2454,8 +2454,7 @@ anything 06 owns**: there is no health-check event class, no telemetry-pipeline 
 class here, because those records are 06 §9.3's and §9.5's and a second definition of them would be a
 second contract.
 
-**The ownership split, stated once and in one sentence each, and this paragraph is the recorded
-amendment where an earlier form of this sub-section crossed it.** **This document owns the security
+**The ownership split, stated once and in one sentence each.** **This document owns the security
 finding register `F-09-01`..`F-09-38` (§8), the per-edition posture the register is drawn from, and the
 security *requirements* on auditing** — which event classes must exist, what each one must be able to
 answer, its identifier, its closed outcome vocabulary, its severity assignment, and its closed
@@ -2468,18 +2467,18 @@ pinning ([06 §9.6.1](06-azure-hosting-recommendations.md)), the actor domain
 **audit channel of record with its destination and its retention** ([06 §9.5](06-azure-hosting-recommendations.md),
 with the per-table retention settings of [06 §9.5.2](06-azure-hosting-recommendations.md)).
 
-**One handoff inside that split is recorded here explicitly, because it is the one an earlier form of
-this document crossed in three places at once: the provisioning command's audit record.**
+**One handoff inside that split is recorded here explicitly, because it is the one three places in this
+document reach for at once: the provisioning command's audit record.**
 [06 §9.5.1](06-azure-hosting-recommendations.md) owns **that record's field schema, its cardinality — how
 many records a run emits on each of its branches — and where it durably lands**, all three. This document
 states the security *requirements* on it and nothing else: that the record must exist for every operation
 the run reaches, that it must attribute the operation to a validated actor under the precedence of the
 fourth convention below rather than to the identity the process happens to hold, that it must name the
 account acted on, and that it must never carry the credential, anything derived from a value that failed
-validation, or free-form provider text. Earlier forms of row 16, of the branch note below the table and
-of the rejection contract's first rule each stated one of the owner's three facts in this document's own
-words — a count table, a five-field enumeration and a destination — and all three are **withdrawn in
-favour of a citation** rather than annotated, for the reason this whole paragraph exists: a consumer that
+validation, or free-form provider text. Row 16, the branch note below the table and the rejection
+contract's first rule are the three places that reach for the owner's three facts — the cardinality, the
+field enumeration and the destination — and each of them **cites the owner rather than restating the fact
+in this document's own words**, for the reason this whole paragraph exists: a consumer that
 writes the owner's value down is a second value, and when the owner's changes the consumer's silently
 becomes false.
 
@@ -2489,19 +2488,19 @@ audit table, the exporter that would
 have moved its rows and the immutable store that would have received them, as artifacts outside the AAP
 artifact set of AAP §0.3.1 and §0.4.1. So there is no column, type, width, constraint or grant on 06's side
 of this line for either document to own — a record field whose domain the **emitter** enforces is what
-stands in place of a column whose domain an engine constraint enforced. Three field sets stated in an
-earlier form of this sub-section fell on 06's side of that line and are **withdrawn here rather than
-annotated**, because two live copies of one schema are the defect and the second copy is always the one
-that goes stale: the **envelope field set** this sub-section used to enumerate — which named a `Timestamp`
-application field where R1 states the timestamp is supplied by the collection path and R5 names the durable
-fields `OccurredUtc` and `RecordedUtc`; the **single-correlation-identifier** form, superseded by R5's two
-domains; and the **durable-representation table**, which restated the owner's column types, widths and
-constraint names alongside the producer requirements they satisfy — a restatement that is now doubly
-withdrawn, since the table it described no longer exists on the owner's side either. What survives on this
+stands in place of a column whose domain an engine constraint enforced. Three field sets fall on 06's side
+of that line and are therefore **not stated here at all**, because two live copies of one schema are the
+defect and the second copy is always the one that goes stale: the **envelope field set**, of which this
+sub-section enumerates nothing and in particular declares no `Timestamp`
+application field, because R1 states the timestamp is supplied by the collection path and R5 names the durable
+fields `OccurredUtc` and `RecordedUtc`; the **single-correlation-identifier** form, which R5's two
+domains supersede; and the **durable-representation table** of the owner's column types, widths and
+constraint names, which no producer requirement on this side may restate and which has no subject left in
+any case, the table it would describe no longer existing on the owner's side either. What survives on this
 side is stated below as a **requirement on the record and on the channel that carries it** and never as a
-description of either, and the further withdrawal already recorded in the conventions below — the actor
-literal `unresolved`, which added a third value to a two-literal domain 06 §9.6.3 closes — is an instance
-of the same rule.
+description of either, and the exclusion recorded in the conventions below — the actor
+literal `unresolved`, which would add a third value to a two-literal domain 06 §9.6.3 closes — is an
+instance of the same rule.
 
 **Four conventions bind every row, and they exist because an audit trail that carries personal data is
 a second copy of the thing it audits.**
@@ -2517,9 +2516,9 @@ a second copy of the thing it audits.**
   exactly two literals, because [06 §9.6.3](06-azure-hosting-recommendations.md) — the register that governs the actor domain — declares exactly two.**
   `UserId` where an identity resolved, and **`anonymous`** where the request carries none. That covers an
   unauthenticated request reaching a handler **and** a sign-in attempt naming an account that does not
-  exist: both are requests with no authenticated identity, so both write `anonymous`. *An earlier form of
-  this bullet added a third literal, `unresolved`, for the second case. It is withdrawn rather than
-  softened. Nothing was gained by it — the distinction it drew is already carried, twice over, by the
+  exist: both are requests with no authenticated identity, so both write `anonymous`. *A third literal for
+  the second case — `unresolved` — is **excluded, not merely discouraged**. Nothing is gained by it — the
+  distinction it would draw is already carried, twice over, by the
   `AccountNotFound` outcome value of class 2 below and by `SubjectPseudonym`, which correlates the attempts
   — and a third literal is a divergence from the owning deliverable's closed set, which is exactly the kind
   of drift a consumer document introduces by restating a decision instead of citing it.* A submitted
@@ -2564,8 +2563,8 @@ a second copy of the thing it audits.**
   **two** nullable columns rather than one shared column — `TraceId` for the HTTP domain, `RunId` for the job
   domain, with a check constraint requiring exactly one of them populated per row and selecting which by the
   `Producer` column — so which domain a stored value belongs to is structural rather than inferred from its
-  shape. *An earlier form of this bullet said "a request correlation identifier" without qualification. That
-  is unsatisfiable for a record a command-line tool writes, and it would have left the correlation of the
+  shape. *"A request correlation identifier" without qualification is not what this convention asks for: it
+  is unsatisfiable for a record a command-line tool writes, and it would leave the correlation of the
   non-web classes to whatever the implementer had to hand.*
 - **Every externally supplied value that reaches a record is validated by its own domain, and no record is
   a line of prose.** **Three** fields in this catalog carry a value that arrives from outside the emitting
@@ -2577,14 +2576,13 @@ a second copy of the thing it audits.**
   pre-parse before any host is built — and the **target username** and the **role name** as the
   `--username` and `--role` switches of that same closed set
   ([05 §10.2](05-aspnet-core-migration-approach.md) properties 1b, 3 and 4 — the closed switch set, the
-  operations that consume the two named values, and the record they land in). An earlier form
-  of this convention called the actor the only such field, which was wrong and
-  left two channels unguarded; *an earlier form also called all three of them **arguments** of the
-  command, which was wrong in the other direction — it required of the actor exactly the invocation shape
-  that section's pre-parse rejects.* *An earlier form also cited a "property 3a" alongside those two. [05
+  operations that consume the two named values, and the record they land in). *The three are guarded
+  together and the two channels are kept apart: the actor is not the only externally supplied field, and
+  the three are not all **arguments** of the command — calling them that would require of the actor exactly
+  the invocation shape that section's pre-parse rejects.* *No citation here names a "property 3a": [05
   §10.2](05-aspnet-core-migration-approach.md) defines properties 1, 1a, 1b, 2, 2a, 2b, 3, 4 and 5 and no
-  property 3a, so that citation named nothing; it is withdrawn here and wherever else this section carried
-  it, and §6.8.1.1's note below the producer table states what the withdrawal costs.* An audit field taken from either channel and interpolated into a log line is
+  property 3a, so the withdrawn "property 3a" citation is not reinstated anywhere in this section, and
+  §6.8.1.1's note below the producer table states what that withdrawal costs.* An audit field taken from either channel and interpolated into a log line is
   the textbook log-injection defect, **CWE-117**: a value carrying a line break forges a second record, and
   one carrying a field separator or a plausible field name rewrites the record it sits in — which in an
   audit trail means an operator can fabricate the evidence of their own action. **Five rules close it, and
@@ -2628,11 +2626,10 @@ a second copy of the thing it audits.**
     [05 §6.1](05-aspnet-core-migration-approach.md) owns the single user-name policy for this application,
     and [05 §10.2](05-aspnet-core-migration-approach.md) requires this command to validate `--username`
     against **that** set rather than against the framework default — `--username` being the spelling that
-    section's closed switch set fixes, which this document cites rather than respelling. An earlier form of
-    this bullet wrote the switch as `--user-name`, a spelling the closed pre-parse of that section does not
-    accept. An earlier form also restated
-    the framework default here, which is **wider** than the owned policy, so a name the application would
-    refuse at registration would have passed the command's check — two policies for one field, which is how
+    section's closed switch set fixes, which this document cites rather than respelling — `--user-name` is
+    not that spelling and the closed pre-parse of that section does not accept it. The framework default is
+    **wider** than the owned policy, so restating it here would let a name the application would
+    refuse at registration pass the command's check — two policies for one field, which is how
     the two drift. This document therefore cites the owner and adds nothing to it. A value outside the
     owned set is rejected, which is both a log-injection defence and a correctness one: a name the
     application's own options would refuse can never name an account in the store, so refusing it before
@@ -2692,14 +2689,11 @@ valid means*. This document owns the application-side contract: **which event cl
 on an invalid key** — and it cites 06 §8.4.7 for every mechanism element rather than restating one. The
 table below is that contract; where a row touches mechanism it points at 06 §8.4.7 and stops there.
 
-*An earlier form of this section specified a mechanism of its own — a single raw 32-byte setting, an epoch
-identifier derived from it by a domain-separated HMAC, and a two-field `<keyId>.<payload>` label. It is
-withdrawn in full rather than reconciled row by row. It was written to fix a real defect, the absence of any
-binding between a key and the labels it produced, and 06 §8.4.7 now fixes that defect at the owning
-deliverable with a stronger construction — the key id and the scheme version are **inside the digest
-input**, and the active-key pointer and the material live in **one document**, so activation is atomic
-without deriving anything. Two mechanisms for one value is the failure this document is elsewhere strict
-about; the owner's is the one that stands.*
+*This section specifies no mechanism of its own — no raw key setting, no derived epoch identifier and no
+label grammar. Two mechanisms for one value is the failure this document is elsewhere strict about, and
+the owner's is the one that stands: 06 §8.4.7 binds a key to the labels it produces by putting the key id
+and the scheme version **inside the digest input**, and by keeping the active-key pointer and the material
+in **one document** so activation is atomic without deriving anything.*
 
 | Property | Requirement |
 | --- | --- |
@@ -2780,9 +2774,9 @@ why each one is stated here and checked against that DDL rather than assumed to 
 
 | # | What this catalog produces | The representation it requires of 06 §9.5's table |
 | --- | --- | --- |
-| 1 | **Exactly three severity levels across the sixteen classes: `Information`, `Warning` and `Error`** — the closed set the third convention above states, and no class is written below `Information` | The `Severity` domain must **admit all three**, and [06 §9.5](06-azure-hosting-recommendations.md)'s `CK_SecurityAuditLog_Severity` on `CREATE TABLE dbo.SecurityAuditLog` **admits them** — `Error` included, which an earlier form of that constraint omitted. `Error` is used by exactly **two** classes, and both are writes that did not complete: `ORDER-5002`, a confirmed-order write that failed, and `ADMIN-4003` **at `AbsentRow` only** — row 13 is the one row whose severity is per outcome, its `Success` staying at `Warning`. A domain that omitted `Error` would not downgrade either record, it would **reject the insert**, so the two classes whose failures most need a durable trail would be the two that have none. The requirement is that the three levels this catalog emits are all accepted; whether the domain also admits levels this catalog never writes is the owner's to decide |
+| 1 | **Exactly three severity levels across the sixteen classes: `Information`, `Warning` and `Error`** — the closed set the third convention above states, and no class is written below `Information` | The `Severity` domain must **admit all three**, and [06 §9.5](06-azure-hosting-recommendations.md)'s `CK_SecurityAuditLog_Severity` on `CREATE TABLE dbo.SecurityAuditLog` **admits them** — `Error` included. `Error` is used by exactly **two** classes, and both are writes that did not complete: `ORDER-5002`, a confirmed-order write that failed, and `ADMIN-4003` **at `AbsentRow` only** — row 13 is the one row whose severity is per outcome, its `Success` staying at `Warning`. A domain that omitted `Error` would not downgrade either record, it would **reject the insert**, so the two classes whose failures most need a durable trail would be the two that have none. The requirement is that the three levels this catalog emits are all accepted; whether the domain also admits levels this catalog never writes is the owner's to decide |
 | 2 | **An `Actor` and a `SuppliedActorClaim` validated to a closed character set and a hard bound of 128 characters**, with a longer value **rejected rather than truncated** (fourth convention, and row 16) | The `Actor` column must hold **128 characters**, and [06 §9.5](06-azure-hosting-recommendations.md)'s is declared `nvarchar(128)`, which **holds them**. Truncation is not an acceptable degradation of an audit actor: a truncated `DOMAIN\account` or UPN names a different principal, or no principal, and the record then attributes an administrative action to something that does not exist — which is precisely the failure the 128-character rejection rule upstream exists to prevent. A store bound narrower than the validated bound would move the rejection from the command, where it is reported to an operator, to the insert, where it is a lost record |
-| 3 | **A correlation identifier in two domains** — the request's W3C `trace-id` for the thirteen application-produced classes, the run identifier for the two tool-produced ones (third convention above; the reserved sixteenth class populates neither, because nothing emits it) | **Two columns, each 32 characters and each nullable**, with exactly one populated per row. [06 §9.5](06-azure-hosting-recommendations.md) declares them and this document requires that form: `TraceId` for the HTTP domain, `RunId` for the job domain, each constrained to exactly 32 lowercase hexadecimal characters, with `CK_SecurityAuditLog_Correlation` enforcing the exactly-one rule and selecting which column by the `Producer` value. The requirement this catalog places on the store is that the correlation not be **request-only**, because three of its sixteen classes have no request — and the owner's two columns express that better than one shared column could, since a single column carries a value with no statement of which domain produced it. **The split is `13 + 2 + 1`, and it is written that way here for the same reason §6.8.1.1 gives**: thirteen application-produced classes populate `TraceId`, the **two** tool-produced ones populate `RunId`, and the reserved sixteenth populates **neither**, because nothing emits it — so the three request-less classes are not three producers, and a row that said "three tool-produced" would put a column requirement on a class with no producer to place it. An earlier form of this row asked for one column serving both domains; that request is withdrawn in favour of the owner's pair |
+| 3 | **A correlation identifier in two domains** — the request's W3C `trace-id` for the thirteen application-produced classes, the run identifier for the two tool-produced ones (third convention above; the reserved sixteenth class populates neither, because nothing emits it) | **Two columns, each 32 characters and each nullable**, with exactly one populated per row. [06 §9.5](06-azure-hosting-recommendations.md) declares them and this document requires that form: `TraceId` for the HTTP domain, `RunId` for the job domain, each constrained to exactly 32 lowercase hexadecimal characters, with `CK_SecurityAuditLog_Correlation` enforcing the exactly-one rule and selecting which column by the `Producer` value. The requirement this catalog places on the store is that the correlation not be **request-only**, because three of its sixteen classes have no request — and the owner's two columns express that better than one shared column could, since a single column carries a value with no statement of which domain produced it. **The split is `13 + 2 + 1`, and it is written that way here for the same reason §6.8.1.1 gives**: thirteen application-produced classes populate `TraceId`, the **two** tool-produced ones populate `RunId`, and the reserved sixteenth populates **neither**, because nothing emits it — so the three request-less classes are not three producers, and a row that said "three tool-produced" would put a column requirement on a class with no producer to place it. This row therefore asks for the owner's pair, and never for one column serving both domains |
 | 4 | **Every permitted field beyond the implicit set, as structured properties** — never interpolated prose (fourth convention) | The columns carry the implicit set and the actor, target and outcome; **every remaining permitted field of a class lands in the JSON field column**. For the widest row, class 16 on `Failed_ArgumentRejected`, that is `RoleName`, `Operation`, `SuppliedActorClaim`, `ActorSource`, `FailureCategory`, `RejectedField` and `RejectionRule` — seven bounded values, each a code or a bounded identifier and none a free-form message, which is what keeps the widest record inside a kilobyte-scale bound. A class whose fields would not fit is a design error in this catalog, not a reason for the store to spill to prose |
 
 **Where this catalog and the owner's schema meet, and why the requirement is stated anyway.** Under the
@@ -2791,10 +2785,10 @@ owner can take on the producer's behalf, which is why requirements 1 and 2 above
 rather than left to whatever the schema happens to declare. Both are **satisfied by the DDL
 [06 §9.5](06-azure-hosting-recommendations.md) now publishes**: in its `CREATE TABLE dbo.SecurityAuditLog`
 the `Actor` column is `nvarchar(128)`, and `CK_SecurityAuditLog_Severity` admits `Error` alongside the other
-two levels this catalog emits. An earlier form of that DDL satisfied neither, and both were recorded here as
-corrections required before the table is created at [06 §6.3](06-azure-hosting-recommendations.md) step 1;
-the corrections have been made, and these two rows are now checks against the owner's current text rather
-than outstanding work against it. What does not change is that neither would ever have been worked around on
+two levels this catalog emits. So these two rows are **checks against the owner's current text rather
+than outstanding work against it**, and they are re-checked before the table is created at
+[06 §6.3](06-azure-hosting-recommendations.md) step 1.
+Neither would ever have been worked around on
 this side — writing `Critical` where this catalog says `Error`, or truncating an actor to fit, would each
 replace a schema defect with a false record, which is the reasoning that makes the requirement legible
 whether or not the schema currently meets it.
@@ -2809,14 +2803,14 @@ whether or not the schema currently meets it.
 | 6 | Password changed | `ACCT-2002` | `UserId` | the same `UserId` | `Success` | **Warning** | `ClientIpAddress`; `RehashedOnSignIn` (bool) where the write was a migration rehash on sign-in rather than a user action. **This field is set only from the rehash seam §6.8.1.1 specifies, and only on a store-observed successful hash change** — never from the hasher's `SuccessRehashNeeded` advice, which is produced before persistence is attempted, and never inferred from a successful sign-in. A rehash whose store update failed produces **no** record of this class, only the distinct diagnostic that seam names. If the seam is not built the field is not permitted, because a guessed value in an audit record is worse than an absent one |
 | 7 | Password change failed | `ACCT-2003` | `UserId` | the same `UserId` | `IncorrectCurrentPassword`, `PolicyRejected` | **Warning** | `PolicyRuleViolated` — the rule identifier, never the candidate password; `ClientIpAddress` |
 | 8 | Role granted | `AUTHZ-3001` | The **validated actor** of §6.8.1's fourth convention, by the same precedence as row 16: the run-initiator identity the platform attests where it attests one — which is the Identity data migration's only source, since it reads no actor variable — otherwise the provisioning command's validated `MUSICSTORE_AUDIT_ACTOR` value. **Not** a `UserId` taken from a web request: §6.8.1.1 assigns this class no application producer, because nothing in the ported application grants a role. `deploymentPrincipal` is one value a pipeline may supply, not a fixed literal | `UserId` of the grantee | `Success`, `AlreadyHeld` — the command emits `Success` only, on the run that actually adds the membership; `AlreadyHeld` is the migration's outcome for an assignment already present in the target (§6.8.1.1) | **Warning** | `RoleName` — a member of the closed role set; `ActorSource`; `SuppliedActorClaim` where the producer reads the actor variable, which the migration does not, so the field is **absent** on its records rather than empty |
-| 9 | Role revoked | `AUTHZ-3002` | **Reserved: this class has no producer, so it has no actor.** Nothing in the target withdraws a role. [05 §10.2](05-aspnet-core-migration-approach.md) property 3 states the provisioning command never deletes or demotes anything; its verb table is closed and contains no revoke verb; and the `admin` verb's accepted switch set is closed at four, none of which asks for a revocation. An earlier form of this row attributed the class to a "revoke mode" of the provisioning command, specified in a "property 3a" of [05 §10.2](05-aspnet-core-migration-approach.md) — a property that section does not define and a mode it does not describe — so the attribution is **withdrawn** rather than re-pointed at some other producer, because there is none to re-point it at. §6.8.1.1's note below the producer table states what that costs and who owns closing it | reserved with the class | reserved with the class. `Success` — an **actual** removal — is the only outcome it would ever carry, and it is **unreachable today** because no operation performs a removal. No other class silently absorbs the fact: there is no attempt to record either, since nothing attempts it | **Warning** | reserved with the class: `RoleName` — a member of the closed role set; `SuppliedActorClaim`; `ActorSource`. The field list is stated rather than left blank so that a future producer inherits a defined record shape instead of inventing one, and so [06 §9.5](06-azure-hosting-recommendations.md)'s table needs no change when it arrives |
+| 9 | Role revoked | `AUTHZ-3002` | **Reserved: this class has no producer, so it has no actor.** Nothing in the target withdraws a role. [05 §10.2](05-aspnet-core-migration-approach.md) property 3 states the provisioning command never deletes or demotes anything; its verb table is closed and contains no revoke verb; and the `admin` verb's accepted switch set is closed at four, none of which asks for a revocation. There is no "revoke mode" of the provisioning command to attribute the class to, and no "property 3a" of [05 §10.2](05-aspnet-core-migration-approach.md) to specify one — that section defines no such property and describes no such mode — so the attribution such a citation would carry is **withdrawn** rather than re-pointed at some other producer, because there is none to re-point it at. §6.8.1.1's note below the producer table states what that costs and who owns closing it | reserved with the class | reserved with the class. `Success` — an **actual** removal — is the only outcome it would ever carry, and it is **unreachable today** because no operation performs a removal. No other class silently absorbs the fact: there is no attempt to record either, since nothing attempts it | **Warning** | reserved with the class: `RoleName` — a member of the closed role set; `SuppliedActorClaim`; `ActorSource`. The field list is stated rather than left blank so that a future producer inherits a defined record shape instead of inventing one, and so [06 §9.5](06-azure-hosting-recommendations.md)'s table needs no change when it arrives |
 | 10 | Authorization denied | `AUTHZ-3003` | `UserId`, or `anonymous` | the route reached — controller and action names | `Denied` | **Warning** | `DenialKind` — `Challenged` or `Forbidden`, the two closed values §6.8.1.1's seam 2 reads from `PolicyAuthorizationResult`, separating an unauthenticated caller from an authenticated one who is not permitted; `RequiredPolicy` — **derived from the endpoint's `IAuthorizeData` metadata and validated against a closed set**, by the four-step rule in seam 2, and **not** from the `AuthorizationPolicy` argument, which carries no name; `ControllerName`; `ActionName`; `ClientIpAddress` |
 | 11 | Album created | `ADMIN-4001` | `UserId` | `AlbumId` on `Success`; **`none`** on `ValidationFailed`, because no row was inserted and no key was allocated | `Success`, `ValidationFailed` | Information | `AlbumId` on `Success` only; `GenreId`; `ArtistId`; `ValidationFailureCategory` on `ValidationFailed` — a code, never the submitted field values |
 | 12 | Album updated | `ADMIN-4002` | `UserId` | `AlbumId` | `Success`, `NotFound`, `ValidationFailed` | Information | `AlbumId`; the **names** of the properties changed — never their before and after values, which may include price |
 | 13 | Album deleted | `ADMIN-4003` | `UserId` | `AlbumId` | `Success`, `AbsentRow`. **`NotFound` is a retired spelling for this record id**, named here so that a citation of it resolves instead of reading as a live third value; it stays live elsewhere in this catalog, including row 12 above, where it names a genuine 404. The retirement is scoped to this id and not to the word: `DeleteConfirmed`'s null branch answers a **preserved 500**, not a 404 ([05 §4.15](05-aspnet-core-migration-approach.md) census site F5, and F-09-37 in §6.3), so an outcome word borrowed from a status the site does not return would make the record contradict the response beside it | **Per outcome — `Success` at `Warning`, `AbsentRow` at `Error`** — and this is the one row in the catalog whose severity is not single-valued. `Warning` for a completed deletion, because it is the administration operation with no undo. `Error` for the absent-row branch, because that record is the only one accompanying a served **500**, and writing it at `Warning` would leave a served 500 invisible to every error-severity alert. **The split of ownership is settled, not held open:** the *behaviour* — the preserved 500, the single record and this severity pair — is [05 §6.5](05-aspnet-core-migration-approach.md)'s, and the *vocabulary* is this catalog's, which is exactly the division that section states | `AlbumId` |
 | 14 | Order placed | `ORDER-5001` | `UserId` | `OrderId` | `Success` | Information | `OrderId`; `LineItemCount`; `OrderTotal`; `PromoCodeApplied` (bool — **not** the code). The boolean is [06 §9.2](06-azure-hosting-recommendations.md)'s sanction rather than this document's addition: that section's never-logged table places the promo code under business inputs and states that its *application* is recorded as a boolean and its value never, and its closed order-record list names the boolean explicitly as part of that list rather than as an addition to it. The two statements in 06 agree, and this field is written under both |
 | 15 | Order placement failed | `ORDER-5002` | `UserId` | `OrderId` where one was allocated, else `none` | `ValidationFailed`, `EmptyCart`, `PersistenceFailed` | **Error** | `FailureCategory`; `LineItemCount`. **The exception detail goes to the error log, not to this record**, and never onto a response-bound channel — F-09-14 and §4.9 |
-| 16 | Administrator provisioning operation | `PROV-6001` | the **validated actor** of §6.8.1's fourth convention, by its **precedence**: the run-initiator identity the execution platform supplies **is** the `Actor` wherever the platform supplies one; only where it supplies none is the `Actor` the validated value the command requires on **`MUSICSTORE_AUDIT_ACTOR`**, the invocation-scoped environment variable [05 §10.2](05-aspnet-core-migration-approach.md) property 4 makes the actor's only channel — that section states in as many words that it is **not** a switch, and an invocation that passed the actor on the command line is rejected by its closed pre-parse before any host is built. The supplied value is **always** recorded separately as `SuppliedActorClaim`, and `ActorSource` names which channel produced the `Actor`, so a supplied value can never overwrite an attested one. **Both actor-side values** — the `Actor` and the `SuppliedActorClaim` — are checked against the closed character set, **rejected outright** on any control character or line break, and bounded at 128 characters with a longer value rejected rather than truncated; the target username and the role name are validated against **their own** domains, per the same convention. Every value is written as a property of a structured record rather than interpolated into a line — an unvalidated externally supplied value in an audit field is CWE-117. `deploymentPrincipal` is one such value a pipeline may supply, not a fixed literal | the **target username**, validated against the user-name set [05 §6.1](05-aspnet-core-migration-approach.md) owns — this document states no set of its own — per §6.8.1's fourth convention, and present on every outcome the run **reached**. That includes `Failed_UserNotFound`, where the name passed validation and simply named no account — an outcome **reserved with row 9's class** and unreachable on any run this plan produces, because the provisioning run creates the account it does not find ([05 §10.2](05-aspnet-core-migration-approach.md) property 3) and no other run exists; the field rule is stated so that a producer which one day resolves an account without creating it inherits it. On the one outcome where a supplied value is what failed validation, `Failed_ArgumentRejected`, the field is **declared absent** — never the submitted value, and never a reserved literal either, because every legal user name is a possible account name and reserving one would make that account unmanageable through this command: the rejection contract below the table fixes this per field, and it is the whole reason that outcome exists separately from `Failed_PolicyRejected` | `RoleCreated`, `RoleAlreadyExisted`, `UserCreated`, `Created`, `AlreadyPresent_NotRotated`, `Rotated`, `MembershipAdded`, `MembershipAlreadyPresent`, `MembershipRevoked`, `MembershipNotHeld`, `NotAttempted`, `RunSucceeded`, and the **six** closed failure outcomes `Failed_ArgumentRejected`, `Failed_UserNotFound`, `Failed_PolicyRejected`, `Failed_PublishedCredentialRefused`, `Failed_IdentityError`, `Failed_StoreUnavailable`. **Three of those values are reserved with row 9's class and are not reachable on any run this plan produces** — `MembershipRevoked`, `MembershipNotHeld` and `Failed_UserNotFound`, each of which presupposes a removal or a resolve-without-create that no operation performs — so the set is **closed at eighteen values of which fifteen are exercisable**, and the acceptance criteria below count it that way rather than demanding a test for a branch that cannot be entered. **`NotAttempted` and `RunSucceeded` are the two values the four-record invariant requires** and neither is optional: `NotAttempted` is what an operation record carries on an invocation that never reached that operation — which is **every** rejected invocation, all three of whose operation records carry it — and `RunSucceeded` is what the fourth record, the run record, carries where every operation the run reached completed. **`UserAlreadyExisted` is a retired value rather than a nineteenth surviving one**, and it is named here so that a citation of it resolves: [05 §10.2](05-aspnet-core-migration-approach.md) property 4 gives the credential no record of its own, so the account-existence discovery and the credential verdict land on **one** record carrying **one** outcome — `UserCreated` where the account was absent, `Created` where it existed with no password at all, `AlreadyPresent_NotRotated` or `Rotated` where it existed with one — and a separate account-existence value would be a second outcome for that single record, which is why the four above partition the operation and the retired value overlapped three of them. **The audit envelope's own outcome field and its two closed sets are that property's, not this row's** — seven distinct values across the three operation records and the run record, one value being common to both sets — and this catalog restates none of them; the values here are the **security-event** outcome domain that [06 §9.5](06-azure-hosting-recommendations.md)'s column carries and that its register defers to this row to define. `Failed_ArgumentRejected` is the **input-validation** failure and `Failed_PolicyRejected` is now **only** a credential refused by Identity's password policy: an earlier form merged the two, which made the record unreadable — an auditor could not tell a weak password from an operator's typo — and, worse, made the row unimplementable, because the merged outcome required a validated actor and target on a branch that exists precisely because a value was not valid. The rejection contract below the table states the field rules for that outcome. `Created`, `AlreadyPresent_NotRotated` and `Rotated` are the **credential verdict**, carried on the `create-user` record because that is the operation [05 §10.2](05-aspnet-core-migration-approach.md) property 4 gives the credential, and read together with the Operation field: a credential is set only where the account is absent or where the release explicitly asks for a rotation ([06 §12.1](06-azure-hosting-recommendations.md)), so a steady-state run records the not-rotated outcome and changes nothing. Which outcomes each operation may record is the mapping below the table | **Warning** | `RoleName` — a member of the closed role set, per §6.8.1's fourth convention; `Operation` — one of `create-user`, `create-role`, `add-membership`, `run`, the closed discriminator [05 §10.2](05-aspnet-core-migration-approach.md) property 4 fixes and this document restates no spelling of its own for; `SuppliedActorClaim` — the `MUSICSTORE_AUDIT_ACTOR` value as supplied, validated and bounded exactly as the actor is; `ActorSource` — `platformMetadata` or `environmentVariable`; `FailureCategory` on a failure outcome, which is the outcome value itself and **not** Identity's free-form error description; and, on `Failed_ArgumentRejected` only, `RejectedField` and `RejectionRule` — two bounded codes from the closed sets the rejection contract below the table defines, carrying **which** field failed and **which** rule it broke, and nothing whatever derived from the value that failed. **This is the one sanctioned exception to the no-login-name rule**, and its cardinality is **four records per invocation, invariantly**: one for each of the three operations [05 §10.2](05-aspnet-core-migration-approach.md) property 3 checks independently — the user, the role and the membership — plus the **run record** that property 4 makes the fourth, in that order. **Four is a constant rather than a maximum**, so the count holds on the paths that fail and on the paths rejected before any host is built as well as on the successful one, which is what makes it assertable without the consumer branching on how far the run got. **That is the only run shape there is**: an earlier form of this cell counted the credential as a fourth *operation* and a "revoke run" of two operations citing a property 3a that [05 §10.2](05-aspnet-core-migration-approach.md) does not define, and neither exists — the credential has no record of its own and no revoke run can be invoked — so the count here is four on that section's decomposition and the cardinality note below the table states it for one run rather than two. The grant *fact* is `AUTHZ-3001` and is **never the same record as a `PROV-6001`** — see that note, which also carries the withdrawal of the revoke counts and the reservation of row 9's class. Its sink and retention are [06 §9.5](06-azure-hosting-recommendations.md)'s, not the application's |
+| 16 | Administrator provisioning operation | `PROV-6001` | the **validated actor** of §6.8.1's fourth convention, by its **precedence**: the run-initiator identity the execution platform supplies **is** the `Actor` wherever the platform supplies one; only where it supplies none is the `Actor` the validated value the command requires on **`MUSICSTORE_AUDIT_ACTOR`**, the invocation-scoped environment variable [05 §10.2](05-aspnet-core-migration-approach.md) property 4 makes the actor's only channel — that section states in as many words that it is **not** a switch, and an invocation that passed the actor on the command line is rejected by its closed pre-parse before any host is built. The supplied value is **always** recorded separately as `SuppliedActorClaim`, and `ActorSource` names which channel produced the `Actor`, so a supplied value can never overwrite an attested one. **Both actor-side values** — the `Actor` and the `SuppliedActorClaim` — are checked against the closed character set, **rejected outright** on any control character or line break, and bounded at 128 characters with a longer value rejected rather than truncated; the target username and the role name are validated against **their own** domains, per the same convention. Every value is written as a property of a structured record rather than interpolated into a line — an unvalidated externally supplied value in an audit field is CWE-117. `deploymentPrincipal` is one such value a pipeline may supply, not a fixed literal | the **target username**, validated against the user-name set [05 §6.1](05-aspnet-core-migration-approach.md) owns — this document states no set of its own — per §6.8.1's fourth convention, and present on every outcome the run **reached**. That includes `Failed_UserNotFound`, where the name passed validation and simply named no account — an outcome **reserved with row 9's class** and unreachable on any run this plan produces, because the provisioning run creates the account it does not find ([05 §10.2](05-aspnet-core-migration-approach.md) property 3) and no other run exists; the field rule is stated so that a producer which one day resolves an account without creating it inherits it. On the one outcome where a supplied value is what failed validation, `Failed_ArgumentRejected`, the field is **declared absent** — never the submitted value, and never a reserved literal either, because every legal user name is a possible account name and reserving one would make that account unmanageable through this command: the rejection contract below the table fixes this per field, and it is the whole reason that outcome exists separately from `Failed_PolicyRejected` | `RoleCreated`, `RoleAlreadyExisted`, `UserCreated`, `Created`, `AlreadyPresent_NotRotated`, `Rotated`, `MembershipAdded`, `MembershipAlreadyPresent`, `MembershipRevoked`, `MembershipNotHeld`, `NotAttempted`, `RunSucceeded`, and the **six** closed failure outcomes `Failed_ArgumentRejected`, `Failed_UserNotFound`, `Failed_PolicyRejected`, `Failed_PublishedCredentialRefused`, `Failed_IdentityError`, `Failed_StoreUnavailable`. **Three of those values are reserved with row 9's class and are not reachable on any run this plan produces** — `MembershipRevoked`, `MembershipNotHeld` and `Failed_UserNotFound`, each of which presupposes a removal or a resolve-without-create that no operation performs — so the set is **closed at eighteen values of which fifteen are exercisable**, and the acceptance criteria below count it that way rather than demanding a test for a branch that cannot be entered. **`NotAttempted` and `RunSucceeded` are the two values the four-record invariant requires** and neither is optional: `NotAttempted` is what an operation record carries on an invocation that never reached that operation — which is **every** rejected invocation, all three of whose operation records carry it — and `RunSucceeded` is what the fourth record, the run record, carries where every operation the run reached completed. **`UserAlreadyExisted` is a retired value rather than a nineteenth surviving one**, and it is named here so that a citation of it resolves: [05 §10.2](05-aspnet-core-migration-approach.md) property 4 gives the credential no record of its own, so the account-existence discovery and the credential verdict land on **one** record carrying **one** outcome — `UserCreated` where the account was absent, `Created` where it existed with no password at all, `AlreadyPresent_NotRotated` or `Rotated` where it existed with one — and a separate account-existence value would be a second outcome for that single record, which is why the four above partition the operation and the retired value overlapped three of them. **The audit envelope's own outcome field and its two closed sets are that property's, not this row's** — seven distinct values across the three operation records and the run record, one value being common to both sets — and this catalog restates none of them; the values here are the **security-event** outcome domain that [06 §9.5](06-azure-hosting-recommendations.md)'s column carries and that its register defers to this row to define. `Failed_ArgumentRejected` is the **input-validation** failure and `Failed_PolicyRejected` is **only** a credential refused by Identity's password policy, and the two are **never merged**: a merged outcome makes the record unreadable — an auditor could not tell a weak password from an operator's typo — and, worse, makes the row unimplementable, because it would require a validated actor and target on a branch that exists precisely because a value was not valid. The rejection contract below the table states the field rules for that outcome. `Created`, `AlreadyPresent_NotRotated` and `Rotated` are the **credential verdict**, carried on the `create-user` record because that is the operation [05 §10.2](05-aspnet-core-migration-approach.md) property 4 gives the credential, and read together with the Operation field: a credential is set only where the account is absent or where the release explicitly asks for a rotation ([06 §12.1](06-azure-hosting-recommendations.md)), so a steady-state run records the not-rotated outcome and changes nothing. Which outcomes each operation may record is the mapping below the table | **Warning** | `RoleName` — a member of the closed role set, per §6.8.1's fourth convention; `Operation` — one of `create-user`, `create-role`, `add-membership`, `run`, the closed discriminator [05 §10.2](05-aspnet-core-migration-approach.md) property 4 fixes and this document restates no spelling of its own for; `SuppliedActorClaim` — the `MUSICSTORE_AUDIT_ACTOR` value as supplied, validated and bounded exactly as the actor is; `ActorSource` — `platformMetadata` or `environmentVariable`; `FailureCategory` on a failure outcome, which is the outcome value itself and **not** Identity's free-form error description; and, on `Failed_ArgumentRejected` only, `RejectedField` and `RejectionRule` — two bounded codes from the closed sets the rejection contract below the table defines, carrying **which** field failed and **which** rule it broke, and nothing whatever derived from the value that failed. **This is the one sanctioned exception to the no-login-name rule**, and its cardinality is **four records per invocation, invariantly**: one for each of the three operations [05 §10.2](05-aspnet-core-migration-approach.md) property 3 checks independently — the user, the role and the membership — plus the **run record** that property 4 makes the fourth, in that order. **Four is a constant rather than a maximum**, so the count holds on the paths that fail and on the paths rejected before any host is built as well as on the successful one, which is what makes it assertable without the consumer branching on how far the run got. **That is the only run shape there is**: the credential is not a fourth *operation* — it has no record of its own — and there is no "revoke run" of two operations to count, the property 3a of [05 §10.2](05-aspnet-core-migration-approach.md) such a run would rest on being undefined there and no revoke run being invocable — so the count here is four on that section's decomposition and the cardinality note below the table states it for one run rather than two. The grant *fact* is `AUTHZ-3001` and is **never the same record as a `PROV-6001`** — see that note, which also carries the withdrawal of the revoke counts and the reservation of row 9's class. Its sink and retention are [06 §9.5](06-azure-hosting-recommendations.md)'s, not the application's |
 
 > **Row 16 is an exception with a stated reason, not an inconsistency.** AAP §0.3.2 requires the
 > provisioning command to leave an audit record of what it did, and the requirement that makes this row
@@ -2832,34 +2826,34 @@ whether or not the schema currently meets it.
 > together, so the two do not read as a contradiction.
 >
 > **And its actor is attributed to a person or a run, never to a fixed literal — under a precedence that
-> keeps the two channels apart.** An earlier form of this row named `deploymentPrincipal` as the actor
-> value, which conflicts with the command's own contract: [05
+> keeps the two channels apart.** Naming `deploymentPrincipal` as the actor
+> value would conflict with the command's own contract: [05
 > §10.2](05-aspnet-core-migration-approach.md) property 4 makes the actor a **required input** the
 > command refuses to run without, precisely so the record attributes the grant to a person or a pipeline
-> run rather than to the identity the process happens to hold. A later form then over-corrected and
-> declared the supplied value to be *exactly* the record's actor, which contradicted the same section's
-> preference for platform attestation and would have let an operator's own string overwrite an attested
-> identity. **Neither reading is the contract.** §6.8.1's fourth convention resolves it as a precedence
+> run rather than to the identity the process happens to hold. Nor is the supplied value
+> *exactly* the record's actor, which would contradict the same section's
+> preference for platform attestation and would let an operator's own string overwrite an attested
+> identity. **Neither reading is the contract.** §6.8.1's fourth convention states it as a precedence
 > with two fields: **platform-supplied initiator metadata is the `Actor` wherever it exists**, the
 > validated supplied value is the `Actor` only where it does not, that value is **always** written
 > to `SuppliedActorClaim`, and `ActorSource` records which channel the `Actor` came from. The requirement
-> the actor satisfies is unchanged — the run is refused without it, so no provisioning record is ever
-> unattributed — but satisfying it no longer means trusting it over an attestation, and a disagreement
+> the actor satisfies is stated exactly — the run is refused without it, so no provisioning record is ever
+> unattributed — and satisfying it does not mean trusting it over an attestation, because a disagreement
 > between the two is preserved in the record instead of being resolved silently. A pipeline supplying
 > `deploymentPrincipal` is one instance of the metadata channel rather than the definition of the field.
 >
-> **A third form of this row is corrected here, and it was the one that made the requirement
-> unsatisfiable.** It attributed the actor to a **command-line argument of its own** and cited
-> [05 §10.2](05-aspnet-core-migration-approach.md) property 4 for it. That section requires the opposite
+> **And the actor is not a command-line argument of this row's own, which is the reading that would make
+> the requirement unsatisfiable.**
+> [05 §10.2](05-aspnet-core-migration-approach.md) property 4 requires the opposite
 > and says so twice: the actor arrives on **`MUSICSTORE_AUDIT_ACTOR`**, an invocation-scoped environment
 > variable rendered by the pipeline from its own authenticated trigger, and "it is **not** a switch" —
 > the `admin` verb's accepted set is closed at four and an invocation that passed the actor on the command
-> line is **rejected** by that section's closed pre-parse. So the earlier text demanded the one invocation
-> shape the parser refuses, and it demanded it while citing the parser. The channel is also the safer of
+> line is **rejected** by that section's closed pre-parse, so an argument-borne actor demands the one
+> invocation shape the parser refuses while citing the parser. The channel is also the safer of
 > the two for the reason that section gives for the password: a command-line value is visible in process
 > listings and recorded by shell and pipeline history, and an invocation-scoped variable is in neither —
-> so nothing this row requires of the actor is weakened by the correction, and the disclosure surface the
-> argument would have created is removed.
+> so nothing this row requires of the actor is weakened by using it, and the disclosure surface an
+> argument would create is absent.
 
 **The cardinality of a provisioning run, stated exactly, because one run emits records of two different
 classes and an implementation that merges them loses the privilege-change fact.** `PROV-6001` is the
@@ -2874,29 +2868,29 @@ touches a membership and it only ever adds one:
 | --- | --- | --- | --- | --- |
 | **Provisioning** | **3** independent checks — `create-user`, `create-role`, `add-membership` — each on its own record, and a fourth record for the **run** ([05 §10.2](05-aspnet-core-migration-approach.md) property 4) | **4**, invariantly and in that order: three operation records at their own outcomes plus the run record. **Four is a constant, not a maximum** — it holds where an operation fails and where the invocation is rejected before any store call, and on that rejected path the three operation records carry `NotAttempted` while the run record carries the rejection, so a reader counts records without first establishing how far the run got | **One `AUTHZ-3001`**, and only where the membership was **actually added** — the run whose `add-membership` record is at `MembershipAdded`. A run that finds the membership already present records that operation at `MembershipAlreadyPresent` and emits **no** `AUTHZ-3001`, because no grant occurred | **5** where the membership was added; **4** on every other path, including rejection |
 
-**A second row is withdrawn from this table, and it is named rather than dropped quietly, because the
-counts it carried are cited elsewhere.** An earlier form carried a **Revoke** run of two operations — a
-user resolve then a membership removal — with three branches, branch cardinalities of one, two and three records, and an
-`AUTHZ-3002` on the branch that removed a held membership, all attributed to a "property 3a" of
-[05 §10.2](05-aspnet-core-migration-approach.md).
-**No such run can be invoked.** [05 §10.2](05-aspnet-core-migration-approach.md) defines properties 1, 1a,
+**There is one run to count, and the second row of this table is withdrawn rather than dropped quietly,
+because the counts it carried are cited elsewhere.**
+**No revoke run can be invoked.** [05 §10.2](05-aspnet-core-migration-approach.md) defines properties 1, 1a,
 1b, 2, 2a, 2b, 3, 4 and 5 and no property 3a; property 3 states the command never deletes or demotes
 anything; its verb table is closed and holds no revoke verb; and the `admin` verb's accepted switch set is
-closed at four, none of which asks for a revocation. So the row counted records of a run that does not
-exist, and **every number in it is withdrawn** — the branch cardinalities, the `Failed_UserNotFound`,
+closed at four, none of which asks for a revocation. The withdrawn row counted records of that
+non-existent run — a **Revoke** run of two operations, a user resolve then a membership removal, with
+three branches, branch cardinalities of one, two and three records, and an `AUTHZ-3002` on the branch that
+removed a held membership, all attributed to a "property 3a" of that section — and
+**every number in it is withdrawn**, together with the `Failed_UserNotFound`,
 `MembershipNotHeld` and `MembershipRevoked` outcomes those branches recorded, and the `AUTHZ-3002` its
 third branch produced. What survives the withdrawal is a **reservation**, not a capability: row 9 keeps
 the identifier, the single outcome and the field shape so that a future revoke capability emits a defined
 record instead of an invented one, and §6.8.1.1's note below the producer table carries the operational
 gap this leaves and the owner of closing it.
 
-**The surviving row's own decomposition is corrected here too, and the record count is unchanged by the
-correction.** An earlier form of that row read the run as **four operations** — role, user, credential and
-membership — with one record each. [05 §10.2](05-aspnet-core-migration-approach.md) property 3 checks
+**The surviving row's decomposition is stated exactly, because the record count does not distinguish
+it.** [05 §10.2](05-aspnet-core-migration-approach.md) property 3 checks
 **three** things independently, and property 4 gives the credential **no record of its own** while adding a
 **run** record as the fourth; the operation names are that section's `create-user`, `create-role` and
-`add-membership`, and this document restates no spelling of its own for them. The total is four either way,
-which is exactly why the earlier form went unnoticed: what it got wrong was **which** four, and therefore
+`add-membership`, and this document restates no spelling of its own for them. Reading the run as **four
+operations** — role, user, credential and membership, one record each — totals four as well,
+which is why such a reading goes unnoticed: what it gets wrong is **which** four, and therefore
 where the credential verdict lands and how many records a rejected invocation emits. Row 16's cell
 above states the consequence for the outcome set.
 
@@ -2918,7 +2912,7 @@ is a defect. The **six** failure outcomes partition too: `Failed_IdentityError` 
 credential refused by Identity's password policy and therefore lands on the `create-user` record, which is
 where the credential verdict belongs, and
 `Failed_ArgumentRejected` is **only** an input refused by the validation rules of §6.8.1's fourth
-convention and therefore lands **only on the run record**, no operation having run. Those last two were one outcome in an earlier form of this catalog and are now separate,
+convention and therefore lands **only on the run record**, no operation having run. Those last two are separate outcomes and are **never merged into one**,
 because they differ in the one way that decides what the record may contain: a policy-rejected credential
 arrives on a run whose actor and target both validated, while an argument rejection is by construction a
 run in which at least one of those values did not.
@@ -2956,12 +2950,12 @@ lookup, no credential write, no membership change — so no **fifth** `PROV-6001
 or `AUTHZ-3002`, can accompany them. The command exits non-zero. This holds however many fields are
 invalid: one invocation, four records, exactly one of which names the first failing field.
 
-*An earlier form of this rule made the rejected path emit **exactly one** record. That contradicted the
+*A rejected path emitting **exactly one** record would contradict the
 four-record invariant [05 §10.2](05-aspnet-core-migration-approach.md) property 4 states for **every**
-path, and it did so in the direction that costs the reader most: a consumer counting records would have
-had to special-case the one path on which nothing is supposed to have happened, and an implementation
-satisfying the earlier rule would have emitted a record set no other invocation produces. The rule is
-restated here as the invariant, and the count the tests assert is four.*
+path, and would do so in the direction that costs the reader most: a consumer counting records would have
+to special-case the one path on which nothing is supposed to have happened, and the implementation would
+emit a record set no other invocation produces. The rule here is the invariant, and the count the tests
+assert is four.*
 
 **Rule 2 — the validation order is fixed, so which field is reported is not an implementation choice.**
 Validation stops at the **first** failing field, and the order is: (1) the actor side — platform
@@ -2985,7 +2979,7 @@ reservation:
 | `ActorSource` | `platformMetadata` or `environmentVariable` exactly as on any other outcome — the field names the channel the `Actor` came from, and on a rejection with no attestation it is `environmentVariable` even though the claim itself was refused, because that is still the channel that produced the sentinel | Its two literals are already closed |
 | `Target` | **Declared absent — always, on this outcome.** Not a literal, not an empty string and not a null: the field is **not present** in the record, and its absence is part of the contract rather than a missing value | **No literal can be reserved in this domain, which is why typed absence replaces one.** The user-name set [05 §6.1](05-aspnet-core-migration-approach.md) owns is letters and digits, so **every** candidate sentinel — `none`, `rejected`, `unknown` — is itself a legal user name, and the Identity migration preserves source user names exactly ([05 §5.5](05-aspnet-core-migration-approach.md)). Reserving one would therefore have made an account that legitimately bears that name **unmanageable by the audited path**, pushing the operator to the hand-edit this whole section exists to eliminate — so **the command reserves no user name and refuses none on account of its text alone**. Absence is representable because the record is a structured document and rule 3 already uses declared absence for `SuppliedActorClaim` and `RoleName`, and it is unambiguous because the reason is carried by the two closed codes of rule 4: `RejectedField = targetUsername` says a target was supplied and failed, and any other `RejectedField` value says validation stopped before the target was ever examined — which is also why an unexamined supplied value must not be written here |
 | `RoleName` | **`rejected`** where a role name was supplied and failed the closed-set check; **absent** where none was supplied | The closed role set is exactly one member, `Administrator`, so `rejected` is provably outside it |
-| `Operation` | **`run`** — the field names the record, and this outcome is the **run** record's, no operation having run; the invocation's other three records carry their own `create-user`, `create-role` and `add-membership` values at `NotAttempted` | Which field failed is `RejectedField` below, **not** `Operation`. *An earlier form of this cell used `Operation` to name the failing field — `user`, `role` or `credential` — which duplicated `RejectedField` in a vocabulary [05 §10.2](05-aspnet-core-migration-approach.md) does not define, and left the field with no value at all where the actor was what failed* |
+| `Operation` | **`run`** — the field names the record, and this outcome is the **run** record's, no operation having run; the invocation's other three records carry their own `create-user`, `create-role` and `add-membership` values at `NotAttempted` | Which field failed is `RejectedField` below, **not** `Operation`. *Using `Operation` to name the failing field — `user`, `role` or `credential` — would duplicate `RejectedField` in a vocabulary [05 §10.2](05-aspnet-core-migration-approach.md) does not define, and would leave the field with no value at all where the actor was what failed* |
 | `FailureCategory` | `Failed_ArgumentRejected`, the outcome value itself | Already closed |
 
 The table states the rule for the **run** record, which is the one of the four that carries
@@ -3041,9 +3035,9 @@ value, most likely the submitted one.
   the missing target is not
   one that was never created but one that **must not be written** — and, unlike rows 5 and 11, its domain
   admits no reservable literal at all, because every letters-and-digits string is a legal user name that
-  the migration may have carried forward from source. *An earlier form of this bullet reserved `rejected`
-  and `none` here and had the command refuse them as supplied user names. That is withdrawn: it made two
-  source-valid accounts unmanageable through the audited command, which contradicts the user-name
+  the migration may have carried forward from source. *Reserving `rejected`
+  and `none` here and having the command refuse them as supplied user names is **excluded**: it would make
+  two source-valid accounts unmanageable through the audited command, which contradicts the user-name
   preservation [05 §5.5](05-aspnet-core-migration-approach.md) requires and trades a real gap for a
   cosmetic one.* The field is **declared absent** on those records, the rejection contract above states
   it per field, and the two closed code sets say **why** it is absent — which is more than a sentinel
@@ -3101,12 +3095,12 @@ what that leaves open and who owns it.
 | `ADMIN-4001`, `ADMIN-4002`, `ADMIN-4003` | The ported web application's administration controller | The input-model actions of [05 §8.11](05-aspnet-core-migration-approach.md), at each branch | The port |
 | `ORDER-5001`, `ORDER-5002` | The ported web application's checkout controller | The ordered write path of [05 §8.12](05-aspnet-core-migration-approach.md), including the failure table that replaces the source's bare `catch` | The port |
 | `AUTHZ-3001` — role granted | **Two producers, and neither is the web application.** The provisioning command for an operator grant; the Identity data migration for each assignment it loads | The command's membership operation; the migration's assignment load, one record per assignment | The provisioning tool for the first; the Identity migration tooling for the second |
-| `AUTHZ-3002` — role revoked | **None. The identifier is reserved and nothing in this plan emits it** — an earlier form of this row named "the provisioning command's revoke mode", which the command does not have | **None.** There is no interception point, because there is no operation to intercept: [05 §10.2](05-aspnet-core-migration-approach.md) property 3 states the command never deletes or demotes, its verb table is closed with no revoke verb, and the `admin` verb's switch set is closed at four. The earlier form cited that section's "property 3a", which it does not define | **Nowhere yet** — first exists in whatever capability a future decision adds, per the note below |
+| `AUTHZ-3002` — role revoked | **None. The identifier is reserved and nothing in this plan emits it** — the command has no revoke mode to attribute it to | **None.** There is no interception point, because there is no operation to intercept: [05 §10.2](05-aspnet-core-migration-approach.md) property 3 states the command never deletes or demotes, its verb table is closed with no revoke verb, and the `admin` verb's switch set is closed at four. An attribution resting on that section's "property 3a" names nothing, because that section does not define one | **Nowhere yet** — first exists in whatever capability a future decision adds, per the note below |
 | `PROV-6001` | The provisioning command | **Four records per invocation, invariantly** — one for each of the three operations [05 §10.2](05-aspnet-core-migration-approach.md) property 3 checks and one for the run, in that section's fixed order and on every path including a rejected invocation — written as one JSON object per line to the command's **standard output** by a **dedicated serializer and not through `ILogger`**, because the pre-host rejection path has no logger to resolve, then selected by event name and count and lodged as one append-only blob by the four-hop route of [06 §9.5.1](06-azure-hosting-recommendations.md) | The provisioning tool |
 
 > **`AUTHZ-3002` is a reserved identifier with no producer, and this note is the whole of its status.**
-> An earlier form of this catalog attributed the class to "the provisioning command's revoke mode",
-> specified in a "property 3a" of [05 §10.2](05-aspnet-core-migration-approach.md). **That property does
+> There is no producer to attribute it to: no "revoke mode" of the provisioning command, and no
+> "property 3a" of [05 §10.2](05-aspnet-core-migration-approach.md) specifying one. **That property does
 > not exist and that mode does not exist.**
 > [05 §10.2](05-aspnet-core-migration-approach.md) defines properties 1, 1a, 1b, 2, 2a, 2b, 3, 4 and 5;
 > its property 3 states the command never deletes or demotes anything; its verb table is closed and holds
@@ -3188,9 +3182,9 @@ of one, and no ordering claim stronger than the hand-off in (a), is made anywher
   absorbed: **F-09-32's closure asserts that every class is emitted and that each producer's collection
   path works, which is strictly weaker than every individual record surviving**, and no gate, query or
   acceptance criterion here is written as though the stronger property held. There is likewise no
-  write-once, append-only or otherwise immutable destination to appeal to — 06 §9.5 withdrew the one this
-  sub-section's earlier form assumed, as the amendment paragraph of §6.8.1 records, and §6.8.2 carries the
-  one control that the withdrawal costs — control 3, the legal hold — as an accepted gap with named owners.
+  write-once, append-only or otherwise immutable destination to appeal to — 06 §9.5 withdrew the immutable
+  store, as the amendment paragraph of §6.8.1 records, and §6.8.2 carries the
+  one control that withdrawal costs — control 3, the legal hold — as an accepted gap with named owners.
 
 **The one fail-closed requirement this document does make is a different kind of thing, and the
 distinction is worth keeping visible.** The `SubjectPseudonym` key contract above requires the application
@@ -3231,10 +3225,10 @@ change**, and the seam that observes it is a second override, not the hasher.
 | --- | --- |
 | **Artifact 1 — the observer** | `RehashObservingPasswordHasher : IPasswordHasher<ApplicationUser>`, a **decorator whose single hasher dependency is the *concrete* `PasswordHasher<ApplicationUser>`** — never the `IPasswordHasher<ApplicationUser>` service type the decorator is itself registered as, for the reason the registration row below states in full — and **there is one of it, not one per consumer**. [05 §4.3](05-aspnet-core-migration-approach.md) owns the composition root, writes the registration lines and registers this same artifact for its own uniform-cost purpose; **this row and the registration row below own the constructor dependency and the registration shape, and they are what [04](04-dotnet8-migration-strategy.md) and 05 cite for the mechanism**. On `VerifyHashedPassword` it delegates to the inner hasher, records that a derivation ran and whether the inner result was `PasswordVerificationResult.SuccessRehashNeeded`, and **returns the inner value unchanged**. It **never emits** — it only observes. *A subclass of `PasswordHasher<ApplicationUser>` overriding the same method is equally possible — the type is not sealed and the method is virtual in the `Microsoft.AspNetCore.App.Ref` **8.0.30** reference pack — and is deliberately **not** the specified form: it would fork this artifact into two incompatible types, and a subclass binds its own base implementation at compile time where the decorator's inner hasher is a registration that can be changed without touching this type* |
 | **Artifact 2 — the store seam that emits** | `AuditingUserManager : UserManager<ApplicationUser>` — the **same subclass seam 3 introduces**, one type with two overrides — additionally overriding `protected virtual Task<IdentityResult> UpdateUserAsync(ApplicationUser user)`. That member is `protected virtual` and returns `Task<IdentityResult>` in the **8.0.30** reference pack, and it is the single point every credential write funnels through: `CheckPasswordAsync` reaches it via the equally `protected virtual` `UpdatePasswordHash`, and `ChangePasswordAsync`, `ResetPasswordAsync` and `AddPasswordAsync` reach it the same way. The override calls `base`, holds the returned `IdentityResult`, decides emission from it, and **returns it unchanged** |
-| **The signal — one scoped object, one name** | **`PasswordDerivationObservation`**, the scoped per-request state [05 §4.3](05-aspnet-core-migration-approach.md) declares and whose two readers it already names: its uniform-cost top-up, and this seam's `ACCT-2002` producer. It is **one service with two consumers**, not two services — an earlier form of this section called it `PasswordRehashSignal`, which is the same object under a second name and is recorded here only so the two identifiers are not implemented as two registrations. Scoped, so it is neither static nor ambient and two concurrent sign-ins cannot see each other's value. Its members and their owners: **`DerivationRan`**, the format marker and the iteration count, all set by artifact 1 and owned by 05 §4.3 for the top-up; **`RehashObserved`**, set by artifact 1 where the inner result was `SuccessRehashNeeded`; and **`UserInitiatedCredentialChange`**, set by the change-password action before it calls `ChangePasswordAsync`. The last two are this seam's, and the second of them is the one addition this seam makes to 05's declared shape |
+| **The signal — one scoped object, one name** | **`PasswordDerivationObservation`**, the scoped per-request state [05 §4.3](05-aspnet-core-migration-approach.md) declares and whose two readers it already names: its uniform-cost top-up, and this seam's `ACCT-2002` producer. It is **one service with two consumers**, not two services — `PasswordRehashSignal` is a second name for this same object, named here only so the two identifiers are never implemented as two registrations. Scoped, so it is neither static nor ambient and two concurrent sign-ins cannot see each other's value. Its members and their owners: **`DerivationRan`**, the format marker and the iteration count, all set by artifact 1 and owned by 05 §4.3 for the top-up; **`RehashObserved`**, set by artifact 1 where the inner result was `SuccessRehashNeeded`; and **`UserInitiatedCredentialChange`**, set by the change-password action before it calls `ChangePasswordAsync`. The last two are this seam's, and the second of them is the one addition this seam makes to 05's declared shape |
 | **Read and reset — exactly where, and by whom** | The two audit members are **consume-once**: they are read in **one** place, inside artifact 2's `UpdateUserAsync` override, **after** `base` returns, and the read **clears** the member as part of the same read. Both are read **unconditionally at that point, before the emission decision is taken** — not only on the branch that emits — because a write that failed must still consume the observation, or a set flag would survive into the next `UpdateUserAsync` of the same request and that later, unrelated write would emit a rehash record for a rehash that never persisted. Nothing else reads or writes them. Consume-once matters because a successful sign-in can reach `UpdateUserAsync` **more than once** in one request — the rehash write, and then the reset of an accumulated access-failed count — so only the first of those reads a set flag and the rehash is audited exactly once. 05 §4.3's own members are **not** consume-once: the top-up reads `DerivationRan` on the request path before any store write, and this seam neither reads nor clears them, so the two consumers cannot interfere. Every member is at its default at the start of each request, because the object's lifetime is the request |
 | **Concurrent verification of one account** | Two simultaneous sign-ins for the same legacy-hash account are two request scopes, so **two** observations are set and **two** `UpdateUserAsync` calls are attempted. Emission follows each call's **own** `IdentityResult`, and `ApplicationUser.ConcurrencyStamp` — which the Identity migration populates for every account — makes at most one of the two writes succeed. So at most **one** `ACCT-2002` with `RehashedOnSignIn` is emitted for the account, and the losing request emits the failed-update diagnostic below instead, which is the correct account of what happened to it. This class therefore needs **no** de-duplication key: unlike `AUTH-1003` in seam 3, whose multiplicity comes from delivery semantics, `ACCT-2002`'s cardinality is bounded by the store's own concurrency control, and adding a key would imply a multiplicity this design does not have |
-| **Registration — four registrations, one of each artifact, and the inner hasher is one of them** | **The defect this row exists to prevent, stated before the shape, because an earlier form of this row specified it.** A decorator registered *as* `IPasswordHasher<ApplicationUser>` whose constructor parameter is also `IPasswordHasher<ApplicationUser>` is **self-referential**: the container satisfies that parameter through the same service type, which resolves to the decorator, and the resolution recurses until it fails. `Microsoft.Extensions.DependencyInjection` has **no descriptor-capturing decoration primitive**, so no registration order and no "wrap the previously registered hasher" phrasing rescues the shape — it cannot be constructed at all, and the third-party library that supplies such a primitive is a package neither [02](02-dependency-inventory.md) nor [04](04-dotnet8-migration-strategy.md) carries. **The mechanism, which is this row's to state:** the inner hasher is made **separately resolvable by its concrete type**, and the decorator depends on that concrete type. The four registrations, each written once, are (1) `PasswordDerivationObservation` as a **scoped** service; (2) **`PasswordHasher<ApplicationUser>` registered as its own concrete type, scoped** — the type is public and non-sealed and its constructor parameter is an `IOptions<PasswordHasherOptions>` in the `Microsoft.AspNetCore.App.Ref` **8.0.30** reference pack, which the container satisfies from the options Identity already configures; (3) `RehashObservingPasswordHasher` as the `IPasswordHasher<ApplicationUser>` implementation, **scoped**, taking (2) and (1) as its constructor dependencies; and (4) `AuditingUserManager` exactly once, by seam 3's `AddIdentity<ApplicationUser, IdentityRole>().AddUserManager<AuditingUserManager>()`, so every caller including `SignInManager` goes through both of that type's overrides. **The property that makes the seam constructible is that (3) does not depend on the interface at all** — no ordering can make the interface resolve to itself — and the placement of the lines relative to `AddIdentity`, which decides only *which* descriptor the interface resolves to, is [05 §4.3](05-aspnet-core-migration-approach.md)'s to fix and is fixed there. **No fifth registration exists**: one observation object, one inner hasher, one decorator, one user manager. There is no separate rehash-signal service, no second decorator and no second user manager, and an implementation that adds one has two objects where the contract has one; an implementation that omits (2) has a shape the container cannot build, which is a startup failure rather than a missing audit record |
+| **Registration — four registrations, one of each artifact, and the inner hasher is one of them** | **The defect this row exists to prevent, stated before the shape.** A decorator registered *as* `IPasswordHasher<ApplicationUser>` whose constructor parameter is also `IPasswordHasher<ApplicationUser>` is **self-referential**: the container satisfies that parameter through the same service type, which resolves to the decorator, and the resolution recurses until it fails. `Microsoft.Extensions.DependencyInjection` has **no descriptor-capturing decoration primitive**, so no registration order and no "wrap the previously registered hasher" phrasing rescues the shape — it cannot be constructed at all, and the third-party library that supplies such a primitive is a package neither [02](02-dependency-inventory.md) nor [04](04-dotnet8-migration-strategy.md) carries. **The mechanism, which is this row's to state:** the inner hasher is made **separately resolvable by its concrete type**, and the decorator depends on that concrete type. The four registrations, each written once, are (1) `PasswordDerivationObservation` as a **scoped** service; (2) **`PasswordHasher<ApplicationUser>` registered as its own concrete type, scoped** — the type is public and non-sealed and its constructor parameter is an `IOptions<PasswordHasherOptions>` in the `Microsoft.AspNetCore.App.Ref` **8.0.30** reference pack, which the container satisfies from the options Identity already configures; (3) `RehashObservingPasswordHasher` as the `IPasswordHasher<ApplicationUser>` implementation, **scoped**, taking (2) and (1) as its constructor dependencies; and (4) `AuditingUserManager` exactly once, by seam 3's `AddIdentity<ApplicationUser, IdentityRole>().AddUserManager<AuditingUserManager>()`, so every caller including `SignInManager` goes through both of that type's overrides. **The property that makes the seam constructible is that (3) does not depend on the interface at all** — no ordering can make the interface resolve to itself — and the placement of the lines relative to `AddIdentity`, which decides only *which* descriptor the interface resolves to, is [05 §4.3](05-aspnet-core-migration-approach.md)'s to fix and is fixed there. **No fifth registration exists**: one observation object, one inner hasher, one decorator, one user manager. There is no separate rehash-signal service, no second decorator and no second user manager, and an implementation that adds one has two objects where the contract has one; an implementation that omits (2) has a shape the container cannot build, which is a startup failure rather than a missing audit record |
 | **Emission — the exact contract** | Inside the `UpdateUserAsync` override, after `base` returns: emit **one** `ACCT-2002` at `Success` with `RehashedOnSignIn = true` **if and only if** (a) the returned `IdentityResult.Succeeded` is **true** *and* (b) the scoped `RehashObserved` flag is set *and* (c) `UserInitiatedCredentialChange` is **not** set. Any other combination emits **no** `ACCT-2002` from this seam. The record accompanies the sign-in's `AUTH-1001`, which the controller emits as before. A user-initiated change is unaffected: condition (c) suppresses the rehash record — the hasher also reports `SuccessRehashNeeded` while verifying the *current* password on a legacy-hash account, and without (c) one credential change would write two `ACCT-2002` records — and the change-password action emits its own `ACCT-2002` at `Success` on the `IdentityResult` success branch, **without** `RehashedOnSignIn`. **One credential change, one record, in every combination** |
 | **Failed update — a distinct diagnostic, not an `ACCT-2002`** | Where (b) holds and `IdentityResult.Succeeded` is **false**, the store did not persist the rehash and the account still holds its legacy hash. The seam emits **no** `ACCT-2002` and instead **one diagnostic record on the ordinary application diagnostic channel** — not into this catalog, which stays at **sixteen** classes — at **Warning**, carrying the `UserId`, the operation label `credential-rehash`, the request correlation identifier and Identity's error **codes**. Never the error descriptions, never the candidate or stored hash: the permitted-content rules of [06 §9.2](06-azure-hosting-recommendations.md) and [05 §8.3](05-aspnet-core-migration-approach.md) govern it exactly as they govern any diagnostic. It is a **diagnostic, not an audit fact**, because nothing security-relevant changed — which is the whole point of separating the two |
 | **Behaviour impact** | **None.** Artifact 1 returns the inner verification result untouched and artifact 2 returns the base `IdentityResult` untouched, so verification, rehash, sign-in and every other credential write behave exactly as the framework's own types. Emission is wrapped so that a failure to write a record cannot alter or block the returned result — statement **(b)** of the emission contract above, which seam 2 states in the same words for the response |
@@ -3254,7 +3248,7 @@ while intending only to add a log record.
 | **Registration** | `services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditingAuthorizationMiddlewareResultHandler>();`. The framework registers its default with `TryAddSingleton`, so an explicit registration takes precedence; the inner handler is constructed directly rather than resolved, because the interface now resolves to the decorator |
 | **Emission** | Where the authorization result did **not** succeed — challenged or forbidden — one `AUTHZ-3003` record at `Denied`, carrying `DenialKind`, `RequiredPolicy`, and `ControllerName` and `ActionName` from the endpoint's `ControllerActionDescriptor` metadata (`ControllerName` and `ActionName` are declared properties of that type). The actor is the request's `UserId` claim, or the `anonymous` literal §6.8.1 defines. The two derived fields are contracted in the two rows below, because neither can be taken from the obvious place |
 | **`DenialKind` — the distinction the record exists to make, and it comes from the result, not the policy** | Two closed values, `Challenged` and `Forbidden`, read from the `PolicyAuthorizationResult` argument's `Challenged` and `Forbidden` properties. Without this field `AUTHZ-3003` cannot separate **"the caller was not authenticated"** from **"the caller was authenticated and not permitted"** — which is the single most useful distinction in an authorization trail, and the two are also the two different *responses* the inner handler produces, so a record that conflates them cannot be reconciled against the response it accompanied. It is a field rather than an outcome value: class 10's `Outcome` remains the single value `Denied`, so §6.8.1's outcome count is unchanged |
-| **`RequiredPolicy` — derived from endpoint metadata, because the policy argument cannot supply it** | **`AuthorizationPolicy` has no name.** The type declares exactly two public members, `Requirements` and `AuthenticationSchemes`, and a name is bound only where `AuthorizationOptions.AddPolicy(string, …)` registered one — the policy *object* handed to the result handler does not carry it. An earlier form of this row said `RequiredPolicy` came "from the policy argument", which is not implementable: there is nothing to read, and the nearest available substitute, a `ToString()` of the policy or of its requirements, yields framework type names that are neither stable nor meaningful and are exactly the free-form value §6.8.1's third convention forbids. The field is therefore derived from the **endpoint**, by the four-step rule below it, and validated against a closed set before it is written |
+| **`RequiredPolicy` — derived from endpoint metadata, because the policy argument cannot supply it** | **`AuthorizationPolicy` has no name.** The type declares exactly two public members, `Requirements` and `AuthenticationSchemes`, and a name is bound only where `AuthorizationOptions.AddPolicy(string, …)` registered one — the policy *object* handed to the result handler does not carry it. `RequiredPolicy` therefore cannot come "from the policy argument", which is not implementable: there is nothing to read, and the nearest available substitute, a `ToString()` of the policy or of its requirements, yields framework type names that are neither stable nor meaningful and are exactly the free-form value §6.8.1's third convention forbids. The field is therefore derived from the **endpoint**, by the four-step rule below it, and validated against a closed set before it is written |
 | **Delegation is mandatory, on every path** | The decorator **always** invokes the inner handler exactly once, for success and failure alike, and returns what it returns. Without that, every denial's status code, redirect to the login path and access-denied behaviour become whatever the decorator happens to do — a change to the application's authorization behaviour introduced by an audit requirement. Emission is wrapped so that a failure to write a record cannot alter or block the response |
 | **Emission never alters the response — the governing statement of this document's audit contract, and the one [06 §9.5](06-azure-hosting-recommendations.md)'s property 4 cites** | The record is constructed and handed to `ILogger` **before** the inner handler produces the response, wherever that order is observable, and the emission is **wrapped**: where the logging call throws, where a provider fails, and where the line is lost after the hand-off, the denial's status code, `Location` header and body are exactly what the framework handler produced. **A failure to emit never suppresses, delays, downgrades or otherwise changes a denial or any other authorization outcome, and no `AUTHZ-3003` record is a precondition of any response.** That is statement **(b)** of the emission contract above — this document's requirement — and it **governs** wherever a stronger property is proposed on either side of the ownership line. What the hand-off does **not** establish is a physical write or platform collection: delivery is asserted by statement **(c)**'s per-producer gates and canary record, and statement **(d)**'s loss window between hand-off and collection is carried as an accepted limitation rather than closed by anything here |
 | **Behaviour impact** | **None**, by construction: the response is produced by the framework handler in both cases. That is the property the coverage assertion checks — a denial's status and location must be byte-identical with the decorator registered and unregistered |
@@ -3282,9 +3276,9 @@ returns an `IReadOnlyList<T>` — and `IAuthorizeData` declares exactly three st
    comma-separated **string**, and it is written **only** after being split and matched against the closed
    role set, which has one member; an unmatched token is dropped and step 4 applies. That is what stops a
    metadata string reaching the field unchecked.
-4. **Three reserved literals close the remaining cases, and nothing else may be written.** The first is the
-   one an earlier form of this derivation omitted, and it is the **most frequently produced value in this
-   application**, so its absence would have left the commonest denial with an empty audit field.
+4. **Three reserved literals close the remaining cases, and nothing else may be written.** The first is
+   the **most frequently produced value in this
+   application**, so its absence would leave the commonest denial with an empty audit field.
    **`default`** where the endpoint carries an `IAuthorizeData` entry that declares **neither** a policy
    **nor** roles — a bare `[Authorize]`, which is the shape of the source's class-level attribute on
    `AccountController` [src/MVC5/MvcMusicStore/Controllers/AccountController.cs:15] and the shape
@@ -3576,7 +3570,7 @@ under a different interleaving both can observe "already locked" and emit none.
    **accepted** — both are legal user names, and refusing them would make a source account bearing either
    unmanageable through the audited command — and a rejection record produced on any other failing field
    carries **no target-username property at all** rather than a value drawn from that domain. A suite that
-   asserted the refusal instead would be asserting the withdrawn reservation.
+   asserted the refusal instead would be asserting the reservation this contract excludes.
 
    *The actor precedence, in both directions and in disagreement.* Three invocations, asserted on the
    parsed record rather than on prose. **(a) Platform metadata present and the supplied
@@ -3912,13 +3906,13 @@ of them MVC 5's. Where a figure appears below, it says which unit it is counting
 
 4 + 6 + 1 = **11**, and 7 + 4 = **11** by edition.
 
-**Row 11 was omitted from an earlier form of this finding, which counted ten, and it is the one row whose
-omission mattered most.** `Microsoft.AspNet.WebPages.OAuth` is not a peripheral package: it ships the
+**Row 11 is the row whose omission would matter most.** `Microsoft.AspNet.WebPages.OAuth` is not a
+peripheral package: it ships the
 `Microsoft.Web.WebPages.OAuth` namespace and the `OAuthWebSecurity` type that **is** MVC 4's entire
 external-login API. MVC 4's authentication configuration imports that namespace at
 [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:5] and every commented-out registration in the file calls
 that type [src/MVC4/MvcMusicStore/App_Start/AuthConfig.cs:17-29], and its account controller calls it
-throughout [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:228-330]. So a count of ten described
+throughout [src/MVC4/MvcMusicStore/Controllers/AccountController.cs:228-330]. A count of ten would describe
 MVC 4's protocol libraries while leaving out the assembly that hosts the code path the second risk below is
 about — the reverse of the priority the finding claims.
 
@@ -3954,10 +3948,10 @@ whether the remote endpoint that credential-free call targeted still answers is 
 and this document is not a penetration test (§1.2) — and the reachability mark for the capability is
 deliverable 01's [01 §9.3](01-architecture-overview.md).
 
-*An earlier form of this paragraph read "Microsoft Account, Twitter, Facebook and Google, each with empty
-credential arguments", which was true of three of the four and wrong about Google, and it attributed the
-surface's inactivity to the empty credentials rather than to the comment markers. Both halves are
-corrected above.*
+*A description of the four as "Microsoft Account, Twitter, Facebook and Google, each with empty credential
+arguments" is wrong twice over: it is true of three of the four and wrong about Google, whose call takes
+no arguments at all, and it attributes the surface's inactivity to the empty credentials rather than to
+the comment markers.*
 
 Yet the packages ship: deliverable 02 records
 four dormant `Microsoft.Owin.Security.*` provider packages in MVC 5 (F-02-03) and six DotNetOpenAuth
@@ -4034,25 +4028,24 @@ Severity is defined in §1.6 and assigned on exposure in a hosted, internet-faci
 no finding is asserted for an edition whose evidence is not cited in the section named.
 
 **This table is canonical and §8.1's two rollups are counts over it, not summaries maintained beside
-it.** That is stated because an earlier form of §8.1 totalled **37** against a 38-row register: it had
-dropped F-09-38 from the severity rollup entirely, and it had placed F-09-08 — which the register
-states for **MVC 5, MVC 4** — in the *MVC 5 only* bucket while leaving it out of the pair bucket. Two
-derived tables disagreed with the rows they were derived from, and a reader had no way to tell which of
-the two was wrong. Three properties now make that class of drift visible rather than latent, and each
-is checkable from this page:
+it.** A rollup maintained beside the register drifts from it — a row dropped from a severity bucket, or
+a row like F-09-08, which the register states for **MVC 5, MVC 4**, filed under *MVC 5 only* and left
+out of the pair bucket — and a reader who meets a derived table disagreeing with the rows it was derived
+from has no way to tell which of the two is wrong. Three properties make that class of drift visible
+rather than latent, and each is checkable from this page:
 
 - **Every row appears in exactly one severity bucket and exactly one edition bucket, and no row is
   excluded from either rollup for any reason** — not for lacking a consumer, not for being
   comparative, not for being the lowest severity in the set. Where a row fits neither a single-edition
   nor an all-editions bucket it gets a bucket of its own, which is why §8.1's edition rollup has seven
-  rows rather than four. F-09-12 (no consumer) and F-09-38 (added last) are the two rows a hand-kept
-  rollup dropped, and they are counted here like every other row.
+  rows rather than four. F-09-12 (no consumer) and F-09-38 (last in the register) are the two rows a
+  hand-kept rollup is likeliest to drop, and they are counted here like every other row.
 - **The severity vocabulary is §1.6's four values and no fifth is introduced.** §1.6 defines Critical,
-  High, Medium and Low; every row carries one of those four; §8.1 counts those four. An earlier form of
-  §8.1 carried an **Informational** bucket holding F-09-12 — a severity §1.6 does not define and the
-  register does not assign — so that row was simultaneously **Low** in the register and absent from the
-  Low count. The bucket is withdrawn; §8.1 states why **Low** is the right severity for a comparative
-  observation and does not need a fifth level to say it.
+  High, Medium and Low; every row carries one of those four; §8.1 counts those four. There is **no
+  Informational bucket** — that is a severity §1.6 does not define and the
+  register does not assign, and a bucket of it holding F-09-12 would make that row simultaneously
+  **Low** in the register and absent from the Low count. The bucket is withdrawn; §8.1 states why **Low**
+  is the right severity for a comparative observation and does not need a fifth level to say it.
 - **The Editions cell is one of exactly seven canonical strings**, so the edition rollup is an
   exact-match grouping rather than a reading of prose: `all three`, `MVC 3 only`, `MVC 4 only`,
   `MVC 5 only`, `MVC 5, MVC 4`, `MVC 4, MVC 3`, `MVC 5 vs MVC 4`. Eight cells previously used a
@@ -4108,13 +4101,13 @@ is checkable from this page:
 buckets are §1.6's four severity values and there is no fifth; every identifier below appears in
 exactly one row of this table, and the four counts sum to the register's row count.
 **Both tables below are derived from the register above by the command in this sub-section rather than
-counted by hand, and that command reads this file, so editing a register row re-derives them.** An
-earlier form of this sub-section published a total of **37** against a 38-row register: F-09-38 was
-absent from both tables, and F-09-08 was filed under *MVC 5 only* although its own **Editions** cell
-names both newer editions. Two independent errors of one kind — a distribution counted once and then
-left alone while the register it summarizes grew — which is why neither table is annotated here and
+counted by hand, and that command reads this file, so editing a register row re-derives them.** A
+distribution counted once and then left alone while the register it summarizes grows is the failure that
+derivation avoids — it produces a total short of the register's row count, and rows like F-09-08 filed under
+*MVC 5 only* although their own **Editions** cell names both newer editions — which is why neither
+table is annotated here and
 both are regenerated. Mechanical derivation needs one property of the register to work, and the
-register now has it: **the Editions cell of every row is one of exactly seven literals** — `all three`,
+register has it: **the Editions cell of every row is one of exactly seven literals** — `all three`,
 `MVC 5 only`, `MVC 5 and MVC 4`, `MVC 4 only`, `MVC 4 and MVC 3`, `MVC 3 only` and the one comparative
 value `MVC 5 vs MVC 4` — so the second table is a grouping rather than an interpretation.
 
@@ -4160,7 +4153,7 @@ F-09-38
 | **Critical** | 3 | F-09-05, F-09-31, F-09-34 |
 | **High** | 14 | F-09-03, F-09-08, F-09-13, F-09-16, F-09-17, F-09-18, F-09-21, F-09-22, F-09-24, F-09-29, F-09-30, F-09-32, F-09-33, F-09-38 |
 | **Medium** | 16 | F-09-02, F-09-04, F-09-06, F-09-07, F-09-09, F-09-10, F-09-14, F-09-15, F-09-19, F-09-20, F-09-25, F-09-26, F-09-27, F-09-28, F-09-35, F-09-36 |
-| **Low** | 5 | F-09-01, F-09-11, F-09-12, F-09-12, F-09-23, F-09-37 |
+| **Low** | 5 | F-09-01, F-09-11, F-09-12, F-09-23, F-09-37 |
 | **Total** | **38** | — |
 
 3 + 14 + 16 + 5 = 38, which is the register's row count. **The four levels above are the whole scale**
@@ -4590,8 +4583,8 @@ does **not** retain the harness source, the build tooling, the command lines or 
 claim a reader checks here is the *repository impact*, which is the only part of a scratch-directory
 build this document is in a position to attest.
 
-**An earlier version of this section claimed more than that, and the additional claim was false.** It
-said that nothing at all had been written into the checkout. Package restores and build attempts
+**Nothing stronger than that repository impact is claimed here, and in particular a claim that nothing
+at all had been written into the checkout would be false.** Package restores and build attempts
 *were* run against the three editions while the assessment was being made — deliverable 10 owns what
 they established about each edition — and they wrote eight gitignored trees into this working tree. A
 restore cannot be redirected outside the tree the way a compiler invocation can, because the projects
@@ -4612,7 +4605,13 @@ resolve their references through `..\packages` hint paths
 | `src/MVC5/packages` | 167 |
 | **Total** | **527 files, 114,310,394 bytes** |
 
-All eight have since been removed and their absence verified, by checks 2 and 3 below. Those counts
+All eight were removed once the assessment had finished with them, and their absence was verified at that
+point by checks 2 and 3 below — a statement about a moment rather than a durable property of a later
+checkout, since ignored content returns wherever a build or a restore runs again, including a run
+belonging to concurrent work rather than to this assessment. Keeping the tree clear of them at the moment
+of commit is a standing rule owned by whoever commits this assessment
+([10 §1.4](10-build-and-deployment-requirements.md)), and the four checks below state the results the
+check must produce rather than results recorded here. Those counts
 are the measurement taken at removal time and are deliberately **not** reproducible from the checkout
 now — the state they describe no longer exists, which is the reason for recording it here rather than
 letting a passing check imply it never happened.
@@ -4774,12 +4773,13 @@ the same bound. It is the one measurement in this assessment that could not be m
 which is why it is the only one with a harness at all.
 
 **The evidence policy is §1.4's fifth convention, and this sub-section applies it rather than stating a
-second one.** An earlier form of §9.3 published the harness source in full, the compiler and host
-versions, the literal build and run command lines and the verbatim console output — while §1.4 and §4.9
-both declared those four things **not retained**. That was one measurement under two policies, and the
-published form was the one neither of the other two sections claimed. The retained form is the one
+second one.** Four things are **not retained**, exactly as §1.4 and §4.9 both declare: the harness source
+in full, the compiler and host
+versions, the literal build and run command lines, and the verbatim console output. Publishing them here
+would be one measurement under two policies, in a form neither of the other two sections claims. The
+retained form is the one
 below: **what was measured, the assembly identity it was measured against, the repository impact, and
-the reproduction procedure.** The four unretained things are **deleted rather than annotated**. Deleting
+the reproduction procedure.** The four unretained things are **omitted rather than annotated**. Omitting
 them costs nothing a reader can use: §4.9 already states the transcribed result, a re-run re-establishes
 it better than a transcript can, and a console listing inside a committed document is one more artifact
 no reader is able to verify.

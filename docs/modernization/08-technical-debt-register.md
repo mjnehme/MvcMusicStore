@@ -1034,7 +1034,7 @@ Template scaffolding that executes, or ships, while serving nothing. Each entry 
 | **Severity** | **Low** — a reflection scan at startup and a misleading signal about the application's structure |
 | **Editions** | **All three.** Each calls it from its own `Application_Start`, and none has an `Areas` folder, so the scan discovers nothing in any edition |
 
-`AreaRegistration.RegisterAllAreas();` is the first statement of `Application_Start` in MVC 5 [src/MVC5/MvcMusicStore/Global.asax.cs:15] and in MVC 4 [src/MVC4/MvcMusicStore/Global.asax.cs:19], and MVC 3 calls it too [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:36] — from the application class itself rather than from an `App_Start` file, because MVC 3 has no `App_Start` folder (deliverable 01 §3.6, which owns MVC 3's composition shape). The absence of the composition folder is a difference in *where* the call is written, not in whether it happens, and an earlier reading of this entry mistook the one for the other. No edition has an `Areas` folder:
+`AreaRegistration.RegisterAllAreas();` is the first statement of `Application_Start` in MVC 5 [src/MVC5/MvcMusicStore/Global.asax.cs:15] and in MVC 4 [src/MVC4/MvcMusicStore/Global.asax.cs:19], and MVC 3 calls it too [src/MVC3/MvcMusicStore-Completed/MvcMusicStore/Global.asax.cs:36] — from the application class itself rather than from an `App_Start` file, because MVC 3 has no `App_Start` folder (deliverable 01 §3.6, which owns MVC 3's composition shape). The absence of the composition folder is a difference in *where* the call is written, not in whether it happens. No edition has an `Areas` folder:
 
 ```bash
 git grep -n 'RegisterAllAreas' -- 'src/*' | grep -v /packages/
