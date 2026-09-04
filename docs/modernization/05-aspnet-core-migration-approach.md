@@ -17467,9 +17467,13 @@ until the ported application exists:
 
 **The suite's `ProjectReference` edges are [04 §12.4](04-dotnet8-migration-strategy.md)'s and are cited
 here rather than restated.** Two of its consequences bear directly on how the table above must be read,
-so they are stated as consequences and nothing more. `src/MvcMusicStore.Tests` references the web
-application — `WebApplicationFactory` has to name `Program` and read the content-root manifest — and the
-operator command, so **no part of the target half compiles before the target project graph exists**.
+so they are stated as consequences and nothing more. `src/MvcMusicStore.Tests` declares **two** references
+and no others — the web application, because `WebApplicationFactory` has to name `Program` and read the
+content-root manifest, and `src/MvcMusicStore.Contracts.Tests`, for the abstract bases its concretes
+derive from — so **no part of the target half compiles before the target project graph exists**. The
+operator command is **not** among them: its own edge runs to the web application and no edge runs from
+either test project to it, which [04 §12.4](04-dotnet8-migration-strategy.md) states as a row of its
+inventory rather than leaving to inference.
 `src/MvcMusicStore.Contracts.Tests` declares no reference into this solution at all, which is what makes
 the baseline half **independently buildable**: its classes compile while the ported application is still
 a skeleton or absent. What that half is independent of is therefore both the target graph and the ported
