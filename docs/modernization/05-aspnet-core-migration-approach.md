@@ -4228,14 +4228,17 @@ Two things are forbidden:
   process used another. An override that no reviewer can see is the failure mode, and its severity is
   exactly the same whether the value is a secret or a log level. Removing the provider from the site is
   the same argument carried to its conclusion.
-- **The two pinned release tools take a credential-free target connection as an argument, and that is
-  not an exception being tolerated — it is the only channel either of them has.** A migration bundle
+- **The migration bundles take a credential-free target connection as an argument, and that is
+  not an exception being tolerated — it is the only channel they have.** A migration bundle
   accepts `--connection`, and omitting it makes the connection compiled into the context decide which
-  database receives DDL; `dotnet sql-cache create` takes the connection as its **first positional
-  argument** and accepts configuration by no other route at all. Neither is an application host and
-  neither reads this contract, so clause (b) above does not reach them — and a rule written as "no
-  command line, ever" would have been a rule those two commands cannot obey, which is how a policy stops
-  being applied to the host it should bind. What makes the argument safe rather than merely unavoidable
+  database receives DDL. **The cache-table step is no longer a second case of this**: the tool that took a
+  connection string positionally is withdrawn over a critical advisory in its packaged graph
+  ([04 §6.3](04-dotnet8-migration-strategy.md), [06 §6.4](06-azure-hosting-recommendations.md)), and the
+  T-SQL client that replaced it is addressed by server, database and a non-secret managed-identity client
+  ID, so it puts no connection string on a command line at all. A bundle is not an application host and
+  does not read this contract, so clause (b) above does not reach it — and a rule written as "no
+  command line, ever" would have been a rule the release's own commands cannot obey, which is how a policy
+  stops being applied to the host it should bind. What makes the argument safe rather than merely unavoidable
   is four properties [04 §13.3](04-dotnet8-migration-strategy.md) states and this document does not
   restate: the value is a declared pipeline variable, it carries no credential because it authenticates
   as a managed identity, it is never echoed into a log or a failure message, and the server and database
@@ -7060,7 +7063,8 @@ repository should find these too.
   [12.6](#126-the-test-project-the-system-under-test-and-the-host-wiring) — which run under the fixture
   principal against a disposable database and never ship anywhere.
 
-The release also issues DDL this document does not author: `dotnet sql-cache create` and the grant
+The release also issues DDL this document does not author: the reviewed cache-table script
+[06 §6.4](06-azure-hosting-recommendations.md) owns and the grant
 statements [06 §6.6](06-azure-hosting-recommendations.md) owns.
 
 **One failure path changes and no successful one does**: the concurrent loser of a remove receives the
@@ -10869,8 +10873,8 @@ carried **four** bullets — the cache, the registration order, the key constant
   which registers the SQL Server implementation of `IDistributedCache` (*Distributed caching in ASP.NET
   Core*, .NET 8), sharing the one database of section
   [4.5](#45-two-contexts-two-migration-sets-two-history-tables). Its **table is provisioned by
-  [06 §6.4](06-azure-hosting-recommendations.md)** — `dbo.SessionCache`, created by
-  `dotnet sql-cache create` — and created **first** in the ordering of section
+  [06 §6.4](06-azure-hosting-recommendations.md)** — `dbo.SessionCache`, created by that section's
+  reviewed idempotent T-SQL rather than by a .NET tool — and created **first** in the ordering of section
   [5.3](#53-who-applies-ddl-and-in-what-order), because a cache whose table does not exist fails on the
   first session write rather than at start.
 
@@ -11228,7 +11232,7 @@ code.
 
 - **`PROV-6001`** — the provisioning command, **four records per invocation, invariantly**, section
   [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties) property 4: one per
-  `State.operation` literal — the three operations — and then the run record, on every path, including
+  `Scopes[0].operation` literal — the three operations — and then the run record, on every path, including
   the paths that fail and the rejection that happens before a host exists. **"One record per operation" is
   deleted rather than reconciled as a statement of that cardinality**: it is the
   cardinality of the operation records alone, it leaves the run record uncounted, and a consumer written
@@ -11236,9 +11240,9 @@ code.
   [12.4](#124-required-coverage) row 75, which drives the three operation outcomes a completing
   invocation can produce — `created`, `already-present` and `rotated` — case by case, and by rows **O5 to
   O9** of section [12.4.1](#1241-the-published-operator-bytes), which assert the four-record envelope
-  itself — its cardinality, its nested `State.eventName`, its operation sequence and its shared
-  invocation identifier — on all four paths, and so cover the two outcomes no completing invocation
-  produces, `failed` and `not-attempted`.
+  itself — its cardinality, its header-borne `Scopes[0].eventName`, its operation sequence, its shared
+  invocation identifier and the **five-key closure of `State`** — on all four paths, and so cover the two
+  outcomes no completing invocation produces, `failed` and `not-attempted`.
 - **`AUTHZ-3001`** — **two producers.** The command's membership operation, at `Success` and only where
   the membership was actually added; and the Identity data migration of section
   [5.6](#56-the-data-migration-executor), one record per
@@ -16705,39 +16709,105 @@ four or more; neither half of that is left standing. The pinned contract:
 
 | Property | Value, fixed |
 | --- | --- |
-| **The event name, and where it lives** | **`AdminProvisioned`**, at the **nested** path **`State.eventName`** — never a top-level `.eventName`, for the reason the shape-parity row below gives. **All four records carry the same event name**, which is what keeps a consumer's selector a single equality test and is why the decomposition below uses a discriminator field rather than four event names. A consumer that matched on four distinct names would have to be edited every time the decomposition changed |
-| **The discriminator** | **`State.operation`**, taking exactly one of four literals — **`create-user`**, **`create-role`**, **`add-membership`**, **`run`** — and **no others**. The set is closed: a fifth value is a finding, not an extension. **The first three literals are deliberately the ones the `--report-dir` report already uses** (row 75 of section [12.4](#124-required-coverage)), so this design has **one** operation vocabulary rather than two spellings of the same three operations that a reader would have to map between; `run` is the fourth because the report has no run-level row |
+| **The record itself — exactly five fields, and this is the row every other row in this table is subordinate to** | **`State` carries exactly `actor`, `timestamp`, `targetUserName`, `roleName` and `outcome`, and nothing else.** Those are the five fields the project's provisioning-audit requirement names, in that order, and the record is closed at them: **a sixth key in `State` is a finding, not an extension.** Everything a consumer needs that is *not* one of the five — the event name, the per-record discriminator, the invocation identifier and the actor-provenance fields — lives **outside `State`, in the invocation header** the row below fixes. That separation is the whole design and it is not cosmetic: it is what lets a reader check the record against the five-field requirement by parsing one object's keys, with no allow-list of exceptions to carry in their head. Two things `State` does **not** carry, both of which a message-template producer would have put there: a `Message` copy, which the envelope already has at its top level, and an `{OriginalFormat}` template, which exists only to let a consumer re-render text nobody re-renders here. The serialiser is a dedicated deterministic one rather than `ILogger`'s formatter (the serialisation subsection below), so neither is imposed on this shape and neither is emitted |
+| **The invocation header, and where it lives** | **`Scopes` carries exactly one object — the invocation header — on every one of the four records**, and it is the home of every field that is not one of the five. It carries **`eventName`** (`AdminProvisioned`), **`invocationId`**, **`operation`**, **`actorSource`** and — where a value was supplied on `MUSICSTORE_AUDIT_ACTOR` — **`suppliedActorClaim`**. Two further header keys appear only on the outcomes that define them, and closing `State` at five is what obliges naming them here rather than leaving them as unnamed prose: **`rejectedCheck`**, on the run record at `outcome = rejected`, naming the check that rejected the invocation; and **`failedStep`**, on any record at `outcome = failed`, naming the step that failed. Both are bounded identifiers of this document's own, and neither ever reproduces the value that failed. They are **not** [09 §6.8.1](09-security-assessment.md)'s `RejectedField`, `RejectionRule` or `FailureCategory` — those are columns of that section's durable row, derived from these, and the two artifacts are distinguished below. `Scopes` is the right carrier rather than a new sibling key because the envelope already has it, a consumer already walks it, and its meaning — *the scope this record was written in* — is exactly what an invocation identifier and an operation discriminator are. **The header is per-record bytes and per-invocation content**: `eventName`, `invocationId` and the actor-provenance fields are identical on all four lines, so any single line remains self-describing and a line separated from its siblings is still an attributable audit record rather than a fragment; only `operation`, and the two rejection codes, vary. That duplication is deliberate for the reason the cardinality row gives — a separate header *record* the other three depended on would leave a consumer that lost it holding three unattributable lines |
+| **The event name, and where it lives** | **`AdminProvisioned`**, at **`Scopes[0].eventName`** — never inside `State`, because it is not one of the five, and never at a top level of the envelope, because the envelope's top level is the formatter-shaped part and this is authored content. **All four records carry the same event name**, which is what keeps a consumer's selector a single equality test and is why the decomposition below uses a discriminator field rather than four event names. A consumer that matched on four distinct names would have to be edited every time the decomposition changed |
+| **The discriminator** | **`Scopes[0].operation`**, taking exactly one of four literals — **`create-user`**, **`create-role`**, **`add-membership`**, **`run`** — and **no others**. The set is closed: a fifth value is a finding, not an extension. It sits in the header rather than in `State` because it is a discriminator over records and not one of the five fields the record is closed at. **The first three literals are deliberately the ones the `--report-dir` report already uses** (row 75 of section [12.4](#124-required-coverage)), so this design has **one** operation vocabulary rather than two spellings of the same three operations that a reader would have to map between; `run` is the fourth because the report has no run-level row |
 | **The cardinality** | **Exactly four records per invocation, invariantly, on every path including the paths that fail.** One record per `operation` literal, in that order: the user operation, the role operation, the membership operation, then the **run outcome**. Four is a **constant**, not a maximum and not a function of how far the run got — which is the single property that makes the count assertable with no branching by the consumer |
 | **What the three operation records carry** | `outcome` taking one of **`created`**, **`already-present`**, **`rotated`**, **`failed`** or **`not-attempted`** — **five** literals, closed — matching the per-operation independence of property 3: each of the three is decided by its own check, so each reports its own result. The first three literals are again the report's own, for the same one-vocabulary reason; the last two are the ones the report has no occasion to emit, because a report is only written on a path that got far enough to have one. **`rotated` is emitted only by the user operation and only when `--rotate-credential` was passed** — the flag whose stripping, binding and constraint semantics are rule 5 of property 1b — so it distinguishes "the account already existed and its credential was replaced" from `already-present`, which is the same discovery with no write. `failed` additionally carries the failing step's name; `not-attempted` carries nothing further, because there is nothing to report |
 | **What the run-outcome record carries** | `outcome` taking one of **`succeeded`**, **`failed`** or **`rejected`**; on `rejected`, the `rejectedCheck` field naming the check, and on `failed`, the failing step. It is the **last** of the four lines, so a truncated capture is detectable by its absence rather than by a length comparison |
-| **The `outcome` vocabulary, counted, because the two sets above overlap** | **Seven distinct literals across the two closed sets**, with the derivation published rather than left to a consumer to infer: `5 + 3 = 8` declarations, less the one literal declared in both sets, gives **seven**. `failed` is that literal — the only value a record of either kind may carry — so a consumer validating `outcome` **without** first reading `State.operation` admits exactly those seven, `created`, `already-present`, `rotated`, `failed`, `not-attempted`, `succeeded` and `rejected`, while one that reads the discriminator first admits **five** on each of the three operation records and **three** on the run record. The second is the stricter reading and the intended one: `succeeded` on an operation record and `created` on the run record are both malformed, and only the discriminator separates them. **Neither six nor eight is a count of this vocabulary** — eight counts declarations rather than values, and six counts nothing this property defines — so a consumer or a summary publishing either is describing a set this document does not close |
-| **What every one of the four carries** | The run-identifying fields — `invocationId`, `actor`, `timestamp`, `targetUserName`, `roleName` — so **any single line is self-describing** and a line separated from its siblings is still an audit record rather than a fragment. This is deliberate duplication: the alternative is a header record the other three depend on, and a consumer that lost the header would hold three unattributable lines |
+| **The `outcome` vocabulary, counted, because the two sets above overlap** | **Seven distinct literals across the two closed sets**, with the derivation published rather than left to a consumer to infer: `5 + 3 = 8` declarations, less the one literal declared in both sets, gives **seven**. `failed` is that literal — the only value a record of either kind may carry — so a consumer validating `outcome` **without** first reading `Scopes[0].operation` admits exactly those seven, `created`, `already-present`, `rotated`, `failed`, `not-attempted`, `succeeded` and `rejected`, while one that reads the discriminator first admits **five** on each of the three operation records and **three** on the run record. The second is the stricter reading and the intended one: `succeeded` on an operation record and `created` on the run record are both malformed, and only the discriminator separates them. **Neither six nor eight is a count of this vocabulary** — eight counts declarations rather than values, and six counts nothing this property defines — so a consumer or a summary publishing either is describing a set this document does not close |
+| **What every one of the four carries, split across the record and its header** | In **`State`**, four of the five: `actor`, `timestamp`, `targetUserName` and `roleName` — the fifth, `outcome`, is the one field whose value differs per record and is fixed by the two rows above. In the **header**, `eventName`, `invocationId`, `actorSource` and, where supplied, `suppliedActorClaim`. So **any single line is self-describing** and a line separated from its siblings is still an audit record rather than a fragment, and the five-field record stays five while the correlation identifier still travels on every line. **`invocationId` is in the header and not in `State`**, which is the placement the hosting deliverable's own register requires of it — the run identifier is a property of the *invocation*, written into the transcript's header rather than onto each record, and it reaches the durable trail through that register's own run-identifier column rather than by becoming a sixth field here |
 | **A rejected invocation still emits four** | The three operation records carry `outcome = not-attempted` and the run record carries `outcome = rejected` with its `rejectedCheck`. This is not padding: "this run did not attempt the user operation" is a true and auditable statement, and emitting it keeps the cardinality a constant so the pre-host rejection path — the path the dedicated serialiser exists for — is counted by the same rule as every other path. A serialiser that can write one line before a host exists can write four |
-| **The order is fixed and asserted** | `create-user`, `create-role`, `add-membership`, `run`. The consumer asserts the **sequence** of the four `State.operation` values, not merely the set, so a reordering that would confuse a reader of the container is caught |
+| **The order is fixed and asserted** | `create-user`, `create-role`, `add-membership`, `run`. The consumer asserts the **sequence** of the four `Scopes[0].operation` values, not merely the set, so a reordering that would confuse a reader of the container is caught |
 | **How it relates to the `--report-dir` report, so the two are not mistaken for one artifact** | They are **two artifacts with one vocabulary and two destinations**, and both are required. The **report** is a file in the run's artifact directory, written only on a path that reached the operations, and it is what row 75 of section [12.4](#124-required-coverage) reads. The **audit record set** is four lines on standard output, written on **every** path, and it is what the immutable container receives. Where both exist, the three operation records' `operation` and `outcome` values are the **same literals** the report's three rows carry for the same invocation — asserted, not assumed, by row **O7** — which is the whole point of not inventing a second vocabulary |
 
 **The four records as literal bytes, because a consumer writing a selector needs the shape and not a
 description of it.** Below is one successful invocation's complete audit set, shown indented for
 readability — on the wire each object is **one line** and the set is **four lines in this order**, which
-is exactly what `$AUDIT_LINES` holds and what the container receives. `Scopes` is `[]` on every one of
-them, because the tool is a console process with no request and no ambient `Activity`, which is the
-same property the formatter subsection establishes for a background service:
+is exactly what `$AUDIT_LINES` holds and what the container receives. **`Scopes` carries exactly one
+element on every one of them — the invocation header of the row above — and that is a deliberate
+departure from the formatter's own behaviour rather than an inconsistency with it.** The formatter
+subsection establishes that a record written outside a request has `"Scopes": []`, because the framework's
+activity scope is what populates it and this tool is a console process with no request and no ambient
+`Activity`. That remains true of what the *framework* would contribute here: **the header is not an
+activity scope and no request scope appears**, and `Scopes[0]` carries no `TraceId`, no `SpanId` and no
+framework-supplied key at all. The reason this record may depart is the one the serialisation subsection
+below states: its producer is a **dedicated deterministic serialiser and not `ILogger`'s formatter**, so
+the envelope here is authored rather than emitted, and authoring one scope object is available to it in a
+way it would not be to a logging call. A reader comparing this shape with an application record should
+expect exactly that one difference and no other:
 
 ```json
-{"Timestamp":"2026-08-29T09:12:44.1180000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: create-user created","State":{"Message":"AdminProvisioned: create-user created","eventName":"AdminProvisioned","operation":"create-user","outcome":"created","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.1180000+00:00","targetUserName":"a3f1c9d0","roleName":"Administrator","{OriginalFormat}":"{eventName}: {operation} {outcome}"},"Scopes":[]}
-{"Timestamp":"2026-08-29T09:12:44.2640000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: create-role already-present","State":{"Message":"AdminProvisioned: create-role already-present","eventName":"AdminProvisioned","operation":"create-role","outcome":"already-present","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.2640000+00:00","targetUserName":"a3f1c9d0","roleName":"Administrator","{OriginalFormat}":"{eventName}: {operation} {outcome}"},"Scopes":[]}
-{"Timestamp":"2026-08-29T09:12:44.3910000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: add-membership created","State":{"Message":"AdminProvisioned: add-membership created","eventName":"AdminProvisioned","operation":"add-membership","outcome":"created","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.3910000+00:00","targetUserName":"a3f1c9d0","roleName":"Administrator","{OriginalFormat}":"{eventName}: {operation} {outcome}"},"Scopes":[]}
-{"Timestamp":"2026-08-29T09:12:44.4020000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: run succeeded","State":{"Message":"AdminProvisioned: run succeeded","eventName":"AdminProvisioned","operation":"run","outcome":"succeeded","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.4020000+00:00","targetUserName":"a3f1c9d0","roleName":"Administrator","{OriginalFormat}":"{eventName}: {operation} {outcome}"},"Scopes":[]}
+{"Timestamp":"2026-08-29T09:12:44.1180000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: create-user created","State":{"actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.1180000+00:00","targetUserName":"Administrator","roleName":"Administrator","outcome":"created"},"Scopes":[{"eventName":"AdminProvisioned","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","operation":"create-user","actorSource":"platformMetadata"}]}
+{"Timestamp":"2026-08-29T09:12:44.2640000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: create-role already-present","State":{"actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.2640000+00:00","targetUserName":"Administrator","roleName":"Administrator","outcome":"already-present"},"Scopes":[{"eventName":"AdminProvisioned","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","operation":"create-role","actorSource":"platformMetadata"}]}
+{"Timestamp":"2026-08-29T09:12:44.3910000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: add-membership created","State":{"actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.3910000+00:00","targetUserName":"Administrator","roleName":"Administrator","outcome":"created"},"Scopes":[{"eventName":"AdminProvisioned","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","operation":"add-membership","actorSource":"platformMetadata"}]}
+{"Timestamp":"2026-08-29T09:12:44.4020000+00:00","EventId":0,"LogLevel":"Information","Category":"ProvisionAdmin.Audit","Message":"AdminProvisioned: run succeeded","State":{"actor":"pipeline://musicstore-release/run/8814","timestamp":"2026-08-29T09:12:44.4020000+00:00","targetUserName":"Administrator","roleName":"Administrator","outcome":"succeeded"},"Scopes":[{"eventName":"AdminProvisioned","invocationId":"9f2c1d7e-4a55-4b21-9e30-77c0a1d6b4e2","operation":"run","actorSource":"platformMetadata"}]}
 ```
 
-Three properties of those bytes are worth naming because each is a rule rather than an incidental of the
-example. **`targetUserName` is the alias, not the user name** — `a3f1c9d0` above — under the aliasing
-contract this document applies to every personal-data field that leaves a process, which is why an audit
-record is safe to place in a 365-day immutable container. **No field carries the password, the connection
-string or an exception message**, so the never-record list is satisfied by the shape itself rather than by
-a filter over it. And **`invocationId` is identical across all four lines and is the value in the blob
+Four properties of those bytes are worth naming because each is a rule rather than an incidental of the
+example.
+
+**`State` has exactly five keys on every line, and that is checkable in one expression.**
+`jq -e '.State | keys == ["actor","outcome","roleName","targetUserName","timestamp"]'` holds for all four
+records — `keys` sorts, so the comparison is against the sorted five and is independent of emission order.
+A record with a sixth key fails it, which is the point: the five-field requirement is enforced by the
+shape rather than asserted about it.
+
+<a id="provisioning-target-clear-name"></a>
+
+**`targetUserName` carries the target's user name in the clear — `Administrator` above — and this is a
+decision rather than an omission of the aliasing rule.** Three reasons, and the third is why the opposite
+choice is not merely unnecessary but wrong. First, the requirement names the *target username*, and the
+record exists to answer one question — *which account was granted which role, by whom, and did it work* —
+which an unresolvable value does not answer. Second, the aliasing contract's own scope is narrower than
+"every personal-data field that leaves a process": sections
+[5.6](#56-the-data-migration-executor) and [12.9](#129-sensitive-test-data-diagnostics-and-redaction)
+apply it to the **migration and test artifacts that carry end-user account identifiers in bulk** — extract
+keyed sets, mismatch and duplicate reports, the tool-owned member table, suite diagnostics — and the
+provisioning target is none of those: it is a single **operational administrator account**, named
+deliberately by the operator or the release on the invocation that creates it. Third, an alias here is
+resolvable only through the separate authorized, audited lookup section 5.6 defines, and the reader of a
+365-day immutable audit container is precisely the reader who may not hold that key — so aliasing would
+move the record's one load-bearing value behind a door the auditor cannot open, while protecting a value
+that is not end-user personal data. The record remains safe to place in that container for the reason the
+property below gives rather than because of an alias, and this placement is asserted by
+[09 §6.8.1](09-security-assessment.md)'s own provisioning row, which carries the same value as its
+`Target` and states the scoped exception that permits a login name there.
+
+**No field carries the password, the connection string, an exception message, or anything derived from a
+value that failed validation** — so the never-record list is satisfied by the shape itself rather than by a
+filter over it. That is what makes the set safe for an immutable container: the record has no secret in it
+and no end-user personal data in it, on **any** path, including the rejection path where the offending
+value is described by two bounded codes in the header and never reproduced.
+
+**`invocationId` is identical across all four lines, lives in the header, and is the value in the blob
 name**, which is what lets a reader of the container tie a set back to one invocation without trusting
 file ordering.
+
+<a id="provisioning-record-vs-durable-row"></a>
+
+**One further distinction belongs here, because two artifacts under one name is what makes a five-field
+contract look violated when it is not.** This subsection fixes the **transcript record** — four JSON
+lines on standard output, captured by the pipeline and uploaded to the immutable container — and it is the
+artifact the five-field requirement governs. It is **not** the same artifact as the **durable
+security-event row** the same event produces: that row is [09 §6.8.1](09-security-assessment.md)'s
+`PROV-6001`, it lives in the security-event store, and it has its own column set and its own closed
+outcome domain of eighteen values, which that row defines and this section restates no spelling of. The
+two relate by derivation and not by identity, and the mapping is 09's:
+
+| | This subsection's transcript record | 09 §6.8.1's `PROV-6001` durable row |
+| --- | --- | --- |
+| **What it is** | Four JSON lines on `stdout`, uploaded verbatim as one blob | Rows in the durable security-event store |
+| **Field count** | **Exactly five**, in `State` | 09's own column set, which is wider |
+| **`outcome` domain** | **Seven** literals across the two closed sets fixed above | **Eighteen** literals, fifteen exercisable — 09's `Outcome` domain |
+| **Field names** | `actor`, `timestamp`, `targetUserName`, `roleName`, `outcome` | `Actor`, `OccurredUtc`, `Target`, `RoleName`, `Outcome` — the same five values under 09's column names |
+| **Where the rest lives** | The invocation header (`Scopes[0]`) | Columns of the row, including the run identifier |
+| **Who owns it** | This section | 09 §6.8.1 |
+
+A reader who counts 09's columns and compares the total against five is comparing two artifacts; a reader
+who finds a sixth key in `State` has found a defect. The two checks are different and only the second is a
+check of this contract.
 
 **Its owner is the immutable blob container, and the workspace is not a destination.** Describing the
 record as "written through `ILogger` to the application's configured sink and
@@ -16836,7 +16906,9 @@ it, so the field is not something the tool determines:
   the **reserved literal `(unavailable)`** — parenthesised precisely so it cannot collide with any identity
   the pipeline renders — and `rejectedCheck` carries `actor-missing`. Two consequences make the sentinel
   safe rather than a hole: it is legal **only** in a record whose `outcome` is `rejected` **and** whose
-  `rejectedCheck` is `actor-missing`, so a record carrying it in any other combination is itself a finding;
+  `rejectedCheck` is `actor-missing` — a two-part condition spanning the record and its header, so the
+  consumer's check is `.State.actor`, `.State.outcome` and `.Scopes[0].rejectedCheck` read together —
+  so a record carrying it in any other combination is itself a finding;
   and no work was attempted, so the record documents an invocation that changed nothing rather than an
   unattributed change.
 - **The field is a copy for readability; the authority is elsewhere.** The blob is written into the
@@ -16866,8 +16938,9 @@ tool's progress and error records go to the same stream, so "capture the output 
 specific enough to be implementable. The rule is a selection with a count and an order check:
 
 - The pipeline reads the captured standard output **line by line**, parses each line that is a complete
-  JSON object, and selects those whose **`State.eventName` is exactly `AdminProvisioned`** — the **nested**
-  path, for the reason the parity row above gives, and expressed once so no consumer has to reconstruct it:
+  JSON object, and selects those whose **`Scopes[0].eventName` is exactly `AdminProvisioned`** — the
+  **invocation-header** path, because the event name is not one of the record's five fields and does not
+  appear in `State`, and expressed once so no consumer has to reconstruct it:
 
   ```bash
   # $CAPTURE is the command's captured standard output, which also carries the
@@ -16875,16 +16948,31 @@ specific enough to be implementable. The rule is a selection with a count and an
   # drops the lines that are not JSON instead of aborting on them; 'objects'
   # drops any JSON value that is not an object, so the path is only applied to
   # something it can be applied to. --exit-status makes an empty result non-zero.
+  # The event name is in the INVOCATION HEADER, not in State: State is closed at
+  # the five required fields, so a selector reading .State.eventName matches
+  # nothing. `Scopes[0]?` tolerates a record with no Scopes rather than erroring,
+  # so a diagnostic line cannot abort the selection.
   jq -Rc --exit-status \
-    'fromjson? | objects | select(.State.eventName == "AdminProvisioned")' \
+    'fromjson? | objects | select(.Scopes[0]?.eventName == "AdminProvisioned")' \
     "$CAPTURE" > "$AUDIT_LINES"
   test "$(wc -l < "$AUDIT_LINES")" -eq 4
 
-  # The four State.operation values, in emission order, must be exactly this
-  # sequence. -s slurps the already-selected lines into one array, so this
-  # reads the SELECTED set and never re-runs the predicate.
-  test "$(jq -Rc -s 'map(fromjson | .State.operation) | join(",")' \
+  # The four header operation values, in emission order, must be exactly this
+  # sequence. This reads the SELECTED set and never re-runs the predicate.
+  # -n with `inputs` is deliberate and -s is WRONG here: under -R, -s slurps the
+  # whole file into ONE STRING, so `map` fails with "Cannot iterate over string"
+  # and the assertion errors instead of comparing. With -n, `inputs` yields each
+  # line as its own raw string, which is what `fromjson` needs.
+  test "$(jq -Rc -n '[inputs | fromjson | .Scopes[0].operation] | join(",")' \
             "$AUDIT_LINES")" = '"create-user,create-role,add-membership,run"'
+
+  # The record itself is closed at the five required fields, on every line.
+  # `keys` sorts, so this is order-independent; a sixth key makes `all` false
+  # and --exit-status then returns non-zero.
+  jq -Rc -n --exit-status \
+    'all(inputs | fromjson | .State | keys;
+         . == ["actor","outcome","roleName","targetUserName","timestamp"])' \
+    "$AUDIT_LINES" > /dev/null
   ```
 
   `jq` is not a new dependency: [06 §12.3](06-azure-hosting-recommendations.md) pins it on the release
@@ -16892,10 +16980,11 @@ specific enough to be implementable. The rule is a selection with a count and an
   something to assert with. The serialiser writes **each** of its four objects on a single line, and
   `AdminProvisioned` is
   one named event in [06 §9.2.4](06-azure-hosting-recommendations.md)'s closed schema which **no other
-  record in this tool may carry** — so the predicate is exact rather than heuristic. A selector written
-  against a top-level
-  `eventName` matches **nothing**, for the reason the parity row states; that is the one mistake this
-  subsection is written to prevent.
+  record in this tool may carry** — so the predicate is exact rather than heuristic. **Two selectors match
+  nothing, and both are mistakes this subsection is written to prevent**: one written against a
+  **top-level** `.eventName`, because the envelope's top level carries no such key, and one written
+  against **`.State.eventName`**, because `State` is closed at the record's five required fields and the
+  event name is in the invocation header. The path is `Scopes[0].eventName` and nothing else.
 - **Exactly four matches are required, and the discriminator sequence is checked too.** Fewer than four
   and more than four are **both** failures of the
   provisioning step, reported distinctly: fewer means the tool exited without discharging its audit
@@ -16918,8 +17007,9 @@ specific enough to be implementable. The rule is a selection with a count and an
 exact bytes in emission order, `$AUDIT_LINES` above — are uploaded to the immutable container **as one
 blob**, then **read back and compared
 byte-for-byte with what the command emitted**, and the read-back copy is re-tested against the **same**
-`State.eventName` predicate **and the same four-line count and operation sequence**, so the artifact in
-the container is verified to be the whole record set rather than
+`Scopes[0].eventName` predicate, **the same four-line count and operation sequence, and the same
+five-key `State` assertion**, so the artifact in the container is verified to be the whole record set
+rather than
 merely to be a file of the right length. **One blob rather than four** is deliberate: the four lines are
 one invocation's audit record, the immutable container's `--overwrite false` guarantee then covers the set
 indivisibly, and four separately named blobs would make a partial upload look like a complete one:
@@ -16946,11 +17036,15 @@ az storage blob download \
 
 cmp -- "$AUDIT_LINES" "$AUDIT_READBACK"
 jq -Rc --exit-status \
-  'fromjson? | objects | select(.State.eventName == "AdminProvisioned")' \
+  'fromjson? | objects | select(.Scopes[0]?.eventName == "AdminProvisioned")' \
   "$AUDIT_READBACK" > /dev/null
 test "$(wc -l < "$AUDIT_READBACK")" -eq 4
-test "$(jq -Rc -s 'map(fromjson | .State.operation) | join(",")' \
+test "$(jq -Rc -n '[inputs | fromjson | .Scopes[0].operation] | join(",")' \
           "$AUDIT_READBACK")" = '"create-user,create-role,add-membership,run"'
+jq -Rc -n --exit-status \
+  'all(inputs | fromjson | .State | keys;
+       . == ["actor","outcome","roleName","targetUserName","timestamp"])' \
+  "$AUDIT_READBACK" > /dev/null
 ```
 
 A missing or mismatched blob is a **failed provisioning step** even where the
@@ -17008,9 +17102,13 @@ Three properties of the allocation, stated because each one is a decision:
   The `az`, `sha256sum`, `cmp` and `jq` invocations in this document's shell blocks return their own
   statuses; the blocks re-raise them rather than translating them, because a translated status loses the
   tool's own diagnosis. This allocation governs `provision-admin` and nothing else — in particular it does
-  **not** govern `dotnet sql-cache`, whose own `0`/`1`/`2` contract and the release actions for each are
-  [06 §6.4](06-azure-hosting-recommendations.md)'s, and whose `1` deliberately carries two meanings that
-  that section resolves with a post-condition rather than with a code.
+  **not** govern the T-SQL client that applies the release's reviewed scripts, whose own exit contract and
+  the release actions for each status are
+  [06 §6.4](06-azure-hosting-recommendations.md)'s and [06 §6.10.1](06-azure-hosting-recommendations.md)'s.
+  *An earlier revision named `dotnet sql-cache` here and described a `0`/`1`/`2` contract whose `1` carried
+  two meanings; that tool is withdrawn over a critical advisory in its packaged graph
+  ([04 §6.3](04-dotnet8-migration-strategy.md)), and the client that replaced it has an unambiguous exit
+  status.*
 
 **5. It is not deployed with the web application.** A separate project, not referenced by the web
 project and not included in its publish output, run from the release pipeline or an operator session.
@@ -17051,8 +17149,10 @@ and neither names a value:
 `az`, `sha256sum`, `cmp` and `jq` invocations in this document's shell blocks return their own statuses and
 the blocks re-raise them rather than translating them, because a translated status loses the tool's own
 diagnosis; the pipeline classifies those failures by **which step failed** rather than by reading a number.
-In particular the allocation does not govern `dotnet sql-cache`, whose own contract and the release action
-for each of its statuses are [06 §6.4](06-azure-hosting-recommendations.md)'s.
+In particular the allocation does not govern the T-SQL client that applies the release's reviewed scripts,
+whose own contract and the release action
+for each of its statuses are [06 §6.4](06-azure-hosting-recommendations.md)'s and
+[06 §6.10.1](06-azure-hosting-recommendations.md)'s.
 
 ### 10.3 What this retires
 
@@ -19042,7 +19142,7 @@ uses that same value as its needle.
 | **O4** | **All four verbs exercised here do their work.** `admin` creates the user, the role and the membership; `load-catalog` and `load-identity` move a small fixture dataset and pass their own reconciliation; `seed` writes with all three guards satisfied and **refuses** with any one of them not | **Four of the ten verbs section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties)'s table closes**, each cited to the section that owns it: `load-catalog` and `load-identity` to section [5.1.2](#512-how-the-load-actually-runs--the-executable-contract), `admin` to section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties), `seed` to section [5.4](#54-seeding--the-guard-fails-closed-on-three-checks). **"The four verbs of section 5.1.2" is deleted as an attribution**, because that section owns only the two load verbs — the four are a deliberate subset of the ten, not the whole of any section's set. Together with **O5** this is the row that proves the single-project decision works, rather than that it compiles |
 | **O5** | **Partial-run idempotence, per operation.** `admin` run twice is one user, one role and one membership, with the second run reporting "already present" for each; and a run **interrupted** after the user was created but before the membership completes, then re-run, produces the membership without failing on the user | Property 3 of section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties). "Idempotent overall" would pass a test that skipped the repair; the interrupted case is the one the design's per-operation checks exist for |
 | **O6** | **Batch and resume.** `--batch` outside 100–10 000 and non-integer values fail the bind or the validator, naming the value and the bound, **before any read**; a valid value governs the whole run and appears in the run record; a run interrupted mid-load and re-run with `--resume` completes with the correct row counts and **no duplicate rows**; the same run **without** `--resume` stops with the count it found; and rows in the target whose keys are absent from the source stop the run for a human | Section [5.1.2](#512-how-the-load-actually-runs--the-executable-contract)'s six-step `--batch` path and its fail-closed restart rules. The last two clauses are the ones that make "never truncates, deletes or overwrites" a tested property rather than a promise |
-| **O7** | **The audit record: exactly four per invocation, in the pinned operation order, on all four paths.** Success; a failure **after work has begun**; a rejection **after the host is built but before any work** (a removed member, a mismatched environment); and a rejection **before any host is built** (a bad switch, and a missing actor). Each capture is parsed line by line and the objects carrying **`State.eventName == "AdminProvisioned"`** — the nested path of section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties) property 4, evaluated with **the same `jq -Rc 'fromjson? \| objects \| select(…)'` expression the pipeline uses**, not a re-derived one — are **counted and then sequenced**: the count is **4**, never 3 and never 5, and their `State.operation` values are exactly `create-user`, `create-role`, `add-membership`, `run` **in that order**, so a silent omission, a duplicate and a reordering each fail the row — and the sequence assertion is the one a count alone would pass. Because the cardinality is a **constant**, the same two assertions run on all four paths with no branching: the two rejection paths assert three `not-attempted` operation records and a run record at `rejected`, and the failure-after-work path asserts the failing operation at `failed` with any unreached operation at `not-attempted`. **On the three paths that also write a report** (row 75's artifact), the three operation records' `operation` and `outcome` literals are asserted **equal to the report's three rows** for the same invocation, which is what holds the one-vocabulary property rather than leaving it as an intention. One additional assertion exists because this row is what would have caught the defect it now closes: a selector keyed on a **top-level** `eventName` is asserted to match **0** objects in the same captures, which is the mechanical statement that the nested path is the only correct one and that the earlier top-level form would have produced zero uploads on every path rather than a wrong one on some. **Every one of the four** records carries the actor supplied through the environment on [06 §9.2.4](06-azure-hosting-recommendations.md)'s schema — the self-describing property, asserted per line rather than once — and for the missing-actor case, the reserved `(unavailable)` with `rejectedCheck = actor-missing` on the run record and no other combination. A simulated manual invocation emits the same four records | Property 4 of section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties). The **before any host** case cannot be satisfied by an `ILogger` call at all, so this row is the standing proof that the serialisation is genuinely separate from diagnostic logging; and the count with the sequence is what makes "four per invocation" a checkable property rather than a description of the happy path |
+| **O7** | **The audit record: exactly four per invocation, in the pinned operation order, on all four paths.** Success; a failure **after work has begun**; a rejection **after the host is built but before any work** (a removed member, a mismatched environment); and a rejection **before any host is built** (a bad switch, and a missing actor). Each capture is parsed line by line and the objects carrying **`Scopes[0].eventName == "AdminProvisioned"`** — the invocation-header path of section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties) property 4, evaluated with **the same `jq -Rc 'fromjson? \| objects \| select(…)'` expression the pipeline uses**, not a re-derived one — are **counted and then sequenced**: the count is **4**, never 3 and never 5, and their `Scopes[0].operation` values are exactly `create-user`, `create-role`, `add-membership`, `run` **in that order**, so a silent omission, a duplicate and a reordering each fail the row — and the sequence assertion is the one a count alone would pass. **And the record's own closure is asserted per line rather than inferred**: every one of the four has a `State` whose sorted key set is exactly `["actor","outcome","roleName","targetUserName","timestamp"]`, so a sixth field fails this row wherever it is added and on whichever path adds it — which is what makes the five-field requirement a tested property of the bytes instead of a statement about them. Because the cardinality is a **constant**, the same two assertions run on all four paths with no branching: the two rejection paths assert three `not-attempted` operation records and a run record at `rejected`, and the failure-after-work path asserts the failing operation at `failed` with any unreached operation at `not-attempted`. **On the three paths that also write a report** (row 75's artifact), the three operation records' `operation` and `outcome` literals are asserted **equal to the report's three rows** for the same invocation, which is what holds the one-vocabulary property rather than leaving it as an intention. **Two** negative assertions exist because this row is what would have caught the two defects it now closes: a selector keyed on a **top-level** `eventName` is asserted to match **0** objects in the same captures, **and** a selector keyed on **`.State.eventName`** is asserted to match **0** as well. Together they are the mechanical statement that `Scopes[0].eventName` is the only correct path — the first rules out the envelope's top level, the second rules out the record, which is where the event name used to sit before `State` was closed at the five required fields — and each would have produced zero uploads on every path rather than a wrong upload on some, which is why they are asserted rather than reasoned about. **Every one of the four** records carries the actor supplied through the environment on [06 §9.2.4](06-azure-hosting-recommendations.md)'s schema — the self-describing property, asserted per line rather than once — and for the missing-actor case, the reserved `(unavailable)` with `rejectedCheck = actor-missing` on the run record and no other combination. A simulated manual invocation emits the same four records | Property 4 of section [10.2](#102-the-target-toolsprovision-admin-and-five-required-properties). The **before any host** case cannot be satisfied by an `ILogger` call at all, so this row is the standing proof that the serialisation is genuinely separate from diagnostic logging; and the count with the sequence is what makes "four per invocation" a checkable property rather than a description of the happy path |
 | **O8** | **The secret is in none of it.** The generated password appears **nowhere** in captured standard output, standard error, the exit message, the audit record or any exception text — searched as **raw text** across the whole capture — and the same for the connection string and for `MIGRATE_TARGET_CONNECTION`. Repeated with a deliberately failing create, which is the path that tempts a command to echo its inputs | The never-record list of section [3.3](#33-the-target-configuration-contract) applied to the one process that holds a credential. It is row 47's canary, aimed at the executable rather than at the site |
 | **O9** | **Exit codes are the allocated ones, and they are stable.** Each path is asserted against the **literal value** allocated in section [10.2](#exit-code-allocation), and the allocation defines **exactly five** values, so every path here resolves to one of them: success **0**; a parser rejection, a startup-validation failure, an environment-assertion failure, an `EXPECTED_*` mismatch, a control-plane or `DB_NAME()`/`USER_NAME()` target-assertion failure, a seeding-guard refusal, a run-state refusal and `sp_getapplock` not granted within its wait **2**; a refused login, an unreachable database, a statement refused for want of a grant, and an absent migrations-history or session-cache table **3**; a run that committed one or more units and then stopped, and the seed's whole-seed transaction rolling back **4**; the migration-set comparison unequal in either direction, a `diff-schema` difference the extracted record does not explain, a `reconcile` mismatch, a duplicate normalized **user name**, and a target holding keys the source does not **5** — the shell steps' `sha256sum --check` and `cmp` verifications are **not** asserted here, because they are not this executable's statuses. Three further assertions, because the allocation's own properties are the part that rots: **`1` is never returned** by any of these paths; **`6` and `7` are never returned either**, on any path, which is the mechanical form of the allocation's own statement that both are unallocated; and where two checks share a class the **named check** in the captured output differs even though the code does not | Section [10.3](#103-what-this-retires) makes "failure becomes observable" the point of the whole change. A command that returned `1` for everything would satisfy every other row here and still be unusable in a release gate. **And this row is where the defect it closes would surface**: asserting **`4`** for the environment, `EXPECTED_*`, target-assertion and seeding-guard refusals, **`5`** for a lock not granted, **`6`** for a failed reconciliation and **`7`** for the not-in-source case gives four expectations the allocation does not support, two of them naming codes it explicitly leaves unallocated, so the row would assert statuses the tool cannot return and would fail on four paths while the implementation was correct. The negative assertion on `6` and `7` exists so that a future revision cannot quietly re-add them on one side only |
 | **O10** | **A normal or deployed builder cannot select connection mode M4.** Two halves. First, the **published application's** service descriptors are enumerated and **no descriptor for `ITestConnectionModeSignal` exists**. Second, a host is built the ordinary way, with no fixture involvement, handed an M4-shaped connection string, and its start is asserted to **fail** with "matches no accepted mode" | The non-forgeable gate of section [3.3](#33-the-target-configuration-contract). The first half catches a registration added inside the application later; the second catches a validator edit that made the signal optional. **Neither can be satisfied by editing configuration**, which is the property a configuration marker could never have |
@@ -21153,9 +21253,10 @@ case "$TESTS_RUN_ID" in
 esac
 
 # B1. Restore and build the solution, named explicitly. The local-tool restore is what puts `dotnet ef`
-#     and `dotnet sql-cache` on PATH for this agent; the data-migration rows of section 12.4 execute the
-#     procedure's own steps through them and through T-SQL, so there is no tool to publish here and no
-#     path for the suite to capture (section 5.7).
+#     on PATH for this agent -- the manifest's one entry, since 04 §6.3 withdraws `dotnet-sql-cache`;
+#     the data-migration rows of section 12.4 execute the procedure's own steps through it and through
+#     reviewed T-SQL, so there is no tool to publish here and no path for the suite to capture
+#     (section 5.7).
 dotnet restore ./MvcMusicStore.sln --locked-mode --configfile ./NuGet.config
 dotnet tool restore --configfile ./NuGet.config   # local-tool restore has no locked mode; 06 §12.1
 dotnet build ./MvcMusicStore.sln --no-restore -c Release
@@ -21657,7 +21758,7 @@ the boundary is the whole of "can this be run from a clean checkout".
 
 | Installed by the operator | Provisioned by the suite |
 | --- | --- |
-| The .NET SDK at the band [04 §3](04-dotnet8-migration-strategy.md) pins — a mismatched feature band fails the build, which is the intended behaviour [06 §12.3](06-azure-hosting-recommendations.md) records | Both `dotnet-ef` and `dotnet-sql-cache`, restored from the committed tool manifest by Stage B1 — [04](04-dotnet8-migration-strategy.md) owns the manifest and the pins |
+| The .NET SDK at the band [04 §3](04-dotnet8-migration-strategy.md) pins — a mismatched feature band fails the build, which is the intended behaviour [06 §12.3](06-azure-hosting-recommendations.md) records | `dotnet-ef`, restored from the committed tool manifest by Stage B1 — the manifest's **one** entry, since [04 §6.3](04-dotnet8-migration-strategy.md) withdraws `dotnet-sql-cache` over a critical advisory in its packaged graph; 04 owns the manifest and the pin |
 | A container runtime, for the developer path only, and the **resolved image digest** recorded in this runbook's pin line | The disposable database, its schema and its data: the cache table, **both** migration sets in the order of section [5.3](#53-who-applies-ddl-and-in-what-order), the two run-scoped SQL principals BOOTSTRAP creates together with the rest of [06 §6.6.6](06-azure-hosting-recommendations.md)'s `F1`-`F7` permission estate and the probe runs that measure it, all before the collection's first test (section [12.6](#126-the-test-project-the-system-under-test-and-the-host-wiring) point 3a, ordered at B4a above), and the fixture-data manifest with its seven post-load invariants (section [12.3](#123-three-problems-that-must-be-handled-explicitly) problem two) |
 | For `Category=Baseline` only: Windows, LocalDB, MSBuild, and a **built** legacy application — whose build status [10 §3.2](10-build-and-deployment-requirements.md) records and this document does not restate. **Serving** it is the fixture's job, not the operator's | The legacy **deployment**: the private per-run directory outside the checkout, the copies of both store pairs, the rewritten connection strings, the per-run port, the readiness poll, and the stop-detach-delete teardown (sections [12.3](#123-three-problems-that-must-be-handled-explicitly), [12.6](#126-the-test-project-the-system-under-test-and-the-host-wiring), [12.9](#129-sensitive-test-data-diagnostics-and-redaction)) |
 | The configuration values of point 4, and the **external stage timeout** of section [12.7](#127-fixture-lifecycle-isolation-and-parallelism) layer 2 | The per-run identifier, every resource name derived from it, the ownership registry, the orphan sweep and all in-process teardown (sections [12.7](#127-fixture-lifecycle-isolation-and-parallelism), [12.8](#128-destructive-operation-safety)) |
